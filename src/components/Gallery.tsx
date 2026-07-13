@@ -1,76 +1,94 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ZoomIn } from 'lucide-react';
+import { X } from 'lucide-react';
+import { useContent } from '../contexts/ContentContext';
 
-const projects = [
-
+const defaultProjects = [
   {
-    title: 'واجهات شركات تجارية',
+    title: 'واجهة برج تجاري - الرياض',
     category: 'واجهات زجاجية',
-    description: 'واجهات زجاجية مزدوجة معزولة حرارياً للشركات والمباني الإدارية الكبرى.',
     image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop',
+    description: 'تنفيذ واجهة زجاجية متكاملة لبرج تجاري باستخدام زجاج عاكس ومقاوم للحرارة.',
     className: 'md:col-span-2 md:row-span-2'
   },
   {
-    title: 'قواطع مكتبية حديثة',
-    category: 'قواطع زجاجية',
-    description: 'قواطع سيكوريت 12 ملم مقسّى للمكاتب لتوفير بيئة عمل مفتوحة وهادئة.',
+    title: 'قواطع مكاتب إدارية',
+    category: 'قواطع داخلية',
     image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop',
-    className: 'col-span-1 row-span-1'
+    description: 'تقسيم مساحات مكتبية باستخدام زجاج سيكوريت 12 ملم مع أبواب سحاب.',
+    className: 'md:col-span-1 md:row-span-1'
   },
   {
-    title: 'نوافذ فلل سكنية',
+    title: 'فيلا سكنية - الملقا',
     category: 'أبواب ونوافذ',
-    description: 'تركيب نوافذ ألمنيوم وزجاج دبل جلاس بتصاميم عصرية للفلل والقصور.',
     image: 'https://images.unsplash.com/photo-1600566753386-8a9d16a70e70?q=80&w=2070&auto=format&fit=crop',
-    className: 'col-span-1 row-span-1'
+    description: 'تركيب نوافذ دبل جلاس عازلة للصوت والحرارة لكامل الفيلا.',
+    className: 'md:col-span-1 md:row-span-1'
   },
   {
-    title: 'كبائن شاور فاخرة',
-    category: 'تصميم داخلي',
-    description: 'تفصيل كبائن شاور زجاجية مقاومة للصدأ مع إكسسوارات ذهبية وفضية مميزة.',
-    image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=2069&auto=format&fit=crop',
-    className: 'col-span-1 row-span-1'
+    title: 'معرض سيارات',
+    category: 'واجهات معارض',
+    image: 'https://images.unsplash.com/photo-1555529771-835f59fc5efe?q=80&w=2146&auto=format&fit=crop',
+    description: 'واجهة معرض سيارات بزجاج شفاف لضمان أفضل رؤية للمعروضات.',
+    className: 'md:col-span-1 md:row-span-2'
   },
   {
-    title: 'مرايا ديكورية',
-    category: 'مرايا',
-    description: 'تصاميم مرايا هندسية مضيئة بلمبات ليد مخفية لغرف المعيشة والصالونات.',
+    title: 'مرايا صالون تجميل',
+    category: 'مرايا ديكور',
     image: 'https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=2054&auto=format&fit=crop',
-    className: 'md:col-span-2 row-span-1'
+    description: 'تصميم وتركيب مرايا ديكورية مضيئة بأشكال عصرية.',
+    className: 'md:col-span-1 md:row-span-1'
+  },
+  {
+    title: 'كبائن شاور فندقية',
+    category: 'كبائن شاور',
+    image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=2069&auto=format&fit=crop',
+    description: 'تركيب كبائن شاور زجاجية أوتوماتيكية لفندق 5 نجوم.',
+    className: 'md:col-span-1 md:row-span-1'
   }
 ];
 
-const categories = ['الكل', 'واجهات زجاجية', 'قواطع زجاجية', 'أبواب ونوافذ', 'تصميم داخلي', 'مرايا'];
-
 export default function Gallery() {
   const [activeCategory, setActiveCategory] = useState('الكل');
-  const [selectedProject, setSelectedProject] = useState<typeof projects[0] | null>(null);
+  const [selectedProject, setSelectedProject] = useState<any | null>(null);
+  const phoneNumber = "966510233706";
+  const { getContent } = useContent();
+
+  const itemsContent = getContent('gallery_items');
+  const projects = useMemo(() => {
+    if (itemsContent?.body) {
+      try {
+        const parsed = JSON.parse(itemsContent.body);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.error("Failed to parse gallery items", e);
+      }
+    }
+    return defaultProjects;
+  }, [itemsContent]);
+
+  const categories = ['الكل', ...new Set(projects.map(p => p.category))];
 
   const filteredProjects = activeCategory === 'الكل' 
     ? projects 
     : projects.filter(p => p.category === activeCategory);
 
-  const phoneNumber = "966510233706";
-
   return (
-    <section id="gallery" className="py-24 bg-white relative overflow-hidden">
+    <section id="gallery" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8"
+          className="text-center max-w-3xl mx-auto mb-16"
         >
-          <div className="max-w-2xl">
-            <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-3">أعمالنا</h2>
-            <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight">
-              معرض المشاريع المنجزة
-            </h3>
-          </div>
-          <p className="text-lg text-gray-600 max-w-md border-r-2 border-[#0284C7] pr-4">
-            تصفح مجموعة من أحدث مشاريعنا في تركيب الزجاج وتصميم الواجهات، والتي تعكس التزامنا بالجودة والاحترافية.
+          <h2 className="text-[#0284C7] text-sm font-bold uppercase tracking-widest mb-3">معرض أعمالنا</h2>
+          <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight mb-6">
+            مشاريع نفتخر بإنجازها
+          </h3>
+          <p className="text-lg text-gray-600">
+            تصفح مجموعة من أحدث مشاريعنا في تركيب الزجاج والواجهات، والتي تعكس التزامنا بالجودة والاحترافية.
           </p>
         </motion.div>
 
@@ -158,6 +176,7 @@ export default function Gallery() {
             >
               <X className="w-8 h-8" />
             </button>
+            
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -181,6 +200,7 @@ export default function Gallery() {
                 <p className="text-gray-400 text-lg leading-relaxed mb-8">
                   {selectedProject.description}
                 </p>
+                
                 <a
                   href={`https://wa.me/${phoneNumber}?text=${encodeURIComponent(`مرحباً، أود الاستفسار عن مشروع ${selectedProject.title}`)}`}
                   target="_blank"

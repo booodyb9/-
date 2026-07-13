@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useContent } from '../contexts/ContentContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -15,6 +16,8 @@ const heroImages = [
 
 export default function Hero() {
   const { language } = useLanguage();
+  const { getContent } = useContent();
+  const heroContent = getContent('hero_content');
 
   return (
     <div className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden min-h-[90vh] flex items-center bg-[#F9FAFB]">
@@ -66,20 +69,30 @@ export default function Hero() {
               </div>
             </motion.div>
             
-            <motion.h1 variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-4xl md:text-7xl font-extrabold text-[#0F172A] leading-[1.1] mb-6">
-              {language === 'ar' ? (
-                <>نصمم وننفذ أرقى أعمال <span className="text-[#0284C7]">الزجاج الحديث</span></>
-              ) : (
-                <>Design & Build Premium <span className="text-[#0284C7]">Modern Glass</span></>
-              )}
-            </motion.h1>
-            
-            <motion.p variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl">
-              {language === 'ar' 
-                ? 'نقدم حلولاً مبتكرة وعصرية لتركيب الزجاج للمشاريع التجارية والسكنية في جميع أنحاء الرياض. جودة عالية، دقة في التنفيذ، وأسعار تنافسية.'
-                : 'We provide innovative and modern glass installation solutions for commercial and residential projects across Riyadh. High quality, precise execution, and competitive prices.'
-              }
-            </motion.p>
+            {heroContent?.body ? (
+              <motion.div 
+                variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }}
+                className="prose prose-lg prose-h1:text-4xl prose-h1:md:text-7xl prose-h1:font-extrabold prose-h1:text-[#0F172A] prose-h1:leading-[1.1] prose-h1:mb-6 prose-p:text-lg prose-p:md:text-xl prose-p:text-gray-600 prose-p:mb-8 prose-p:leading-relaxed prose-p:max-w-2xl" 
+                dangerouslySetInnerHTML={{ __html: heroContent.body }} 
+              />
+            ) : (
+              <>
+                <motion.h1 variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-4xl md:text-7xl font-extrabold text-[#0F172A] leading-[1.1] mb-6">
+                  {language === 'ar' ? (
+                    <>نصمم وننفذ أرقى أعمال <span className="text-[#0284C7]">الزجاج الحديث</span></>
+                  ) : (
+                    <>Design & Build Premium <span className="text-[#0284C7]">Modern Glass</span></>
+                  )}
+                </motion.h1>
+                
+                <motion.p variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl">
+                  {language === 'ar' 
+                    ? 'نقدم حلولاً مبتكرة وعصرية لتركيب الزجاج للمشاريع التجارية والسكنية في جميع أنحاء الرياض. جودة عالية، دقة في التنفيذ، وأسعار تنافسية.'
+                    : 'We provide innovative and modern glass installation solutions for commercial and residential projects across Riyadh. High quality, precise execution, and competitive prices.'
+                  }
+                </motion.p>
+              </>
+            )}
 
             <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="flex flex-col sm:flex-row gap-4">
               <a
@@ -115,6 +128,7 @@ export default function Hero() {
                 <span>{language === 'ar' ? 'معاينة مجانية للموقع' : 'Free Site Inspection'}</span>
               </div>
             </motion.div>
+
           </motion.div>
         </div>
       </div>

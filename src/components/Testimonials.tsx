@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Star, Quote } from 'lucide-react';
+import { useContent } from '../contexts/ContentContext';
 
-const testimonials = [
+const defaultTestimonials = [
   {
     name: 'مؤسسة أبعاد التطوير',
     role: 'مشروع واجهات تجارية',
@@ -23,6 +25,21 @@ const testimonials = [
 ];
 
 export default function Testimonials() {
+  const { getContent } = useContent();
+  const itemsContent = getContent('testimonials_items');
+
+  const testimonials = useMemo(() => {
+    if (itemsContent?.body) {
+      try {
+        const parsed = JSON.parse(itemsContent.body);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.error("Failed to parse testimonials items", e);
+      }
+    }
+    return defaultTestimonials;
+  }, [itemsContent]);
+
   return (
     <section id="testimonials" className="py-24 bg-white relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -52,7 +69,7 @@ export default function Testimonials() {
               <Quote className="absolute top-6 left-6 h-12 w-12 text-gray-200" />
               
               <div className="flex gap-1 mb-6">
-                {[...Array(testimonial.rating)].map((_, i) => (
+                {[...Array(Number(testimonial.rating) || 5)].map((_, i) => (
                   <Star key={i} className="h-5 w-5 fill-[#0284C7] text-[#0284C7]" />
                 ))}
               </div>

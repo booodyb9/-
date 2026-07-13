@@ -1,35 +1,74 @@
+import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { PhoneCall, Ruler, Hammer, Wrench, CheckCircle } from 'lucide-react';
+import { useContent } from '../contexts/ContentContext';
 
-const steps = [
+const defaultSteps = [
   {
-    icon: <PhoneCall className="h-6 w-6" />,
+    icon: 'PhoneCall',
     title: 'الاستشارة والاتفاق',
     description: 'تواصل معنا لمناقشة متطلبات مشروعك، وسنقدم لك أفضل الحلول والخيارات المناسبة لميزانيتك وتفضيلاتك.',
   },
   {
-    icon: <Ruler className="h-6 w-6" />,
+    icon: 'Ruler',
     title: 'أخذ المقاسات',
     description: 'يقوم فريقنا الفني بزيارة الموقع لأخذ المقاسات الدقيقة والرفع المساحي لضمان دقة التصنيع.',
   },
   {
-    icon: <Hammer className="h-6 w-6" />,
+    icon: 'Hammer',
     title: 'التصنيع والقص',
     description: 'يتم قص وتجهيز الزجاج في مصانعنا بأحدث التقنيات لضمان أعلى معايير الجودة والصلابة.',
   },
   {
-    icon: <Wrench className="h-6 w-6" />,
+    icon: 'Wrench',
     title: 'التركيب',
     description: 'يقوم فريق التركيب المتخصص لدينا بتركيب الزجاج والإكسسوارات باحترافية عالية وفي الوقت المحدد.',
   },
   {
-    icon: <CheckCircle className="h-6 w-6" />,
+    icon: 'CheckCircle',
     title: 'التسليم والضمان',
     description: 'يتم تنظيف الموقع وتسليم العمل مع تقديم شهادة الضمان الشامل على جودة الزجاج والتركيب.',
   }
 ];
 
+const renderIcon = (iconName: string | undefined, index: number) => {
+  const props = { className: "h-6 w-6" };
+  const fallbackIcons = [
+    <PhoneCall {...props} />,
+    <Ruler {...props} />,
+    <Hammer {...props} />,
+    <Wrench {...props} />,
+    <CheckCircle {...props} />,
+  ];
+  
+  if (!iconName) return fallbackIcons[index % fallbackIcons.length];
+  
+  switch (iconName) {
+    case 'PhoneCall': return <PhoneCall {...props} />;
+    case 'Ruler': return <Ruler {...props} />;
+    case 'Hammer': return <Hammer {...props} />;
+    case 'Wrench': return <Wrench {...props} />;
+    case 'CheckCircle': return <CheckCircle {...props} />;
+    default: return fallbackIcons[index % fallbackIcons.length];
+  }
+};
+
 export default function Process() {
+  const { getContent } = useContent();
+  const itemsContent = getContent('process_items');
+
+  const steps = useMemo(() => {
+    if (itemsContent?.body) {
+      try {
+        const parsed = JSON.parse(itemsContent.body);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.error("Failed to parse process items", e);
+      }
+    }
+    return defaultSteps;
+  }, [itemsContent]);
+
   return (
     <section id="process" className="py-24 bg-white relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -52,8 +91,8 @@ export default function Process() {
         <div className="relative mt-12">
           {/* Timeline Line (Desktop only) */}
           <div className="hidden lg:block absolute top-10 left-[10%] right-[10%] h-0.5 bg-gray-100 z-0"></div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-8 relative z-10">
+          
+          <div className={`grid grid-cols-1 lg:grid-cols-${steps.length} gap-12 lg:gap-8 relative z-10`}>
             {steps.map((step, index) => (
               <motion.div
                 key={index}
@@ -64,7 +103,7 @@ export default function Process() {
                 className="flex flex-col items-center text-center"
               >
                 <div className="w-20 h-20 bg-white border-4 border-gray-50 rounded-full flex items-center justify-center text-[#0284C7] shadow-sm mb-6 relative">
-                  {step.icon}
+                  {renderIcon(step.icon, index)}
                   <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#0F172A] text-white text-sm font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
                     {index + 1}
                   </div>

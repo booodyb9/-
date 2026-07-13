@@ -1,48 +1,79 @@
+import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Home, Building, Maximize, Droplets, LayoutGrid, Store } from 'lucide-react';
 import CostCalculator from './CostCalculator';
+import { useContent } from '../contexts/ContentContext';
 
-const services = [
+const defaultServices = [
   {
-    icon: <Building className="h-8 w-8" />,
+    icon: 'Building',
     title: 'واجهات زجاجية (كرتن وول)',
     description: 'تركيب واجهات زجاجية حديثة للمباني التجارية والأبراج بأفضل المعايير العالمية لضمان العزل والمظهر الأنيق.',
     image: 'https://images.unsplash.com/photo-1541884053363-2b6b0c67d301?q=80&w=2070&auto=format&fit=crop'
   },
   {
-    icon: <LayoutGrid className="h-8 w-8" />,
+    icon: 'LayoutGrid',
     title: 'قواطع زجاجية مكتبية',
     description: 'تقسيم المساحات المكتبية بقواطع زجاجية شفافة أو مثلجة توفر الخصوصية وتحافظ على الإضاءة الطبيعية.',
     image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop'
   },
   {
-    icon: <Home className="h-8 w-8" />,
+    icon: 'Home',
     title: 'أبواب ونوافذ',
     description: 'تصنيع وتركيب الأبواب والنوافذ الزجاجية بمختلف أنواعها (سحاب، مفصلي، أوتوماتيكي) بجودة عالية.',
     image: 'https://images.unsplash.com/photo-1600566753386-8a9d16a70e70?q=80&w=2070&auto=format&fit=crop'
   },
   {
-    icon: <Droplets className="h-8 w-8" />,
+    icon: 'Droplets',
     title: 'كبائن شاور',
     description: 'تفصيل وتركيب كبائن الاستحمام الزجاجية بأحدث الإكسسوارات المضادة للصدأ والتصاميم العصرية.',
     image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=2069&auto=format&fit=crop'
   },
   {
-    icon: <Maximize className="h-8 w-8" />,
+    icon: 'Maximize',
     title: 'مرايا ديكور',
     description: 'تصميم وتركيب المرايا المضيئة والمرايا الديكورية للقصور والفلل والصالونات بأشكال هندسية مبتكرة.',
     image: 'https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=2054&auto=format&fit=crop'
   },
   {
-    icon: <Store className="h-8 w-8" />,
+    icon: 'Store',
     title: 'واجهات معارض ومحلات',
     description: 'واجهات زجاجية سيكوريت مقاومة للكسر تعطي واجهة جذابة لعرض منتجاتك بأفضل صورة ممكنة.',
     image: 'https://images.unsplash.com/photo-1555529771-835f59fc5efe?q=80&w=2146&auto=format&fit=crop'
   }
 ];
 
+const renderIcon = (iconName: string) => {
+  const props = { className: "h-8 w-8" };
+  switch (iconName) {
+    case 'Building': return <Building {...props} />;
+    case 'LayoutGrid': return <LayoutGrid {...props} />;
+    case 'Home': return <Home {...props} />;
+    case 'Droplets': return <Droplets {...props} />;
+    case 'Maximize': return <Maximize {...props} />;
+    case 'Store': return <Store {...props} />;
+    default: return <Building {...props} />;
+  }
+};
+
 export default function Services() {
   const phoneNumber = "966510233706";
+  const { getContent } = useContent();
+
+  const introContent = getContent('services_intro');
+  const itemsContent = getContent('services_items');
+
+  const services = useMemo(() => {
+    if (itemsContent?.body) {
+      try {
+        const parsed = JSON.parse(itemsContent.body);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.error("Failed to parse services items", e);
+      }
+    }
+    return defaultServices;
+  }, [itemsContent]);
 
   return (
     <section id="services" className="py-24 bg-gray-50">
@@ -58,9 +89,14 @@ export default function Services() {
           <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight mb-6">
             حلول زجاجية متكاملة لكل احتياجاتك
           </h3>
-          <p className="text-lg text-gray-600">
-            نقدم مجموعة واسعة من خدمات تركيب الزجاج باستخدام أفضل الخامات العالمية وبأيدي فنيين محترفين.
-          </p>
+          
+          {introContent?.body ? (
+            <div className="prose prose-lg mx-auto text-gray-600 mb-8" dangerouslySetInnerHTML={{ __html: introContent.body }} />
+          ) : (
+            <p className="text-lg text-gray-600 mb-8">
+              نقدم مجموعة واسعة من خدمات تركيب الزجاج باستخدام أفضل الخامات العالمية وبأيدي فنيين محترفين.
+            </p>
+          )}
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -83,7 +119,7 @@ export default function Services() {
               </div>
               <div className="p-8 flex flex-col flex-grow">
                 <div className="w-14 h-14 bg-[#0284C7]/10 text-[#0284C7] flex items-center justify-center mb-6 group-hover:bg-[#0284C7] group-hover:text-white transition-colors duration-300 rounded-sm shrink-0">
-                  {service.icon}
+                  {renderIcon(service.icon)}
                 </div>
                 <h4 className="text-xl font-bold text-[#0F172A] mb-3">{service.title}</h4>
                 <p className="text-gray-600 leading-relaxed flex-grow mb-6">

@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
+import { useContent } from '../contexts/ContentContext';
 
-const faqs = [
+const defaultFaqs = [
   {
     question: 'ما هي أنواع الزجاج المستخدمة في الواجهات؟',
     answer: 'نستخدم بشكل أساسي زجاج السيكوريت (المقسى) لمتانته العالية ومقاومته للكسر، والزجاج المزدوج (Double Glass) لعزله الممتاز للحرارة والصوت. يتم اختيار النوع بناءً على متطلبات المشروع والمواصفات الهندسية.'
@@ -27,6 +28,20 @@ const faqs = [
 
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const { getContent } = useContent();
+  const itemsContent = getContent('faq_items');
+
+  const faqs = useMemo(() => {
+    if (itemsContent?.body) {
+      try {
+        const parsed = JSON.parse(itemsContent.body);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.error("Failed to parse FAQ items", e);
+      }
+    }
+    return defaultFaqs;
+  }, [itemsContent]);
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -67,6 +82,7 @@ export default function FAQ() {
                   className={`h-5 w-5 text-[#0284C7] transition-transform duration-300 flex-shrink-0 ${openIndex === index ? 'rotate-180' : ''}`}
                 />
               </button>
+              
               <AnimatePresence>
                 {openIndex === index && (
                   <motion.div
