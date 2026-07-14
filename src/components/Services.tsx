@@ -7,39 +7,39 @@ import { useContent } from '../contexts/ContentContext';
 const defaultServices = [
   {
     icon: 'Building',
-    title: 'واجهات زجاجية (كرتن وول)',
-    description: 'تركيب واجهات زجاجية حديثة للمباني التجارية والأبراج بأفضل المعايير العالمية لضمان العزل والمظهر الأنيق.',
-    image: 'https://images.unsplash.com/photo-1541884053363-2b6b0c67d301?q=80&w=2070&auto=format&fit=crop'
+    title: 'واجهات زجاجية واستركشر',
+    description: 'تركيب واجهات زجاجية (كرتن وول) واستركشر للمباني التجارية والمحلات، بتصاميم عصرية مقاومة للعوامل الجوية وتوفر عزلاً حرارياً وصوتياً ممتازاً.',
+    image: '/images/service-facades.jpg'
   },
   {
     icon: 'LayoutGrid',
     title: 'قواطع زجاجية مكتبية',
-    description: 'تقسيم المساحات المكتبية بقواطع زجاجية شفافة أو مثلجة توفر الخصوصية وتحافظ على الإضاءة الطبيعية.',
-    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop'
+    description: 'تقسيم مساحات العمل والمكاتب بقواطع زجاجية سيكوريت عازلة للصوت، تمنح المكان اتساعاً ورؤية واضحة وتزيد من إنتاجية بيئة العمل.',
+    image: '/images/service-partitions.jpg'
   },
   {
     icon: 'Home',
-    title: 'أبواب ونوافذ',
-    description: 'تصنيع وتركيب الأبواب والنوافذ الزجاجية بمختلف أنواعها (سحاب، مفصلي، أوتوماتيكي) بجودة عالية.',
-    image: 'https://images.unsplash.com/photo-1600566753386-8a9d16a70e70?q=80&w=2070&auto=format&fit=crop'
+    title: 'درابزين زجاجي للسلالم',
+    description: 'تفصيل وتركيب درابزين زجاجي فاخر للسلالم والبلكونات، يجمع بين متانة الزجاج السيكوريت والتصميم الأنيق لإضافة لمسة فخامة للمكان.',
+    image: '/images/service-handrails.jpg'
   },
   {
     icon: 'Droplets',
     title: 'كبائن شاور',
-    description: 'تفصيل وتركيب كبائن الاستحمام الزجاجية بأحدث الإكسسوارات المضادة للصدأ والتصاميم العصرية.',
-    image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=2069&auto=format&fit=crop'
+    description: 'تصميم وتركيب كبائن الاستحمام الزجاجية (الشاور) بأجود أنواع الزجاج السيكوريت المقاوم للكسر، مع إكسسوارات مقاومة للصدأ تدوم طويلاً.',
+    image: '/images/service-showers.jpg'
   },
   {
     icon: 'Maximize',
-    title: 'مرايا ديكور',
-    description: 'تصميم وتركيب المرايا المضيئة والمرايا الديكورية للقصور والفلل والصالونات بأشكال هندسية مبتكرة.',
-    image: 'https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=2054&auto=format&fit=crop'
+    title: 'مرايا ديكورية وذكية',
+    description: 'تفصيل مرايا ديكورية حديثة ومرايا ليد (LED) ذكية مضيئة للحمامات والصالات الرياضية والمداخل، بأبعاد وتصاميم هندسية دقيقة.',
+    image: '/images/service-mirrors.jpg'
   },
   {
     icon: 'Store',
-    title: 'واجهات معارض ومحلات',
-    description: 'واجهات زجاجية سيكوريت مقاومة للكسر تعطي واجهة جذابة لعرض منتجاتك بأفضل صورة ممكنة.',
-    image: 'https://images.unsplash.com/photo-1555529771-835f59fc5efe?q=80&w=2146&auto=format&fit=crop'
+    title: 'واجهات وأبواب سيكوريت',
+    description: 'تنفيذ وتركيب أبواب سيكوريت مفصلية وسحابة أوتوماتيكية للفلل والمولات التجارية، تمتاز بالقوة والمتانة وسهولة الاستخدام.',
+    image: '/images/service-doors.jpg'
   }
 ];
 

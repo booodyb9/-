@@ -5,45 +5,45 @@ import { useContent } from '../contexts/ContentContext';
 
 const defaultProjects = [
   {
-    title: 'واجهة برج تجاري - الرياض',
-    category: 'واجهات زجاجية',
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop',
-    description: 'تنفيذ واجهة زجاجية متكاملة لبرج تجاري باستخدام زجاج عاكس ومقاوم للحرارة.',
+    title: 'قواطع زجاجية لمكاتب شركة',
+    category: 'قواطع داخلية',
+    image: '/images/gallery-1.jpg',
+    description: 'تنفيذ وتركيب قواطع زجاجية سيكوريت 12 ملم لمكاتب إدارية، توفر بيئة عمل عصرية وعزلاً صوتياً ممتازاً.',
     className: 'md:col-span-2 md:row-span-2'
   },
   {
-    title: 'قواطع مكاتب إدارية',
-    category: 'قواطع داخلية',
-    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop',
-    description: 'تقسيم مساحات مكتبية باستخدام زجاج سيكوريت 12 ملم مع أبواب سحاب.',
+    title: 'كابينة شاور زاوية مفصلية',
+    category: 'كبائن شاور',
+    image: '/images/gallery-2.jpg',
+    description: 'تصميم وتركيب كابينة استحمام زاوية بزجاج سيكوريت عالي السماكة مع إكسسوارات ستانلس ستيل مقاومة للصدأ.',
     className: 'md:col-span-1 md:row-span-1'
   },
   {
-    title: 'فيلا سكنية - الملقا',
-    category: 'أبواب ونوافذ',
-    image: 'https://images.unsplash.com/photo-1600566753386-8a9d16a70e70?q=80&w=2070&auto=format&fit=crop',
-    description: 'تركيب نوافذ دبل جلاس عازلة للصوت والحرارة لكامل الفيلا.',
-    className: 'md:col-span-1 md:row-span-1'
-  },
-  {
-    title: 'معرض سيارات',
+    title: 'واجهة زجاجية لمعرض تجاري',
     category: 'واجهات معارض',
-    image: 'https://images.unsplash.com/photo-1555529771-835f59fc5efe?q=80&w=2146&auto=format&fit=crop',
-    description: 'واجهة معرض سيارات بزجاج شفاف لضمان أفضل رؤية للمعروضات.',
+    image: '/images/gallery-3.jpg',
+    description: 'تركيب واجهة زجاجية استركشر لمعرض، تتيح أقصى رؤية للمنتجات مع توفير الحماية المطلوبة.',
+    className: 'md:col-span-1 md:row-span-1'
+  },
+  {
+    title: 'درابزين زجاجي لسلم داخلي',
+    category: 'درابزين زجاج',
+    image: '/images/gallery-4.jpg',
+    description: 'تركيب درابزين زجاجي أنيق للسلالم بلمسات عصرية تزيد من فخامة واتساع المكان.',
     className: 'md:col-span-1 md:row-span-2'
   },
   {
-    title: 'مرايا صالون تجميل',
+    title: 'مرآة ليد (LED) ذكية مضيئة',
     category: 'مرايا ديكور',
-    image: 'https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=2054&auto=format&fit=crop',
-    description: 'تصميم وتركيب مرايا ديكورية مضيئة بأشكال عصرية.',
+    image: '/images/gallery-5.jpg',
+    description: 'تفصيل مرآة حمام ذكية مع إضاءة ليد (LED) مدمجة بتصميم هندسي راقي.',
     className: 'md:col-span-1 md:row-span-1'
   },
   {
-    title: 'كبائن شاور فندقية',
-    category: 'كبائن شاور',
-    image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=2069&auto=format&fit=crop',
-    description: 'تركيب كبائن شاور زجاجية أوتوماتيكية لفندق 5 نجوم.',
+    title: 'باب زجاجي سحاب للحديقة',
+    category: 'أبواب ونوافذ',
+    image: '/images/gallery-6.jpg',
+    description: 'تركيب أبواب زجاجية سحابة تطل على الحديقة الخارجية، تمتاز بسهولة الحركة والعزل الحراري.',
     className: 'md:col-span-1 md:row-span-1'
   }
 ];
@@ -133,7 +133,7 @@ export default function Gallery() {
                   src={project.image}
                   alt={project.title}
                   loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter grayscale hover:grayscale-0"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#111827]/95 via-[#111827]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                   <span className="text-[#0284C7] text-xs font-bold tracking-widest uppercase mb-2">{project.category}</span>

@@ -98,7 +98,7 @@ export default function Navbar() {
               <Building2 className="h-5 w-5" />
             </div>
             <span className="font-bold text-2xl text-[#0F172A] tracking-tight">
-              {language === 'ar' ? 'روائع الزجاج' : 'Rawae Glass'}
+              {language === 'ar' ? 'شركة زجاج الرياض' : 'Riyadh Glass Company'}
             </span>
           </div>
 

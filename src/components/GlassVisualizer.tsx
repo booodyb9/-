@@ -8,10 +8,11 @@ const glassStyles = [
     nameAr: 'شفاف',
     nameEn: 'Clear',
     style: {
-      backdropFilter: 'blur(0px) brightness(1)',
-      backgroundColor: 'rgba(255, 255, 255, 0)',
-      boxShadow: 'inset 0 0 0px rgba(255,255,255,0)',
-      backgroundImage: 'none'
+      backdropFilter: 'blur(0px)',
+      backgroundColor: 'rgba(255, 255, 255, 0.02)',
+      boxShadow: 'inset 0 0 10px rgba(255,255,255,0.05), 0 4px 30px rgba(0, 0, 0, 0.1)',
+      backgroundImage: 'none',
+      borderColor: 'rgba(255, 255, 255, 0.1)'
     }
   },
   {
@@ -19,10 +20,11 @@ const glassStyles = [
     nameAr: 'مثلج (ساندبلاست)',
     nameEn: 'Frosted (Sandblasted)',
     style: {
-      backdropFilter: 'blur(12px) brightness(1.1)',
-      backgroundColor: 'rgba(255, 255, 255, 0.4)',
-      boxShadow: 'inset 0 0 20px rgba(255,255,255,0.3)',
-      backgroundImage: 'none'
+      backdropFilter: 'blur(16px) saturate(150%)',
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      boxShadow: 'inset 0 0 20px rgba(255,255,255,0.3), 0 4px 30px rgba(0, 0, 0, 0.1)',
+      backgroundImage: 'none',
+      borderColor: 'rgba(255, 255, 255, 0.4)'
     }
   },
   {
@@ -30,10 +32,11 @@ const glassStyles = [
     nameAr: 'ملون (برونزي)',
     nameEn: 'Tinted (Bronze)',
     style: {
-      backdropFilter: 'blur(0px) brightness(0.6) sepia(0.5)',
-      backgroundColor: 'rgba(92, 64, 51, 0.4)',
-      boxShadow: 'inset 0 0 10px rgba(92,64,51,0.2)',
-      backgroundImage: 'none'
+      backdropFilter: 'blur(2px) brightness(0.6) sepia(0.3)',
+      backgroundColor: 'rgba(120, 80, 50, 0.3)',
+      boxShadow: 'inset 0 0 15px rgba(120,80,50,0.3), 0 4px 30px rgba(0, 0, 0, 0.2)',
+      backgroundImage: 'none',
+      borderColor: 'rgba(120, 80, 50, 0.3)'
     }
   },
   {
@@ -41,10 +44,11 @@ const glassStyles = [
     nameAr: 'عاكس (أزرق)',
     nameEn: 'Reflective (Blue)',
     style: {
-      backdropFilter: 'blur(0px) brightness(0.85) contrast(1.1)',
-      backgroundColor: 'rgba(100, 150, 220, 0.2)',
-      backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.2) 100%)',
-      boxShadow: 'inset 0 0 15px rgba(255,255,255,0.4)'
+      backdropFilter: 'blur(2px) brightness(0.8) contrast(1.1)',
+      backgroundColor: 'rgba(30, 64, 175, 0.15)',
+      backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 30%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.2) 100%)',
+      boxShadow: 'inset 0 0 20px rgba(255,255,255,0.4), 0 8px 32px rgba(0, 0, 0, 0.3)',
+      borderColor: 'rgba(255, 255, 255, 0.4)'
     }
   }
 ];
@@ -110,19 +114,29 @@ export default function GlassVisualizer() {
               />
               
               {/* Glass Pane */}
-              <div className="absolute inset-0 p-2 sm:p-4 md:p-8">
+              <div className="absolute inset-0 p-4 sm:p-6 md:p-12" style={{ perspective: '1000px' }}>
                 <div 
-                  className="w-full h-full rounded-sm border border-white/20 transition-all duration-700 ease-in-out relative overflow-hidden"
+                  className="w-full h-full rounded-2xl border transition-all duration-700 ease-in-out relative overflow-hidden"
                   style={{
                     WebkitBackdropFilter: currentStyle.backdropFilter,
                     backdropFilter: currentStyle.backdropFilter,
                     backgroundColor: currentStyle.backgroundColor,
                     boxShadow: currentStyle.boxShadow,
-                    backgroundImage: currentStyle.backgroundImage
+                    backgroundImage: currentStyle.backgroundImage,
+                    borderColor: currentStyle.borderColor,
+                    transform: 'translateZ(0)',
                   }}
                 >
-                  {/* Subtle glare effect that moves slightly based on active style */}
-                  <div className={`absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 transform -skew-x-12 translate-x-full ${activeStyle === 'reflective' ? 'opacity-100' : 'opacity-0'} transition-opacity duration-700 pointer-events-none`}></div>
+                  {/* Subtle top edge highlight */}
+                  <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
+                  
+                  {/* Subtle glare sweep that animates repeatedly to mimic glass shine */}
+                  <motion.div 
+                    initial={{ x: '-150%' }}
+                    animate={{ x: '150%' }}
+                    transition={{ duration: 3, ease: 'linear', repeat: Infinity, repeatDelay: 5 }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-25deg] pointer-events-none w-1/2"
+                  />
                 </div>
               </div>
 

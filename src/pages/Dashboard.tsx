@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Edit3, Cloud, Image, Mail } from 'lucide-react';
+import { LogOut, Edit3, Cloud, Image, Mail, Upload } from 'lucide-react';
 import Messages from './dashboard/Messages';
 import MediaLibrary from './dashboard/MediaLibrary';
 import DriveBackup from './dashboard/DriveBackup';
 import ContentManager from './dashboard/ContentManager';
+import BulkGalleryUpload from './dashboard/BulkGalleryUpload';
 import { Message, Content, MediaFile } from './dashboard/types';
 
 export default function Dashboard() {
@@ -12,7 +13,7 @@ export default function Dashboard() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [contents, setContents] = useState<Content[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
-  const [activeTab, setActiveTab] = useState<'messages' | 'content' | 'drive' | 'media'>('messages');
+  const [activeTab, setActiveTab] = useState<'messages' | 'content' | 'drive' | 'media' | 'bulk'>('messages');
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
 
@@ -119,6 +120,7 @@ export default function Dashboard() {
     { id: 'messages' as const, label: 'الرسائل', icon: Mail },
     { id: 'content' as const, label: 'إدارة المحتوى', icon: Edit3 },
     { id: 'media' as const, label: 'مكتبة الوسائط', icon: Image },
+    { id: 'bulk' as const, label: 'رفع متعدد للمشاريع', icon: Upload },
     { id: 'drive' as const, label: 'النسخ الاحتياطي', icon: Cloud },
   ], []);
 
@@ -178,6 +180,7 @@ export default function Dashboard() {
         <div className="max-w-6xl mx-auto">
           {activeTab === 'messages' && <Messages messages={messages} loading={loadingMessages} />}
           {activeTab === 'media' && <MediaLibrary mediaFiles={mediaFiles} fetchMedia={fetchMedia} token={token} />}
+          {activeTab === 'bulk' && <BulkGalleryUpload token={token} contents={contents} fetchContents={fetchContents} fetchMedia={fetchMedia} />}
           {activeTab === 'drive' && <DriveBackup isBackingUp={isBackingUp} accessToken={accessToken} backupToDrive={backupToDrive} />}
           {activeTab === 'content' && <ContentManager contents={contents} fetchContents={fetchContents} token={token} />}
         </div>

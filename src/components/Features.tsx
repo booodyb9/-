@@ -51,6 +51,7 @@ export default function Features() {
 
   const introContent = getContent('features_intro');
   const itemsContent = getContent('features_items');
+  const imageContent = getContent('features_image');
 
   const features = useMemo(() => {
     if (itemsContent?.body) {
@@ -63,6 +64,16 @@ export default function Features() {
     }
     return defaultFeatures;
   }, [itemsContent]);
+
+  const featureImage = useMemo(() => {
+    if (imageContent?.body) {
+      try {
+        const parsed = JSON.parse(imageContent.body);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].image) return parsed[0].image;
+      } catch (e) {}
+    }
+    return "https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=80&w=2069&auto=format&fit=crop";
+  }, [imageContent]);
 
   return (
     <section id="features" className="py-24 bg-white relative overflow-hidden">
@@ -88,7 +99,7 @@ export default function Features() {
                 <div className="prose prose-lg text-gray-600 mb-8 leading-relaxed" dangerouslySetInnerHTML={{ __html: introContent.body }} />
               ) : (
                 <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                  في روائع الزجاج، لا نكتفي بتركيب الزجاج فحسب، بل نصنع واجهات تعكس هوية مشروعك. نجمع بين الحرفية العالية والتكنولوجيا الحديثة لنقدم لك نتائج تفوق التوقعات.
+                  في شركة زجاج الرياض، لا نكتفي بتركيب الزجاج فحسب، بل نصنع واجهات تعكس هوية مشروعك. نجمع بين الحرفية العالية والتكنولوجيا الحديثة لنقدم لك نتائج تفوق التوقعات.
                 </p>
               )}
 
@@ -136,7 +147,7 @@ export default function Features() {
             >
               <div className="aspect-square md:aspect-[4/3] lg:aspect-square overflow-hidden shadow-2xl relative border-l-8 border-[#0284C7]">
                 <img
-                  src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=80&w=2069&auto=format&fit=crop"
+                  src={featureImage}
                   alt="Modern office interior with glass partitions"
                   className="w-full h-full object-cover"
                 />

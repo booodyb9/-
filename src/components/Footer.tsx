@@ -8,7 +8,7 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-12 lg:col-span-4">
             <div className="flex items-center gap-2 mb-4">
               <Building2 className="h-6 w-6 text-[#0284C7]" />
-              <span className="font-bold text-xl text-white">روائع الزجاج</span>
+              <span className="font-bold text-xl text-white">شركة زجاج الرياض</span>
             </div>
             <p className="text-sm leading-relaxed max-w-sm mb-6">
               شركتك الموثوقة لجميع أعمال وتوريدات الزجاج في مدينة الرياض. نقدم الجودة والإتقان بأسعار تنافسية تلبي احتياجات مشاريعكم السكنية والتجارية.
@@ -58,7 +58,7 @@ export default function Footer() {
         </div>
         
         <div className="pt-8 border-t border-gray-800 text-sm text-center md:text-right flex flex-col md:flex-row justify-between items-center gap-4">
-          <p>جميع الحقوق محفوظة &copy; {new Date().getFullYear()} روائع الزجاج</p>
+          <p>جميع الحقوق محفوظة &copy; {new Date().getFullYear()} شركة زجاج الرياض</p>
           <div className="flex gap-4">
             <span>الرياض، المملكة العربية السعودية</span>
           </div>

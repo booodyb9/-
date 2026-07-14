@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { motion } from 'motion/react';
+import { useContent } from '../contexts/ContentContext';
 
-const partners = [
+const defaultPartners = [
   { name: 'شركة أرامكو', logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=200&h=100&fit=crop' },
   { name: 'سابك', logo: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=100&fit=crop' },
   { name: 'بنك الراجحي', logo: 'https://images.unsplash.com/photo-1598449426314-8b01bb326e6d?w=200&h=100&fit=crop' },
@@ -10,6 +12,21 @@ const partners = [
 ];
 
 export default function TrustedPartners() {
+  const { getContent } = useContent();
+  const partnersContent = getContent('trusted_partners');
+
+  const partners = useMemo(() => {
+    if (partnersContent?.body) {
+      try {
+        const parsed = JSON.parse(partnersContent.body);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.error("Failed to parse trusted partners", e);
+      }
+    }
+    return defaultPartners;
+  }, [partnersContent]);
+
   return (
     <section className="py-16 bg-gray-50 border-y border-gray-200 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center">

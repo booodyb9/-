@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -7,17 +8,30 @@ import { Autoplay, EffectFade } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/effect-fade';
 
-const heroImages = [
-  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1600566753386-8a9d16a70e70?q=80&w=2070&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=2054&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1541884053363-2b6b0c67d301?q=80&w=2070&auto=format&fit=crop'
+const defaultHeroImages = [
+  { url: '/images/hero-1.jpg', alt: 'تركيب واجهات زجاجية حديثة في الرياض' },
+  { url: '/images/hero-2.jpg', alt: 'قواطع زجاجية للمكاتب والشركات' },
+  { url: '/images/hero-3.jpg', alt: 'كبائن شاور زجاجية عصرية' },
+  { url: '/images/hero-4.jpg', alt: 'درابزين زجاجي للسلالم بأعلى معايير الأمان' }
 ];
 
 export default function Hero() {
   const { language } = useLanguage();
   const { getContent } = useContent();
   const heroContent = getContent('hero_content');
+  const heroImagesContent = getContent('hero_images');
+
+  const heroImages = useMemo(() => {
+    if (heroImagesContent?.body) {
+      try {
+        const parsed = JSON.parse(heroImagesContent.body);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.error("Failed to parse hero images", e);
+      }
+    }
+    return defaultHeroImages;
+  }, [heroImagesContent]);
 
   return (
     <div className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden min-h-[90vh] flex items-center bg-[#F9FAFB]">
@@ -36,8 +50,8 @@ export default function Hero() {
           {heroImages.map((img, index) => (
             <SwiperSlide key={index}>
               <img
-                src={img}
-                alt={`Hero image ${index + 1}`}
+                src={img.url}
+                alt={img.alt}
                 className="w-full h-full object-cover grayscale opacity-30"
               />
             </SwiperSlide>

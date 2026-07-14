@@ -4,6 +4,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { Content } from './types';
 import ArrayEditor from './ArrayEditor';
+import { useContent } from '../../contexts/ContentContext';
 
 interface ContentManagerProps {
   contents: Content[];
@@ -22,6 +23,15 @@ interface Section {
 
 const SECTIONS: Section[] = [
   { key: 'hero_content', title: 'الرئيسية (نصوص البانر)', type: 'rich_text' },
+  { 
+    key: 'hero_images', 
+    title: 'صور البانر الرئيسي', 
+    type: 'array',
+    schema: [
+      { key: 'alt', label: 'وصف الصورة (Alt Text)', type: 'text' },
+      { key: 'url', label: 'رابط الصورة', type: 'image' },
+    ]
+  },
   { key: 'services_intro', title: 'مقدمة الخدمات', type: 'rich_text' },
   { 
     key: 'services_items', 
@@ -49,6 +59,14 @@ const SECTIONS: Section[] = [
       { key: 'icon', label: 'اسم الأيقونة (مثال: Shield)', type: 'text' },
     ]
   },
+  {
+    key: 'features_image',
+    title: 'صورة لماذا تختارنا',
+    type: 'array',
+    schema: [
+      { key: 'image', label: 'رابط الصورة', type: 'image' },
+    ]
+  },
   { 
     key: 'process_items', 
     title: 'خطوات العمل', 
@@ -56,6 +74,15 @@ const SECTIONS: Section[] = [
     schema: [
       { key: 'title', label: 'عنوان الخطوة', type: 'text' },
       { key: 'description', label: 'وصف الخطوة', type: 'textarea' },
+    ]
+  },
+  {
+    key: 'trusted_partners',
+    title: 'شركاء النجاح',
+    type: 'array',
+    schema: [
+      { key: 'name', label: 'اسم الشريك', type: 'text' },
+      { key: 'logo', label: 'شعار الشريك (رابط الصورة)', type: 'image' },
     ]
   },
   { 
@@ -108,6 +135,7 @@ const SECTIONS: Section[] = [
 ];
 
 const ContentManager = memo(({ contents, fetchContents, token }: ContentManagerProps) => {
+  const { refreshContent } = useContent();
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
   const [savingContent, setSavingContent] = useState(false);
@@ -128,6 +156,7 @@ const ContentManager = memo(({ contents, fetchContents, token }: ContentManagerP
       if (response.ok) {
         alert('تم حفظ المحتوى بنجاح');
         fetchContents();
+        refreshContent();
         setEditingKey(null);
         setEditingContent(null);
       } else {
@@ -183,14 +212,24 @@ const ContentManager = memo(({ contents, fetchContents, token }: ContentManagerP
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="flex justify-between items-center bg-gray-50 p-4 rounded-md border border-gray-200">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gray-50 p-4 rounded-md border border-gray-200">
             <h3 className="text-xl font-bold">تعديل: {currentSectionInfo?.title}</h3>
-            <button onClick={() => {
-              setEditingKey(null);
-              setEditingContent(null);
-            }} className="text-gray-500 hover:text-gray-900 font-bold bg-white px-4 py-1 rounded border border-gray-300">
-              العودة / إلغاء
-            </button>
+            <div className="flex gap-2 w-full md:w-auto">
+              <button onClick={() => {
+                setEditingKey(null);
+                setEditingContent(null);
+              }} className="flex-1 md:flex-none text-gray-500 hover:text-gray-900 font-bold bg-white px-4 py-2 rounded border border-gray-300">
+                العودة / إلغاء
+              </button>
+              <button 
+                onClick={handleSaveContent}
+                disabled={savingContent}
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#0284C7] text-white px-6 py-2 rounded hover:bg-[#0369A1] transition-colors font-bold disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                {savingContent ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+              </button>
+            </div>
           </div>
           
           <div className="hidden">
@@ -223,6 +262,7 @@ const ContentManager = memo(({ contents, fetchContents, token }: ContentManagerP
                   value={editingContent.body} 
                   onChange={val => setEditingContent({...editingContent, body: val})} 
                   schema={currentSectionInfo.schema || []}
+                  token={token}
                 />
               </>
             ) : null}
