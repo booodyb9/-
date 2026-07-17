@@ -9,10 +9,10 @@ import 'swiper/css';
 import 'swiper/css/effect-fade';
 
 const defaultHeroImages = [
-  { url: '/images/hero-1.jpg', alt: 'تركيب واجهات زجاجية حديثة في الرياض' },
-  { url: '/images/hero-2.jpg', alt: 'قواطع زجاجية للمكاتب والشركات' },
-  { url: '/images/hero-3.jpg', alt: 'كبائن شاور زجاجية عصرية' },
-  { url: '/images/hero-4.jpg', alt: 'درابزين زجاجي للسلالم بأعلى معايير الأمان' }
+  { url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', alt: 'تركيب واجهات زجاجية حديثة في الرياض' },
+  { url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', alt: 'قواطع زجاجية للمكاتب والشركات' },
+  { url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', alt: 'كبائن شاور زجاجية عصرية' },
+  { url: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', alt: 'درابزين زجاجي للسلالم بأعلى معايير الأمان' }
 ];
 
 export default function Hero() {
@@ -25,7 +25,10 @@ export default function Hero() {
     if (heroImagesContent?.body) {
       try {
         const parsed = JSON.parse(heroImagesContent.body);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const filtered = parsed.filter((img: any) => img.url && typeof img.url === 'string' && img.url.trim() !== '');
+          if (filtered.length > 0) return filtered;
+        }
       } catch (e) {
         console.error("Failed to parse hero images", e);
       }

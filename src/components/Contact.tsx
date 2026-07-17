@@ -14,7 +14,7 @@ export default function Contact() {
   const { getContent } = useContent();
   const contactContent = getContent('contact_content');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: import("react").FormEvent) => {
     e.preventDefault();
     setStatus('submitting');
     

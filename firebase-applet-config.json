@@ -3,8 +3,10 @@
   "appId": "1:503430384461:web:7f6c140630526afe7dc504",
   "apiKey": "AIzaSyAKXyJh1COHCzzmV6vflwYhpZs8iT_StE0",
   "authDomain": "abstract-unity-c6rpq.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-riyadhglassinsta-72fcd57b-e845-40f8-8a7a-b3596f5c420f",
   "storageBucket": "abstract-unity-c6rpq.firebasestorage.app",
   "messagingSenderId": "503430384461",
   "measurementId": "",
-  "oAuthClientId": "503430384461-kjqru4pbctfj75h9rq4gk99uklcjhs4e.apps.googleusercontent.com"
+  "oAuthClientId": "503430384461-kjqru4pbctfj75h9rq4gk99uklcjhs4e.apps.googleusercontent.com",
+  "recaptchaSiteKey": ""
 }

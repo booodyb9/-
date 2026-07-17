@@ -1,15 +1,14 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { auth } from '../lib/firebase';
-import { onAuthStateChanged, User, signInWithPopup, signOut, GoogleAuthProvider } from 'firebase/auth';
-import { googleAuthProvider } from '../lib/firebase';
+import { supabase } from '../lib/supabase';
+import { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   token: string | null;
-  accessToken: string | null;
   isAdmin: boolean;
 }
 
@@ -17,54 +16,55 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState<string | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        const idToken = await user.getIdToken();
-        setToken(idToken);
-        // Note: accessToken from GoogleProvider is only available at sign in time
-        // We will set it in signInWithGoogle.
-        
-        // Register user on backend and get admin status
-        try {
-          const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${idToken}`,
-            },
-          });
-          
-          if (res.ok) {
-            const data = await res.json();
-            setIsAdmin(data.user?.isAdmin || false);
-          }
-        } catch (err) {
-          console.error("Error during login", err);
-        }
-      } else {
-        setToken(null);
-        setAccessToken(null);
-        setIsAdmin(false);
-      }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      checkAdminStatus(session?.user?.id);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      checkAdminStatus(session?.user?.id);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const checkAdminStatus = async (userId: string | undefined) => {
+    if (!userId) {
+      setIsAdmin(false);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('is_admin')
+        .eq('uid', userId)
+        .single();
+      
+      if (!error && data) {
+        setIsAdmin(data.is_admin);
+      } else {
+        setIsAdmin(false);
+      }
+    } catch (err) {
+      console.error('Error checking admin status', err);
+      setIsAdmin(false);
+    }
+  };
 
   const signInWithGoogle = async () => {
     try {
-      const result = await signInWithPopup(auth, googleAuthProvider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      if (credential?.accessToken) {
-        setAccessToken(credential.accessToken);
-      }
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
     } catch (error) {
       console.error("Error signing in with Google", error);
     }
@@ -72,14 +72,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await signOut(auth);
+      await supabase.auth.signOut();
     } catch (error) {
       console.error("Error signing out", error);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, logout, token, isAdmin, accessToken }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session,
+      loading, 
+      signInWithGoogle, 
+      logout, 
+      token: session?.access_token || null, 
+      isAdmin 
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { supabase } from '../lib/supabase';
 
 export default function ChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,25 +11,19 @@ export default function ChatBubble() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: import("react").FormEvent) => {
     e.preventDefault();
     if (!name || !email || !message) return;
-
+    
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          message: `[سؤال عبر المحادثة السريعة]: ${message}`
-        }),
+      const { error } = await supabase.from('messages').insert({
+        name,
+        email,
+        message: `[سؤال عبر المحادثة السريعة]: ${message}`
       });
 
-      if (response.ok) {
+      if (!error) {
         setIsSuccess(true);
         setTimeout(() => {
           setIsOpen(false);
@@ -77,7 +72,6 @@ export default function ChatBubble() {
               <div className="bg-white p-3 rounded-lg rounded-tr-none shadow-sm text-sm text-gray-700 border border-gray-100 mb-4 inline-block">
                 مرحباً بك! هل لديك أي استفسار حول مواصفات الزجاج أو خدماتنا؟
               </div>
-
               {isSuccess && (
                 <div className="bg-[#E0F2FE] p-3 rounded-lg shadow-sm text-sm text-[#0284C7] border border-[#BAE6FD] inline-block">
                   تم إرسال رسالتك بنجاح! سنتواصل معك قريباً.

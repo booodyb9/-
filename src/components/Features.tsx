@@ -69,7 +69,9 @@ export default function Features() {
     if (imageContent?.body) {
       try {
         const parsed = JSON.parse(imageContent.body);
-        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].image) return parsed[0].image;
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].image && typeof parsed[0].image === 'string' && parsed[0].image.trim() !== '') {
+          return parsed[0].image;
+        }
       } catch (e) {}
     }
     return "https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=80&w=2069&auto=format&fit=crop";

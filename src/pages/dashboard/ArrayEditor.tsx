@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, ChevronUp, ChevronDown, Upload } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
+import { supabase } from '../../lib/supabase';
 
 interface ArrayEditorProps {
   value: string; // JSON string
@@ -64,7 +65,7 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
     notifyChange(newItems);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number, key: string) => {
+  const handleImageUpload = async (e: import("react").ChangeEvent<HTMLInputElement>, index: number, key: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -79,32 +80,32 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
       
       const compressedFile = await imageCompression(file, options);
       
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(compressedFile);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = error => reject(error);
-      });
-      
-      const response = await fetch('/api/admin/images', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token || ''}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: file.name,
-          url: base64
-        })
-      });
+      const fileName = `${Date.now()}_${file.name}`;
+      const { data, error } = await supabase.storage
+        .from('media')
+        .upload(fileName, compressedFile);
 
-      if (response.ok) {
-        const uploadedImg = await response.json();
-        const imageUrl = uploadedImg.image?.url || base64;
-        updateItem(index, key, imageUrl);
-      } else {
-        alert('حدث خطأ أثناء رفع الصورة');
+      if (error) {
+        throw error;
       }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('media')
+        .getPublicUrl(fileName);
+        
+      const downloadURL = publicUrlData.publicUrl;
+
+      const { data: dbImage, error: dbError } = await supabase
+        .from('images')
+        .insert({ name: file.name, url: downloadURL })
+        .select()
+        .single();
+        
+      if (dbError) {
+        throw dbError;
+      }
+
+      updateItem(index, key, dbImage.url);
     } catch (error) {
       console.error("Upload error:", error);
       alert('فشل رفع الصورة');
@@ -164,7 +165,7 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
                         disabled={uploadingIndex?.index === index && uploadingIndex?.key === field.key}
                       />
                     </label>
-                    {item[field.key] && (
+                    {item[field.key] && typeof item[field.key] === 'string' && item[field.key].trim() !== '' && (
                       <div className="relative w-full h-40 rounded-lg border border-gray-200 overflow-hidden group">
                          <img src={item[field.key]} alt="Preview" className="w-full h-full object-cover" />
                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

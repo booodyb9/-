@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
 import { Content } from '../pages/dashboard/types';
 
 interface ContentContextType {
@@ -16,9 +17,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const fetchContents = async () => {
     try {
-      const res = await fetch('/api/contents');
-      const data = await res.json();
-      setContents(data);
+      const { data, error } = await supabase.from('contents').select('*');
+      if (error) throw error;
+      setContents(data || []);
     } catch (err) {
       console.error("Error fetching contents:", err);
     } finally {
@@ -28,6 +29,26 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchContents();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('contents-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'contents'
+        },
+        () => {
+          fetchContents();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const getContent = (key: string) => contents.find(c => c.key === key);

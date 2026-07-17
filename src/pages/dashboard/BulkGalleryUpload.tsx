@@ -1,6 +1,7 @@
 import { useState, useCallback, memo } from 'react';
 import { Upload, Image as ImageIcon, CheckCircle, AlertCircle } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
+import { supabase } from '../../lib/supabase';
 import { Content } from './types';
 import { useContent } from '../../contexts/ContentContext';
 
@@ -27,8 +28,8 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<{ total: number; current: number; failed: number } | null>(null);
 
-  const handleBulkUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const handleBulkUpload = useCallback(async (e: import("react").ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []) as File[];
     if (!files.length) return;
 
     if (!confirm(`هل أنت متأكد من رفع ${files.length} صورة إلى قسم "${selectedCategory}"؟`)) {
@@ -40,7 +41,6 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
     setProgress({ total: files.length, current: 0, failed: 0 });
 
     const newGalleryItems = [];
-
     let current = 0;
     let failed = 0;
 
@@ -54,44 +54,36 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
         
         const compressedFile = await imageCompression(file, options);
         
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(compressedFile);
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = error => reject(error);
-        });
-        
-        const response = await fetch('/api/admin/images', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            name: file.name,
-            url: base64
-          })
-        });
+        const fileName = `${Date.now()}_${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(fileName, compressedFile);
 
-        if (response.ok) {
-          const uploadedImg = await response.json();
-          // The API returns { id, name, url } typically (based on db). 
-          // Assuming it returns an object with url, or if not, we use the base64 URL or fetch media again.
-          // Let's use the base64 as the image url just in case, but usually we want the permanent one.
-          // We can also fetch the exact URL if the API returns it.
-          const imageUrl = uploadedImg.url || base64; 
+        if (uploadError) throw uploadError;
 
-          newGalleryItems.push({
-            title: file.name.split('.')[0], // Use filename without extension as title
-            category: selectedCategory,
-            description: '',
-            image: imageUrl,
-            className: 'md:col-span-1 md:row-span-1',
-          });
-          current++;
-        } else {
-          failed++;
-        }
+        const { data: publicUrlData } = supabase.storage
+          .from('media')
+          .getPublicUrl(fileName);
+          
+        const downloadURL = publicUrlData.publicUrl;
+
+        const { data: dbImage, error: dbError } = await supabase
+          .from('images')
+          .insert({ name: file.name, url: downloadURL })
+          .select()
+          .single();
+          
+        if (dbError) throw dbError;
+
+        newGalleryItems.push({
+          title: file.name.split('.')[0],
+          category: selectedCategory,
+          description: '',
+          image: dbImage.url,
+          class_name: 'md:col-span-1 md:row-span-1',
+          order_index: Date.now()
+        });
+        current++;
       } catch (error) {
         console.error("Upload error for file:", file.name, error);
         failed++;
@@ -100,49 +92,23 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
     }
 
     if (newGalleryItems.length > 0) {
-      // Update gallery_items content
-      const existingGalleryContent = contents.find(c => c.key === 'gallery_items');
-      let currentItems = [];
       try {
-        if (existingGalleryContent?.body) {
-          currentItems = JSON.parse(existingGalleryContent.body);
-        }
-      } catch (err) {}
-
-      const updatedItems = [...currentItems, ...newGalleryItems];
-      
-      const payload = {
-        key: 'gallery_items',
-        title: existingGalleryContent?.title || 'معرض الأعمال (الصور)',
-        type: 'array',
-        body: JSON.stringify(updatedItems)
-      };
-
-      try {
-        const contentRes = await fetch('/api/admin/contents', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-
-        if (contentRes.ok) {
-          fetchContents();
-          fetchMedia();
-          refreshContent();
-        }
+        const { error } = await supabase
+          .from('projects')
+          .insert(newGalleryItems);
+          
+        if (error) throw error;
+        
+        fetchMedia();
       } catch (error) {
-        console.error("Failed to update content context:", error);
+        console.error("Error saving to Supabase:", error);
       }
     }
 
     setUploading(false);
     setTimeout(() => setProgress(null), 3000);
     e.target.value = '';
-
-  }, [selectedCategory, token, contents, fetchContents, fetchMedia]);
+  }, [selectedCategory, fetchMedia]);
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -217,6 +183,6 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
     </div>
   );
 });
-
 BulkGalleryUpload.displayName = 'BulkGalleryUpload';
+
 export default BulkGalleryUpload;

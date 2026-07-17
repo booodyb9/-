@@ -1,71 +1,68 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
-import { useContent } from '../contexts/ContentContext';
+import { supabase } from '../lib/supabase';
 
-const defaultProjects = [
-  {
-    title: 'قواطع زجاجية لمكاتب شركة',
-    category: 'قواطع داخلية',
-    image: '/images/gallery-1.jpg',
-    description: 'تنفيذ وتركيب قواطع زجاجية سيكوريت 12 ملم لمكاتب إدارية، توفر بيئة عمل عصرية وعزلاً صوتياً ممتازاً.',
-    className: 'md:col-span-2 md:row-span-2'
-  },
-  {
-    title: 'كابينة شاور زاوية مفصلية',
-    category: 'كبائن شاور',
-    image: '/images/gallery-2.jpg',
-    description: 'تصميم وتركيب كابينة استحمام زاوية بزجاج سيكوريت عالي السماكة مع إكسسوارات ستانلس ستيل مقاومة للصدأ.',
-    className: 'md:col-span-1 md:row-span-1'
-  },
-  {
-    title: 'واجهة زجاجية لمعرض تجاري',
-    category: 'واجهات معارض',
-    image: '/images/gallery-3.jpg',
-    description: 'تركيب واجهة زجاجية استركشر لمعرض، تتيح أقصى رؤية للمنتجات مع توفير الحماية المطلوبة.',
-    className: 'md:col-span-1 md:row-span-1'
-  },
-  {
-    title: 'درابزين زجاجي لسلم داخلي',
-    category: 'درابزين زجاج',
-    image: '/images/gallery-4.jpg',
-    description: 'تركيب درابزين زجاجي أنيق للسلالم بلمسات عصرية تزيد من فخامة واتساع المكان.',
-    className: 'md:col-span-1 md:row-span-2'
-  },
-  {
-    title: 'مرآة ليد (LED) ذكية مضيئة',
-    category: 'مرايا ديكور',
-    image: '/images/gallery-5.jpg',
-    description: 'تفصيل مرآة حمام ذكية مع إضاءة ليد (LED) مدمجة بتصميم هندسي راقي.',
-    className: 'md:col-span-1 md:row-span-1'
-  },
-  {
-    title: 'باب زجاجي سحاب للحديقة',
-    category: 'أبواب ونوافذ',
-    image: '/images/gallery-6.jpg',
-    description: 'تركيب أبواب زجاجية سحابة تطل على الحديقة الخارجية، تمتاز بسهولة الحركة والعزل الحراري.',
-    className: 'md:col-span-1 md:row-span-1'
-  }
-];
+interface Project {
+  id: string;
+  title: string;
+  category: string;
+  image: string;
+  description: string;
+  className?: string;
+  order?: number;
+  class_name?: string;
+  order_index?: number;
+}
 
 export default function Gallery() {
   const [activeCategory, setActiveCategory] = useState('الكل');
-  const [selectedProject, setSelectedProject] = useState<any | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const phoneNumber = "966510233706";
-  const { getContent } = useContent();
 
-  const itemsContent = getContent('gallery_items');
-  const projects = useMemo(() => {
-    if (itemsContent?.body) {
-      try {
-        const parsed = JSON.parse(itemsContent.body);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch (e) {
-        console.error("Failed to parse gallery items", e);
-      }
+  const fetchProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('order_index', { ascending: true });
+        
+      if (error) throw error;
+      
+      const validProjects = (data as Project[]).filter(p => p.image && typeof p.image === 'string' && p.image.trim() !== '');
+      validProjects.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+      setProjects(validProjects);
+    } catch (error) {
+      console.error("Error fetching projects from Supabase: ", error);
+    } finally {
+      setLoading(false);
     }
-    return defaultProjects;
-  }, [itemsContent]);
+  };
+
+  useEffect(() => {
+    fetchProjects();
+
+    const channel = supabase
+      .channel('projects-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'projects'
+        },
+        () => {
+          fetchProjects();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const categories = ['الكل', ...new Set(projects.map(p => p.category))];
 
@@ -119,13 +116,13 @@ export default function Gallery() {
             {filteredProjects.map((project) => (
               <motion.div
                 layout
-                key={project.title}
+                key={project.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.3 }}
                 className={`group relative overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer ${
-                  activeCategory === 'الكل' ? project.className || '' : 'md:col-span-1 row-span-1'
+                  activeCategory === 'الكل' ? project.className || 'md:col-span-1 row-span-1' : 'md:col-span-1 row-span-1'
                 }`}
                 onClick={() => setSelectedProject(project)}
               >

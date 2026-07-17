@@ -1,9 +1,10 @@
 import { memo, useState, useCallback } from 'react';
 import { Image, Upload, Trash2, Edit3 } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
+import { supabase } from '../../lib/supabase';
 
 interface MediaFile {
-  id: number;
+  id: string;
   name: string;
   url: string;
 }
@@ -14,10 +15,10 @@ interface MediaLibraryProps {
   token: string | null;
 }
 
-const MediaLibrary = memo(({ mediaFiles, fetchMedia, token }: MediaLibraryProps) => {
+const MediaLibrary = memo(({ mediaFiles, fetchMedia }: MediaLibraryProps) => {
   const [uploadingMedia, setUploadingMedia] = useState(false);
 
-  const handleUploadMedia = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadMedia = useCallback(async (e: import("react").ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -31,58 +32,60 @@ const MediaLibrary = memo(({ mediaFiles, fetchMedia, token }: MediaLibraryProps)
       
       const compressedFile = await imageCompression(file, options);
       
-      // Convert to base64
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(compressedFile);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = error => reject(error);
-      });
-      
-      const response = await fetch('/api/admin/images', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: file.name,
-          url: base64
-        })
-      });
+      const fileName = `${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(fileName, compressedFile);
 
-      if (response.ok) {
-        alert('تم ضغط ورفع الصورة بنجاح');
-        fetchMedia();
-      } else {
-        alert('حدث خطأ أثناء رفع الصورة');
-      }
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('media')
+        .getPublicUrl(fileName);
+        
+      const downloadURL = publicUrlData.publicUrl;
+
+      const { error: dbError } = await supabase
+        .from('images')
+        .insert({ name: file.name, url: downloadURL });
+        
+      if (dbError) throw dbError;
+
+      alert('تم ضغط ورفع الصورة بنجاح');
+      fetchMedia();
     } catch (error) {
       console.error("Upload error:", error);
       alert('حدث خطأ أثناء رفع الصورة');
     } finally {
       setUploadingMedia(false);
+      e.target.value = '';
     }
-  }, [fetchMedia, token]);
+  }, [fetchMedia]);
 
-  const handleDeleteMedia = useCallback(async (id: number) => {
+  const handleDeleteMedia = useCallback(async (id: string, url: string) => {
     if (!confirm('هل أنت متأكد من حذف هذه الصورة؟')) return;
     try {
-      const response = await fetch(`/api/admin/images/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+      // Also delete from storage if it's a Supabase URL
+      if (url.includes('supabase.co')) {
+        const urlObj = new URL(url);
+        const pathParts = urlObj.pathname.split('/');
+        const fileName = pathParts[pathParts.length - 1];
+        if (fileName) {
+          await supabase.storage.from('media').remove([fileName]);
         }
-      });
-      if (response.ok) {
-        alert('تم حذف الصورة');
-        fetchMedia();
       }
+
+      const { error } = await supabase.from('images').delete().eq('id', id);
+      
+      if (error) throw error;
+      
+      alert('تم حذف الصورة');
+      fetchMedia();
     } catch (error) {
       console.error("Delete error:", error);
       alert('حدث خطأ أثناء الحذف');
     }
-  }, [fetchMedia, token]);
+  }, [fetchMedia]);
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -114,8 +117,12 @@ const MediaLibrary = memo(({ mediaFiles, fetchMedia, token }: MediaLibraryProps)
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {mediaFiles.map((file) => (
-            <div key={file.id} className="relative group rounded-lg overflow-hidden border border-gray-200 shadow-sm aspect-square bg-gray-100">
-              <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+            <div key={file.id} className="relative group rounded-lg overflow-hidden border border-gray-200 shadow-sm aspect-square bg-gray-100 flex items-center justify-center">
+              {file.url && typeof file.url === 'string' && file.url.trim() !== '' ? (
+                <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-gray-400 text-sm">صورة غير صالحة</span>
+              )}
               <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <button 
                   onClick={() => {
@@ -128,7 +135,7 @@ const MediaLibrary = memo(({ mediaFiles, fetchMedia, token }: MediaLibraryProps)
                   <Edit3 className="w-4 h-4" />
                 </button>
                 <button 
-                  onClick={() => handleDeleteMedia(file.id)}
+                  onClick={() => handleDeleteMedia(file.id, file.url)}
                   className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
                   title="حذف الصورة"
                 >
@@ -142,6 +149,6 @@ const MediaLibrary = memo(({ mediaFiles, fetchMedia, token }: MediaLibraryProps)
     </div>
   );
 });
-
 MediaLibrary.displayName = 'MediaLibrary';
+
 export default MediaLibrary;

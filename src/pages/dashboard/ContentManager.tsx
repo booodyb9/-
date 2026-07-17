@@ -144,23 +144,25 @@ const ContentManager = memo(({ contents, fetchContents, token }: ContentManagerP
     if (!editingContent) return;
     setSavingContent(true);
     try {
-      const response = await fetch('/api/admin/contents', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(editingContent)
-      });
+      const { supabase } = await import('../../lib/supabase');
+      const { error } = await supabase
+        .from('contents')
+        .upsert({
+          key: editingContent.key,
+          title: editingContent.title,
+          body: editingContent.body,
+          type: editingContent.type,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key' });
 
-      if (response.ok) {
+      if (!error) {
         alert('تم حفظ المحتوى بنجاح');
         fetchContents();
         refreshContent();
         setEditingKey(null);
         setEditingContent(null);
       } else {
-        alert('فشل في حفظ المحتوى');
+        alert('فشل في حفظ المحتوى: ' + error.message);
       }
     } catch (error) {
       console.error("Failed to save content:", error);

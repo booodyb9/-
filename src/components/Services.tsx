@@ -9,37 +9,37 @@ const defaultServices = [
     icon: 'Building',
     title: 'واجهات زجاجية واستركشر',
     description: 'تركيب واجهات زجاجية (كرتن وول) واستركشر للمباني التجارية والمحلات، بتصاميم عصرية مقاومة للعوامل الجوية وتوفر عزلاً حرارياً وصوتياً ممتازاً.',
-    image: '/images/service-facades.jpg'
+    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
   },
   {
     icon: 'LayoutGrid',
     title: 'قواطع زجاجية مكتبية',
     description: 'تقسيم مساحات العمل والمكاتب بقواطع زجاجية سيكوريت عازلة للصوت، تمنح المكان اتساعاً ورؤية واضحة وتزيد من إنتاجية بيئة العمل.',
-    image: '/images/service-partitions.jpg'
+    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
   },
   {
     icon: 'Home',
     title: 'درابزين زجاجي للسلالم',
     description: 'تفصيل وتركيب درابزين زجاجي فاخر للسلالم والبلكونات، يجمع بين متانة الزجاج السيكوريت والتصميم الأنيق لإضافة لمسة فخامة للمكان.',
-    image: '/images/service-handrails.jpg'
+    image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
   },
   {
     icon: 'Droplets',
     title: 'كبائن شاور',
     description: 'تصميم وتركيب كبائن الاستحمام الزجاجية (الشاور) بأجود أنواع الزجاج السيكوريت المقاوم للكسر، مع إكسسوارات مقاومة للصدأ تدوم طويلاً.',
-    image: '/images/service-showers.jpg'
+    image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
   },
   {
     icon: 'Maximize',
     title: 'مرايا ديكورية وذكية',
     description: 'تفصيل مرايا ديكورية حديثة ومرايا ليد (LED) ذكية مضيئة للحمامات والصالات الرياضية والمداخل، بأبعاد وتصاميم هندسية دقيقة.',
-    image: '/images/service-mirrors.jpg'
+    image: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
   },
   {
     icon: 'Store',
     title: 'واجهات وأبواب سيكوريت',
     description: 'تنفيذ وتركيب أبواب سيكوريت مفصلية وسحابة أوتوماتيكية للفلل والمولات التجارية، تمتاز بالقوة والمتانة وسهولة الاستخدام.',
-    image: '/images/service-doors.jpg'
+    image: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
   }
 ];
 
@@ -110,11 +110,13 @@ export default function Services() {
               className="bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-shadow duration-300 group border border-gray-200 flex flex-col"
             >
               <div className="h-48 overflow-hidden relative shrink-0">
-                <img
-                  src={service.image}
-                  alt={service.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+                {service.image && typeof service.image === 'string' && service.image.trim() !== '' && (
+                  <img
+                    src={service.image}
+                    alt={service.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
               <div className="p-8 flex flex-col flex-grow">

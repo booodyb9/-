@@ -7,9 +7,11 @@ import DriveBackup from './dashboard/DriveBackup';
 import ContentManager from './dashboard/ContentManager';
 import BulkGalleryUpload from './dashboard/BulkGalleryUpload';
 import { Message, Content, MediaFile } from './dashboard/types';
+import { supabase } from '../lib/supabase';
 
 export default function Dashboard() {
-  const { user, loading, signInWithGoogle, logout, token, accessToken } = useAuth();
+  const { user, loading, signInWithGoogle, logout, token, accessToken, isAdmin } = useAuth();
+  
   const [messages, setMessages] = useState<Message[]>([]);
   const [contents, setContents] = useState<Content[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -17,20 +19,11 @@ export default function Dashboard() {
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
 
-  useEffect(() => {
-    if (user && token) {
-      fetchMessages();
-      fetchContents();
-      fetchMedia();
-    }
-  }, [user, token]);
-
   const fetchMedia = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/images');
-      if (response.ok) {
-        const data = await response.json();
-        setMediaFiles(data);
+      const { data, error } = await supabase.from('images').select('*').order('created_at', { ascending: false });
+      if (!error && data) {
+        setMediaFiles(data as any);
       }
     } catch (error) {
       console.error("Failed to fetch media:", error);
@@ -40,40 +33,42 @@ export default function Dashboard() {
   const fetchMessages = useCallback(async () => {
     setLoadingMessages(true);
     try {
-      const response = await fetch('/api/admin/messages', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data);
+      const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+      if (!error && data) {
+        // map created_at to createdAt for the component
+        setMessages(data.map(m => ({ ...m, createdAt: m.created_at })) as any);
       }
     } catch (error) {
       console.error("Failed to fetch messages:", error);
     } finally {
       setLoadingMessages(false);
     }
-  }, [token]);
+  }, []);
 
   const fetchContents = useCallback(async () => {
     try {
-      const response = await fetch('/api/contents');
-      if (response.ok) {
-        const data = await response.json();
-        setContents(data);
+      const { data, error } = await supabase.from('contents').select('*');
+      if (!error && data) {
+        setContents(data as any);
       }
     } catch (error) {
       console.error("Failed to fetch contents:", error);
     }
   }, []);
 
+  useEffect(() => {
+    if (user && isAdmin) {
+      fetchMessages();
+      fetchContents();
+      fetchMedia();
+    }
+  }, [user, isAdmin, fetchMessages, fetchContents, fetchMedia]);
+
   const backupToDrive = useCallback(async () => {
     if (!accessToken) {
       alert("الرجاء تسجيل الدخول مرة أخرى للحصول على صلاحيات Google Drive");
       return;
     }
-
     setIsBackingUp(true);
     try {
       const backupData = {
@@ -82,17 +77,17 @@ export default function Dashboard() {
         contents,
         mediaFiles
       };
-
+      
       const fileContent = JSON.stringify(backupData, null, 2);
       const metadata = {
         name: `Website_Backup_${new Date().toISOString().split('T')[0]}.json`,
         mimeType: 'application/json',
       };
-
+      
       const form = new FormData();
       form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
       form.append('file', new Blob([fileContent], { type: 'application/json' }));
-
+      
       const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
         headers: {
@@ -128,18 +123,32 @@ export default function Dashboard() {
     return <div className="min-h-screen flex items-center justify-center">جاري التحميل...</div>;
   }
 
-  if (!user) {
+  if (!user || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">لوحة التحكم</h2>
-          <p className="text-gray-600 mb-8">الرجاء تسجيل الدخول للوصول إلى لوحة التحكم</p>
-          <button
-            onClick={signInWithGoogle}
-            className="w-full bg-[#0284C7] text-white py-3 px-4 rounded-md hover:bg-[#0369A1] transition-colors font-bold"
-          >
-            تسجيل الدخول باستخدام Google
-          </button>
+          {!user ? (
+            <>
+              <p className="text-gray-600 mb-8">الرجاء تسجيل الدخول للوصول إلى لوحة التحكم</p>
+              <button 
+                onClick={signInWithGoogle}
+                className="w-full bg-[#0284C7] text-white py-3 px-4 rounded-md hover:bg-[#0369A1] transition-colors font-bold"
+              >
+                تسجيل الدخول باستخدام حساب Google
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-red-600 mb-8 font-bold">ليس لديك صلاحية الدخول كمسؤول</p>
+              <button 
+                onClick={logout}
+                className="w-full bg-gray-200 text-gray-800 py-3 px-4 rounded-md hover:bg-gray-300 transition-colors font-bold"
+              >
+                تسجيل الخروج
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -147,7 +156,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
-      <aside className="w-full md:w-64 bg-white shadow-md flex flex-col h-auto md:h-screen sticky top-0">
+      <aside className="w-full md:w-64 bg-white shadow-md flex flex-col h-auto md:h-screen sticky top-0 z-10">
         <div className="p-6 border-b border-gray-200">
           <h1 className="text-xl font-bold text-gray-900">لوحة تحكم الموقع</h1>
         </div>
@@ -166,7 +175,7 @@ export default function Dashboard() {
           ))}
         </nav>
         <div className="p-4 border-t border-gray-200">
-          <button
+          <button 
             onClick={logout}
             className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg font-bold transition-colors"
           >

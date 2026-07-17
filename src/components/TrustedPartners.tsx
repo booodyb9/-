@@ -19,7 +19,9 @@ export default function TrustedPartners() {
     if (partnersContent?.body) {
       try {
         const parsed = JSON.parse(partnersContent.body);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.filter((p: any) => p.logo && typeof p.logo === 'string' && p.logo.trim() !== '');
+        }
       } catch (e) {
         console.error("Failed to parse trusted partners", e);
       }
