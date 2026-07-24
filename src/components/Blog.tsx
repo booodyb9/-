@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Calendar, ArrowLeft } from 'lucide-react';
@@ -104,10 +105,10 @@ export default function Blog() {
                   {post.excerpt}
                 </p>
                 <div className="mt-auto">
-                  <button className="flex items-center text-[#0284C7] font-bold group-hover:text-[#0369A1] transition-colors">
+                  <Link to={`/blog/${encodeURIComponent(post.title.replace(/\s+/g, '-').toLowerCase())}`} className="flex items-center text-[#0284C7] font-bold group-hover:text-[#0369A1] transition-colors">
                     اقرأ المزيد
                     <ArrowLeft className="h-4 w-4 mr-2 transform group-hover:-translate-x-1 transition-transform" />
-                  </button>
+                  </Link>
                 </div>
               </div>
             </motion.article>

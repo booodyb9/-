@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, ChevronUp, ChevronDown, Upload } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
-import { supabase } from '../../lib/supabase';
+
 
 interface ArrayEditorProps {
   value: string; // JSON string
@@ -80,32 +80,15 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
       
       const compressedFile = await imageCompression(file, options);
       
-      const fileName = `${Date.now()}_${file.name}`;
-      const { data, error } = await supabase.storage
-        .from('media')
-        .upload(fileName, compressedFile);
+      const downloadURL = URL.createObjectURL(compressedFile);
+      const newImage = { id: Date.now().toString(), name: file.name, url: downloadURL, created_at: new Date().toISOString() };
+      
+      const storedImages = localStorage.getItem('mock_images');
+      let mockImages = storedImages ? JSON.parse(storedImages) : [];
+      mockImages.push(newImage);
+      localStorage.setItem('mock_images', JSON.stringify(mockImages));
 
-      if (error) {
-        throw error;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from('media')
-        .getPublicUrl(fileName);
-        
-      const downloadURL = publicUrlData.publicUrl;
-
-      const { data: dbImage, error: dbError } = await supabase
-        .from('images')
-        .insert({ name: file.name, url: downloadURL })
-        .select()
-        .single();
-        
-      if (dbError) {
-        throw dbError;
-      }
-
-      updateItem(index, key, dbImage.url);
+      updateItem(index, key, newImage.url);
     } catch (error) {
       console.error("Upload error:", error);
       alert('فشل رفع الصورة');

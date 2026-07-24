@@ -1,6 +1,18 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { supabase } from '../lib/supabase';
-import { User, Session } from '@supabase/supabase-js';
+
+export interface User {
+  id: string;
+  email?: string;
+  user_metadata?: {
+    avatar_url?: string;
+    full_name?: string;
+  };
+}
+
+export interface Session {
+  access_token: string;
+  user: User;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -21,58 +33,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      checkAdminStatus(session?.user?.id);
-      setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      checkAdminStatus(session?.user?.id);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const checkAdminStatus = async (userId: string | undefined) => {
-    if (!userId) {
-      setIsAdmin(false);
-      return;
-    }
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('is_admin')
-        .eq('uid', userId)
-        .single();
-      
-      if (!error && data) {
-        setIsAdmin(data.is_admin);
-      } else {
-        setIsAdmin(false);
+    // Mock local session
+    const storedAuth = localStorage.getItem('mock_auth');
+    if (storedAuth) {
+      try {
+        const parsed = JSON.parse(storedAuth);
+        setSession(parsed.session);
+        setUser(parsed.user);
+        setIsAdmin(true); // default to admin for mock
+      } catch (e) {
+        console.error("Failed to parse mock auth", e);
       }
-    } catch (err) {
-      console.error('Error checking admin status', err);
-      setIsAdmin(false);
     }
-  };
+    setLoading(false);
+  }, []);
 
   const signInWithGoogle = async () => {
     try {
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
-      });
+      const mockUser = {
+        id: 'mock_user_id',
+        email: 'admin@example.com',
+        user_metadata: {
+          full_name: 'Admin User',
+        }
+      };
+      const mockSession = {
+        access_token: 'mock_token',
+        user: mockUser
+      };
+      localStorage.setItem('mock_auth', JSON.stringify({ session: mockSession, user: mockUser }));
+      setUser(mockUser);
+      setSession(mockSession);
+      setIsAdmin(true);
     } catch (error) {
-      console.error("Error signing in with Google", error);
+      console.error("Error signing in", error);
     }
   };
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      localStorage.removeItem('mock_auth');
+      setUser(null);
+      setSession(null);
+      setIsAdmin(false);
     } catch (error) {
       console.error("Error signing out", error);
     }

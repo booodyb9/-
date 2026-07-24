@@ -1,34 +1,36 @@
+import { Link } from "react-router-dom";
 import { Building2, Phone, Menu, X, Search, Globe, Calendar, CalendarDays, CheckCircle2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence, useScroll, useSpring } from 'motion/react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useContent } from '../contexts/ContentContext';
 
 const searchDataAr = [
-  { title: 'الواجهات الزجاجية', category: 'الخدمات', href: '#services' },
-  { title: 'القواطع المكتبية', category: 'الخدمات', href: '#services' },
-  { title: 'كبائن الشاور', category: 'الخدمات', href: '#services' },
-  { title: 'الأبواب والنوافذ', category: 'الخدمات', href: '#services' },
-  { title: 'درابزين زجاجي', category: 'الخدمات', href: '#services' },
-  { title: 'مرايا ديكورية وذكية', category: 'الخدمات', href: '#services' },
-  { title: 'معرض المشاريع والأعمال', category: 'أعمالنا', href: '#gallery' },
-  { title: 'الأسئلة الشائعة', category: 'معلومات', href: '#faq' },
-  { title: 'دليل العناية بالزجاج وصيانته', category: 'صيانة', href: '#maintenance' },
-  { title: 'طرق تنظيف الزجاج المقسى (السيكوريت)', category: 'صيانة', href: '#maintenance' },
-  { title: 'تواصل معنا لطلب تسعيرة', category: 'تواصل', href: '#contact' },
+  { title: 'الواجهات الزجاجية', category: 'الخدمات', href: '/services' },
+  { title: 'القواطع المكتبية', category: 'الخدمات', href: '/services' },
+  { title: 'كبائن الشاور', category: 'الخدمات', href: '/services' },
+  { title: 'الأبواب والنوافذ', category: 'الخدمات', href: '/services' },
+  { title: 'درابزين زجاجي', category: 'الخدمات', href: '/services' },
+  { title: 'مرايا ديكورية وذكية', category: 'الخدمات', href: '/services' },
+  { title: 'معرض المشاريع والأعمال', category: 'أعمالنا', href: '/portfolio' },
+  { title: 'الأسئلة الشائعة', category: 'معلومات', href: '/faq' },
+  { title: 'دليل العناية بالزجاج وصيانته', category: 'صيانة', href: '/blog' },
+  { title: 'طرق تنظيف الزجاج المقسى (السيكوريت)', category: 'صيانة', href: '/blog' },
+  { title: 'تواصل معنا لطلب تسعيرة', category: 'تواصل', href: '/contact' },
 ];
 
 const searchDataEn = [
-  { title: 'Glass Facades', category: 'Services', href: '#services' },
-  { title: 'Office Partitions', category: 'Services', href: '#services' },
-  { title: 'Shower Cabins', category: 'Services', href: '#services' },
-  { title: 'Doors & Windows', category: 'Services', href: '#services' },
-  { title: 'Glass Balustrades', category: 'Services', href: '#services' },
-  { title: 'Decorative Mirrors', category: 'Services', href: '#services' },
-  { title: 'Projects Gallery', category: 'Gallery', href: '#gallery' },
-  { title: 'Frequently Asked Questions', category: 'Info', href: '#faq' },
-  { title: 'Glass Maintenance Guide', category: 'Maintenance', href: '#maintenance' },
-  { title: 'Tempered Glass Cleaning Methods', category: 'Maintenance', href: '#maintenance' },
-  { title: 'Contact Us for a Quote', category: 'Contact', href: '#contact' },
+  { title: 'Glass Facades', category: 'Services', href: '/services' },
+  { title: 'Office Partitions', category: 'Services', href: '/services' },
+  { title: 'Shower Cabins', category: 'Services', href: '/services' },
+  { title: 'Doors & Windows', category: 'Services', href: '/services' },
+  { title: 'Glass Balustrades', category: 'Services', href: '/services' },
+  { title: 'Decorative Mirrors', category: 'Services', href: '/services' },
+  { title: 'Projects Gallery', category: 'Gallery', href: '/portfolio' },
+  { title: 'Frequently Asked Questions', category: 'Info', href: '/faq' },
+  { title: 'Glass Maintenance Guide', category: 'Maintenance', href: '/blog' },
+  { title: 'Tempered Glass Cleaning Methods', category: 'Maintenance', href: '/blog' },
+  { title: 'Contact Us for a Quote', category: 'Contact', href: '/contact' },
 ];
 
 export default function Navbar() {
@@ -56,19 +58,97 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = language === 'ar' ? [
-    { name: 'الرئيسية', href: '#' },
-    { name: 'خدماتنا', href: '#services' },
-    { name: 'أعمالنا', href: '#gallery' },
-    { name: 'تواصل معنا', href: '#contact' },
-  ] : [
-    { name: 'Home', href: '#' },
-    { name: 'Services', href: '#services' },
-    { name: 'Gallery', href: '#gallery' },
-    { name: 'Contact Us', href: '#contact' },
-  ];
+  const { getContent } = useContent();
+  const navContent = getContent('navigation_links');
+  
+  const navLinks = useMemo(() => {
+    if (navContent && navContent.body) {
+      try {
+        const parsed = JSON.parse(navContent.body);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.map((item: any) => ({ name: item.label, href: item.href }));
+        }
+      } catch (e) {}
+    }
+    return language === 'ar' ? [
+      { name: 'الرئيسية', href: '/' },
+      { name: 'خدماتنا', href: '/services' },
+      { name: 'أعمالنا', href: '/portfolio' },
+      { name: 'تواصل معنا', href: '/contact' },
+    ] : [
+      { name: 'Home', href: '/' },
+      { name: 'Services', href: '/services' },
+      { name: 'Gallery', href: '/portfolio' },
+      { name: 'Contact Us', href: '/contact' },
+    ];
+  }, [language, navContent]);
 
-  const searchData = language === 'ar' ? searchDataAr : searchDataEn;
+  const servicesContent = getContent('services_items');
+  const portfolioContent = getContent('gallery_items');
+  const blogContent = getContent('blog_items');
+  const faqContent = getContent('faq_items');
+
+  const dynamicSearchData = useMemo(() => {
+    const data: any[] = [];
+    
+    // Services
+    if (servicesContent?.body) {
+      try {
+        const parsed = JSON.parse(servicesContent.body);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((s: any) => {
+             const slug = s.title.replace(/\s+/g, '-').toLowerCase();
+             data.push({ title: s.title, category: 'الخدمات', href: `/services/${slug}` });
+          });
+        }
+      } catch (e) {}
+    }
+
+    // Portfolio
+    if (portfolioContent?.body) {
+      try {
+        const parsed = JSON.parse(portfolioContent.body);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((s: any) => {
+             const slug = s.title.replace(/\s+/g, '-').toLowerCase();
+             data.push({ title: s.title, category: 'أعمالنا', href: `/portfolio/${slug}` });
+          });
+        }
+      } catch (e) {}
+    }
+
+    // Blog
+    if (blogContent?.body) {
+      try {
+        const parsed = JSON.parse(blogContent.body);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((s: any) => {
+             const slug = s.title.replace(/\s+/g, '-').toLowerCase();
+             data.push({ title: s.title, category: 'المدونة', href: `/blog/${slug}` });
+          });
+        }
+      } catch (e) {}
+    }
+
+    // FAQ
+    if (faqContent?.body) {
+      try {
+        const parsed = JSON.parse(faqContent.body);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((s: any) => {
+             data.push({ title: s.question, category: 'الأسئلة الشائعة', href: `/faq` });
+          });
+        }
+      } catch (e) {}
+    }
+
+    // Add fallback contact route if missing
+    data.push({ title: 'تواصل معنا لطلب تسعيرة', category: 'تواصل', href: '/contact' });
+
+    return data;
+  }, [servicesContent, portfolioContent, blogContent, faqContent]);
+
+  const searchData = dynamicSearchData;
 
   const filteredResults = searchData.filter(item => 
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -105,13 +185,13 @@ export default function Navbar() {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6 rtl:space-x-reverse ltr:space-x-6">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.name}
-                href={link.href}
+                to={link.href}
                 className="text-gray-500 hover:text-[#111827] font-medium text-sm uppercase tracking-widest transition-colors duration-200"
               >
                 {link.name}
-              </a>
+              </Link>
             ))}
             <button
               onClick={toggleLanguage}
@@ -136,13 +216,13 @@ export default function Navbar() {
                 <CalendarDays className="h-4 w-4" />
                 <span>{language === 'ar' ? 'احجز استشارة' : 'Book Consult'}</span>
               </button>
-              <a
-                href="#contact"
+              <Link
+                to="/contact"
                 className="bg-[#111827] text-white px-6 py-2 text-sm font-semibold hover:bg-gray-800 transition-colors flex items-center gap-2"
               >
                 <Phone className="h-4 w-4" />
                 <span>{language === 'ar' ? 'اطلب تسعيرة' : 'Get a Quote'}</span>
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -182,14 +262,14 @@ export default function Navbar() {
           >
             <div className="px-4 pt-2 pb-6 space-y-2">
               {navLinks.map((link) => (
-                <a
+                <Link
                   key={link.name}
-                  href={link.href}
+                  to={link.href}
                   onClick={() => setIsOpen(false)}
                   className="block px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-[#111827] text-sm uppercase tracking-widest font-medium transition-colors"
                 >
                   {link.name}
-                </a>
+                </Link>
               ))}
               <div className="flex flex-col gap-2 mt-4 px-4">
                 <button
@@ -202,14 +282,14 @@ export default function Navbar() {
                   <CalendarDays className="h-4 w-4" />
                   <span>{language === 'ar' ? 'احجز استشارة' : 'Book a Consultation'}</span>
                 </button>
-                <a
-                  href="#contact"
+                <Link
+                  to="/contact"
                   onClick={() => setIsOpen(false)}
                   className="w-full text-center bg-[#111827] text-white px-6 py-3 font-semibold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
                 >
                   <Phone className="h-4 w-4" />
                   <span>{language === 'ar' ? 'اطلب تسعيرة الآن' : 'Get a Quote Now'}</span>
-                </a>
+                </Link>
               </div>
             </div>
           </motion.div>
@@ -374,9 +454,9 @@ export default function Navbar() {
                 ) : filteredResults.length > 0 ? (
                   <div className="flex flex-col">
                     {filteredResults.map((result, i) => (
-                      <a
+                      <Link
                         key={i}
-                        href={result.href}
+                        to={result.href}
                         onClick={() => setIsSearchOpen(false)}
                         className="p-4 hover:bg-gray-50 flex items-center justify-between border-b border-gray-50 last:border-0 transition-colors"
                       >
@@ -384,7 +464,7 @@ export default function Navbar() {
                         <span className="text-xs font-bold uppercase tracking-widest text-[#0284C7] bg-[#0284C7]/10 px-2 py-1">
                           {result.category}
                         </span>
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 ) : (

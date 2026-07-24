@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useContent } from '../contexts/ContentContext';
 
 const glassStyles = [
   {
@@ -56,6 +57,8 @@ const glassStyles = [
 export default function GlassVisualizer() {
   const [activeStyle, setActiveStyle] = useState(glassStyles[0].id);
   const { language } = useLanguage();
+  const { getContent } = useContent();
+  const visualizerContent = getContent('visualizer_content');
 
   const currentStyle = glassStyles.find(s => s.id === activeStyle)?.style || glassStyles[0].style;
 
@@ -69,17 +72,23 @@ export default function GlassVisualizer() {
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto mb-16"
         >
-          <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-3">
-            {language === 'ar' ? 'المحاكي البصري' : 'Visualizer'}
-          </h2>
-          <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight">
-            {language === 'ar' ? 'اكتشف أنواع الزجاج' : 'Explore Glass Types'}
-          </h3>
-          <p className="text-gray-600 mt-6 leading-relaxed">
-            {language === 'ar' 
-              ? 'شاهد الفرق بين أنواع الزجاج المختلفة وكيف تؤثر على الرؤية والإضاءة لتختار ما يناسب مساحتك.'
-              : 'See the difference between various glass types and how they affect visibility and lighting to choose what suits your space.'}
-          </p>
+          {visualizerContent?.body ? (
+            <div className="prose prose-lg mx-auto text-gray-600" dangerouslySetInnerHTML={{ __html: visualizerContent.body }} />
+          ) : (
+            <>
+              <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-3">
+                {language === 'ar' ? 'المحاكي البصري' : 'Visualizer'}
+              </h2>
+              <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight">
+                {language === 'ar' ? 'اكتشف أنواع الزجاج' : 'Explore Glass Types'}
+              </h3>
+              <p className="text-gray-600 mt-6 leading-relaxed">
+                {language === 'ar' 
+                  ? 'شاهد الفرق بين أنواع الزجاج المختلفة وكيف تؤثر على الرؤية والإضاءة لتختار ما يناسب مساحتك.'
+                  : 'See the difference between various glass types and how they affect visibility and lighting to choose what suits your space.'}
+              </p>
+            </>
+          )}
         </motion.div>
 
         <div className="flex flex-col lg:flex-row gap-8 items-center justify-center">

@@ -8,7 +8,7 @@ export interface Message {
 }
 
 export interface Content {
-  id?: number;
+  id?: number | string;
   key: string;
   title: string;
   body: string;
@@ -16,7 +16,32 @@ export interface Content {
 }
 
 export interface MediaFile {
-  id: number;
+  id: string | number;
   name: string;
   url: string;
+  type?: string;
+  size?: number;
+  created_at?: string;
+}
+
+export interface PortfolioProject {
+  id: string;
+  slug: string;
+  title: string;
+  category: string;
+  description: string;
+  location: string;
+  serviceType: string;
+  client: string;
+  completionDate: string;
+  materialsUsed: string;
+  coverImage: string;
+  galleryImages: string[];
+  isFeatured: boolean;
+  isHidden: boolean;
+  order: number;
+  seoTitle: string;
+  seoDescription: string;
+  beforeImage?: string;
+  afterImage?: string;
 }

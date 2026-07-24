@@ -78,7 +78,7 @@ export default function Features() {
   }, [imageContent]);
 
   return (
-    <section id="features" className="py-24 bg-white relative overflow-hidden">
+    <section id="features" className="py-24 bg-transparent relative overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 -mr-20 -mt-20 w-72 h-72 rounded-full bg-blue-50 opacity-50 blur-3xl" />
       <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-72 h-72 rounded-full bg-blue-50 opacity-50 blur-3xl" />

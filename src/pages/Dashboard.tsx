@@ -1,13 +1,19 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import DashboardLayout from './dashboard/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut, Edit3, Cloud, Image, Mail, Upload } from 'lucide-react';
 import Messages from './dashboard/Messages';
 import MediaLibrary from './dashboard/MediaLibrary';
 import DriveBackup from './dashboard/DriveBackup';
 import ContentManager from './dashboard/ContentManager';
+import PagesManager from './dashboard/PagesManager';
+import DashboardHome from './dashboard/DashboardHome';
+import FormBuilder from './dashboard/FormBuilder';
+import HomepageBuilder from './dashboard/HomepageBuilder';
 import BulkGalleryUpload from './dashboard/BulkGalleryUpload';
+import PortfolioManager from './dashboard/PortfolioManager';
+import SiteSettings from './dashboard/SiteSettings';
 import { Message, Content, MediaFile } from './dashboard/types';
-import { supabase } from '../lib/supabase';
 
 export default function Dashboard() {
   const { user, loading, signInWithGoogle, logout, token, accessToken, isAdmin } = useAuth();
@@ -15,16 +21,14 @@ export default function Dashboard() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [contents, setContents] = useState<Content[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
-  const [activeTab, setActiveTab] = useState<'messages' | 'content' | 'drive' | 'media' | 'bulk'>('messages');
+  const [activeTab, setActiveTab] = useState<'home' | 'messages' | 'content' | 'pages' | 'drive' | 'media' | 'bulk_upload' | 'forms' | 'settings' | 'services' | 'portfolio' | 'blog' | 'testimonials' | 'faq' | 'partners' | 'homepage_builder' | 'navigation' | 'seo' | 'social' | 'users' | 'roles' | 'activity' | 'backup'>('home');
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
 
   const fetchMedia = useCallback(async () => {
     try {
-      const { data, error } = await supabase.from('images').select('*').order('created_at', { ascending: false });
-      if (!error && data) {
-        setMediaFiles(data as any);
-      }
+      const stored = localStorage.getItem('mock_media');
+      setMediaFiles(stored ? JSON.parse(stored) : []);
     } catch (error) {
       console.error("Failed to fetch media:", error);
     }
@@ -33,11 +37,9 @@ export default function Dashboard() {
   const fetchMessages = useCallback(async () => {
     setLoadingMessages(true);
     try {
-      const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
-      if (!error && data) {
-        // map created_at to createdAt for the component
-        setMessages(data.map(m => ({ ...m, createdAt: m.created_at })) as any);
-      }
+      const stored = localStorage.getItem('mock_messages');
+      const data = stored ? JSON.parse(stored) : [];
+      setMessages(data.map((m: any) => ({ ...m, createdAt: m.created_at })) as any);
     } catch (error) {
       console.error("Failed to fetch messages:", error);
     } finally {
@@ -47,10 +49,9 @@ export default function Dashboard() {
 
   const fetchContents = useCallback(async () => {
     try {
-      const { data, error } = await supabase.from('contents').select('*');
-      if (!error && data) {
-        setContents(data as any);
-      }
+      const stored = localStorage.getItem('mock_contents');
+      const data = stored ? JSON.parse(stored) : [];
+      setContents(data as any);
     } catch (error) {
       console.error("Failed to fetch contents:", error);
     }
@@ -65,10 +66,6 @@ export default function Dashboard() {
   }, [user, isAdmin, fetchMessages, fetchContents, fetchMedia]);
 
   const backupToDrive = useCallback(async () => {
-    if (!accessToken) {
-      alert("الرجاء تسجيل الدخول مرة أخرى للحصول على صلاحيات Google Drive");
-      return;
-    }
     setIsBackingUp(true);
     try {
       const backupData = {
@@ -79,45 +76,18 @@ export default function Dashboard() {
       };
       
       const fileContent = JSON.stringify(backupData, null, 2);
-      const metadata = {
-        name: `Website_Backup_${new Date().toISOString().split('T')[0]}.json`,
-        mimeType: 'application/json',
-      };
+      console.log('Mock Backup Content:', fileContent);
       
-      const form = new FormData();
-      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-      form.append('file', new Blob([fileContent], { type: 'application/json' }));
-      
-      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: form,
-      });
-
-      if (res.ok) {
-        alert('تم إنشاء النسخة الاحتياطية بنجاح على Google Drive!');
-      } else {
-        const err = await res.text();
-        console.error('Backup failed:', err);
-        alert('فشل في إنشاء النسخة الاحتياطية. يرجى التأكد من صلاحيات Google Drive.');
-      }
+      setTimeout(() => {
+        alert('تم إنشاء النسخة الاحتياطية الوهمية بنجاح!');
+        setIsBackingUp(false);
+      }, 1000);
     } catch (error) {
       console.error('Error backing up:', error);
       alert('حدث خطأ أثناء النسخ الاحتياطي');
-    } finally {
       setIsBackingUp(false);
     }
-  }, [accessToken, messages, contents, mediaFiles]);
-
-  const navItems = useMemo(() => [
-    { id: 'messages' as const, label: 'الرسائل', icon: Mail },
-    { id: 'content' as const, label: 'إدارة المحتوى', icon: Edit3 },
-    { id: 'media' as const, label: 'مكتبة الوسائط', icon: Image },
-    { id: 'bulk' as const, label: 'رفع متعدد للمشاريع', icon: Upload },
-    { id: 'drive' as const, label: 'النسخ الاحتياطي', icon: Cloud },
-  ], []);
+  }, [messages, contents, mediaFiles]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">جاري التحميل...</div>;
@@ -155,45 +125,32 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
-      <aside className="w-full md:w-64 bg-white shadow-md flex flex-col h-auto md:h-screen sticky top-0 z-10">
-        <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">لوحة تحكم الموقع</h1>
-        </div>
-        <nav className="p-4 flex-1 space-y-2">
-          {navItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold transition-colors ${
-                activeTab === item.id ? 'bg-[#0284C7] text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              {item.label}
-            </button>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-gray-200">
-          <button 
-            onClick={logout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg font-bold transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            تسجيل الخروج
-          </button>
-        </div>
-      </aside>
-
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
-          {activeTab === 'messages' && <Messages messages={messages} loading={loadingMessages} />}
-          {activeTab === 'media' && <MediaLibrary mediaFiles={mediaFiles} fetchMedia={fetchMedia} token={token} />}
-          {activeTab === 'bulk' && <BulkGalleryUpload token={token} contents={contents} fetchContents={fetchContents} fetchMedia={fetchMedia} />}
-          {activeTab === 'drive' && <DriveBackup isBackingUp={isBackingUp} accessToken={accessToken} backupToDrive={backupToDrive} />}
-          {activeTab === 'content' && <ContentManager contents={contents} fetchContents={fetchContents} token={token} />}
-        </div>
-      </main>
-    </div>
+    <DashboardLayout activeTab={activeTab} setActiveTab={setActiveTab as any}>
+      {activeTab === 'home' && <DashboardHome />}
+      {activeTab === 'messages' && <Messages messages={messages} loading={loadingMessages} />}
+      {activeTab === 'media' && <MediaLibrary mediaFiles={mediaFiles} fetchMedia={fetchMedia} />}
+      {activeTab === 'bulk_upload' && <BulkGalleryUpload token={token as any} contents={contents} fetchContents={fetchContents} fetchMedia={fetchMedia as any} />}
+      {activeTab === 'drive' && <DriveBackup isBackingUp={isBackingUp} accessToken={accessToken as any} backupToDrive={backupToDrive} />}
+      {activeTab === 'pages' && <PagesManager pages={contents.filter(c => c.type === 'page')} fetchContents={fetchContents} />}
+      
+      {/* Specific Content Managers */}
+      {activeTab === 'services' && <ContentManager contents={contents} fetchContents={fetchContents} token={token as any} filterKeys={['services_intro', 'services_items']} />}
+      {activeTab === 'portfolio' && <PortfolioManager contents={contents} fetchContents={fetchContents} token={token as any} />}
+      {activeTab === 'blog' && <ContentManager contents={contents} fetchContents={fetchContents} token={token as any} filterKeys={['blog_intro', 'blog_items']} />}
+      {activeTab === 'testimonials' && <ContentManager contents={contents} fetchContents={fetchContents} token={token as any} filterKeys={['testimonials_items']} />}
+      {activeTab === 'faq' && <ContentManager contents={contents} fetchContents={fetchContents} token={token as any} filterKeys={['faq_items']} />}
+      {activeTab === 'partners' && <ContentManager contents={contents} fetchContents={fetchContents} token={token as any} filterKeys={['trusted_partners']} />}
+      
+      {/* Other sections that aren't specifically mapped yet will just map to full ContentManager or a placeholder */}
+      {activeTab === 'homepage_builder' && <HomepageBuilder />}
+      {activeTab === 'navigation' && <ContentManager contents={contents} fetchContents={fetchContents} token={token as any} filterKeys={['navigation_links']} />}
+      {activeTab === 'forms' && <FormBuilder />}
+      {activeTab === 'seo' && <ContentManager contents={contents} fetchContents={fetchContents} token={token as any} filterKeys={['seo_settings']} />}
+      {activeTab === 'social' && <ContentManager contents={contents} fetchContents={fetchContents} token={token as any} filterKeys={['social_links']} />}
+      {activeTab === 'settings' && <SiteSettings contents={contents} fetchContents={fetchContents} />}
+      
+      {/* Fallback */}
+      {activeTab === 'content' && <ContentManager contents={contents} fetchContents={fetchContents} token={token as any} />}
+    </DashboardLayout>
   );
 }

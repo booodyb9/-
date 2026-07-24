@@ -30,7 +30,7 @@ export default function TrustedPartners() {
   }, [partnersContent]);
 
   return (
-    <section className="py-16 bg-gray-50 border-y border-gray-200 overflow-hidden">
+    <section className="py-16 bg-transparent border-y border-gray-200 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center">
         <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-2">شركاء النجاح</h2>
         <h3 className="text-2xl font-bold text-gray-900">نفتخر بالتعاون مع كبرى الشركات</h3>
@@ -39,14 +39,14 @@ export default function TrustedPartners() {
       <div className="relative flex overflow-x-hidden">
         <div className="animate-marquee whitespace-nowrap flex items-center gap-12 py-4">
           {[...partners, ...partners, ...partners].map((partner, index) => (
-            <div key={index} className="w-48 h-24 bg-white rounded-lg shadow-sm flex items-center justify-center p-4 filter grayscale hover:grayscale-0 transition-all duration-300 border border-gray-100">
+            <div key={index} className="w-48 h-24 bg-white/80 backdrop-blur-md rounded-lg shadow-sm flex items-center justify-center p-4 filter grayscale hover:grayscale-0 transition-all duration-300 border border-gray-100">
               <img src={partner.logo} alt={partner.name} className="max-w-full max-h-full object-contain opacity-70 hover:opacity-100" />
             </div>
           ))}
         </div>
         <div className="absolute top-0 animate-marquee2 whitespace-nowrap flex items-center gap-12 py-4">
           {[...partners, ...partners, ...partners].map((partner, index) => (
-            <div key={index} className="w-48 h-24 bg-white rounded-lg shadow-sm flex items-center justify-center p-4 filter grayscale hover:grayscale-0 transition-all duration-300 border border-gray-100">
+            <div key={index} className="w-48 h-24 bg-white/80 backdrop-blur-md rounded-lg shadow-sm flex items-center justify-center p-4 filter grayscale hover:grayscale-0 transition-all duration-300 border border-gray-100">
               <img src={partner.logo} alt={partner.name} className="max-w-full max-h-full object-contain opacity-70 hover:opacity-100" />
             </div>
           ))}

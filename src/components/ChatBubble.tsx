@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { supabase } from '../lib/supabase';
+
 
 export default function ChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,22 +17,27 @@ export default function ChatBubble() {
     
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('messages').insert({
+      const storedMessages = localStorage.getItem('mock_messages');
+      let mockMessages = storedMessages ? JSON.parse(storedMessages) : [];
+      mockMessages.push({
+        id: Date.now().toString(),
         name,
         email,
-        message: `[سؤال عبر المحادثة السريعة]: ${message}`
+        message: `[سؤال عبر المحادثة السريعة]: ${message}`,
+        created_at: new Date().toISOString(),
+        is_read: false
       });
+      localStorage.setItem('mock_messages', JSON.stringify(mockMessages));
+      window.dispatchEvent(new Event('mock-data-update'));
 
-      if (!error) {
-        setIsSuccess(true);
-        setTimeout(() => {
-          setIsOpen(false);
-          setIsSuccess(false);
-          setName('');
-          setEmail('');
-          setMessage('');
-        }, 3000);
-      }
+      setIsSuccess(true);
+      setTimeout(() => {
+        setIsOpen(false);
+        setIsSuccess(false);
+        setName('');
+        setEmail('');
+        setMessage('');
+      }, 3000);
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {

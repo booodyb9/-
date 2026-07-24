@@ -1,219 +1,292 @@
-import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { X, Search, ChevronRight, ChevronLeft, MapPin, Briefcase } from 'lucide-react';
+import { useContent } from '../contexts/ContentContext';
+import { PortfolioProject } from '../pages/dashboard/types';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination, Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
 
-interface Project {
-  id: string;
-  title: string;
-  category: string;
-  image: string;
-  description: string;
-  className?: string;
-  order?: number;
-  class_name?: string;
-  order_index?: number;
-}
-
-export default function Gallery() {
+export default function Gallery({ limit, featuredOnly }: { limit?: number, featuredOnly?: boolean }) {
   const [activeCategory, setActiveCategory] = useState('الكل');
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const phoneNumber = "966510233706";
-
-  const fetchProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('order_index', { ascending: true });
-        
-      if (error) throw error;
-      
-      const validProjects = (data as Project[]).filter(p => p.image && typeof p.image === 'string' && p.image.trim() !== '');
-      validProjects.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-      setProjects(validProjects);
-    } catch (error) {
-      console.error("Error fetching projects from Supabase: ", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [searchQuery, setSearchQuery] = useState('');
+  const [projects, setProjects] = useState<PortfolioProject[]>([]);
+  const { getContent } = useContent();
+  const portfolioContent = getContent('premium_portfolio_projects');
 
   useEffect(() => {
-    fetchProjects();
-
-    const channel = supabase
-      .channel('projects-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'projects'
-        },
-        () => {
-          fetchProjects();
+    if (portfolioContent?.body) {
+      try {
+        const parsed = JSON.parse(portfolioContent.body);
+        if (Array.isArray(parsed)) {
+          let validProjects = parsed.filter(p => !p.isHidden);
+          validProjects.sort((a, b) => (a.order || 0) - (b.order || 0));
+          if (featuredOnly) {
+            validProjects = validProjects.filter(p => p.isFeatured);
+          }
+          if (limit) {
+            validProjects = validProjects.slice(0, limit);
+          }
+          setProjects(validProjects);
         }
-      )
-      .subscribe();
+      } catch (e) {
+        console.error("Failed to parse portfolio projects", e);
+      }
+    }
+  }, [portfolioContent, limit, featuredOnly]);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  const categories = useMemo(() => {
+    const cats = new Set(projects.map(p => p.category));
+    return ['الكل', ...Array.from(cats)];
+  }, [projects]);
 
-  const categories = ['الكل', ...new Set(projects.map(p => p.category))];
-
-  const filteredProjects = activeCategory === 'الكل' 
-    ? projects 
-    : projects.filter(p => p.category === activeCategory);
+  const filteredProjects = useMemo(() => {
+    let result = activeCategory === 'الكل' 
+      ? projects 
+      : projects.filter(p => p.category === activeCategory);
+      
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(p => 
+        p.title?.toLowerCase().includes(query) || 
+        p.description?.toLowerCase().includes(query) ||
+        p.location?.toLowerCase().includes(query) ||
+        p.serviceType?.toLowerCase().includes(query)
+      );
+    }
+    return result;
+  }, [projects, activeCategory, searchQuery]);
 
   return (
-    <section id="gallery" className="py-24 bg-white">
+    <section className="py-24 bg-transparent relative overflow-hidden" id="portfolio">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center max-w-3xl mx-auto mb-16"
-        >
-          <h2 className="text-[#0284C7] text-sm font-bold uppercase tracking-widest mb-3">معرض أعمالنا</h2>
-          <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight mb-6">
-            مشاريع نفتخر بإنجازها
-          </h3>
-          <p className="text-lg text-gray-600">
-            تصفح مجموعة من أحدث مشاريعنا في تركيب الزجاج والواجهات، والتي تعكس التزامنا بالجودة والاحترافية.
-          </p>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex flex-wrap gap-2 mb-10"
-        >
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`px-6 py-2 text-sm font-bold tracking-widest transition-colors ${
-                activeCategory === cat 
-                  ? 'bg-[#111827] text-white' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </motion.div>
-
-        <motion.div layout className="grid grid-cols-1 md:grid-cols-3 auto-rows-[300px] md:auto-rows-[250px] gap-6">
-          <AnimatePresence>
-            {filteredProjects.map((project) => (
-              <motion.div
-                layout
-                key={project.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
-                className={`group relative overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer ${
-                  activeCategory === 'الكل' ? project.className || 'md:col-span-1 row-span-1' : 'md:col-span-1 row-span-1'
-                }`}
-                onClick={() => setSelectedProject(project)}
-              >
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#111827]/95 via-[#111827]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                  <span className="text-[#0284C7] text-xs font-bold tracking-widest uppercase mb-2">{project.category}</span>
-                  <h4 className="text-white text-xl font-bold mb-2">{project.title}</h4>
-                  <p className="text-gray-300 text-sm mb-4 line-clamp-2">{project.description}</p>
-                  
-                  <a
-                    href={`https://wa.me/${phoneNumber}?text=${encodeURIComponent(`مرحباً، أود الاستفسار عن مشروع ${project.title}`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-4 py-2 text-sm font-bold rounded-sm hover:bg-[#128C7E] transition-colors w-fit"
-                  >
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
-                    </svg>
-                    استفسار عبر واتساب
-                  </a>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
-      </div>
-
-      {/* Lightbox Modal */}
-      <AnimatePresence>
-        {selectedProject && (
+        <div className="text-center max-w-3xl mx-auto mb-16">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSelectedProject(null)}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 sm:p-8 backdrop-blur-sm"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
           >
-            <button
-              onClick={() => setSelectedProject(null)}
-              className="absolute top-6 right-6 text-white/70 hover:text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-colors z-10"
-              aria-label="Close"
+            <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-3">
+              معرض الأعمال
+            </h2>
+            <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight mb-6">
+              مشاريع نفخر بها
+            </h3>
+            <p className="text-gray-600 text-lg leading-relaxed">
+              تصفح أحدث مشاريعنا المتميزة في توريد وتركيب الزجاج، واكتشف جودة تنفيذنا ودقة تفاصيلنا في مختلف القطاعات.
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Filters and Search */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
+          <div className="flex flex-wrap justify-center md:justify-start gap-3 w-full md:w-auto">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${
+                  activeCategory === category
+                    ? 'bg-[#0284C7] text-white shadow-md scale-105'
+                    : 'bg-transparent text-gray-600 hover:bg-gray-100 hover:text-[#0284C7] shadow-sm'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+          
+          {!limit && (
+            <div className="relative w-full md:w-80">
+              <input
+                type="text"
+                placeholder="ابحث في المشاريع..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0284C7] focus:border-transparent transition-all shadow-sm bg-transparent"
+              />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            </div>
+          )}
+        </div>
+
+        {/* Projects Display */}
+        {limit ? (
+          <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0 pb-12">
+            <Swiper
+              modules={[Autoplay, Pagination, Navigation]}
+              spaceBetween={32}
+              slidesPerView={1}
+              breakpoints={{
+                640: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+              }}
+              autoplay={{ delay: 3000, disableOnInteraction: false }}
+              pagination={{ clickable: true, dynamicBullets: true }}
+              navigation={{
+                nextEl: '.swiper-button-next-portfolio',
+                prevEl: '.swiper-button-prev-portfolio',
+              }}
+              className="!pb-16"
+              loop={filteredProjects.length >= 4}
             >
-              <X className="w-8 h-8" />
+              {filteredProjects.map((project, index) => (
+                <SwiperSlide key={project.id} className="h-auto pb-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    className="group bg-white/80 backdrop-blur-md rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 h-full flex flex-col"
+                  >
+                    <Link to={`/portfolio/${project.slug}`} className="block relative h-72 overflow-hidden shrink-0">
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors z-10 duration-500" />
+                      <img
+                        src={project.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                        alt={project.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
+                      />
+                      <div className="absolute top-4 right-4 z-20">
+                        <span className="bg-white/90 backdrop-blur-sm text-[#0F172A] text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+                          {project.category}
+                        </span>
+                      </div>
+                    </Link>
+                    
+                    <div className="p-6 flex flex-col flex-grow">
+                      <Link to={`/portfolio/${project.slug}`}>
+                        <h4 className="text-xl font-bold text-[#0F172A] mb-2 group-hover:text-[#0284C7] transition-colors">
+                          {project.title}
+                        </h4>
+                      </Link>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {project.description}
+                      </p>
+                      
+                      <div className="flex flex-col gap-2 mb-6 mt-auto">
+                        {project.location && (
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <MapPin className="w-4 h-4 text-[#0284C7]" />
+                            <span>{project.location}</span>
+                          </div>
+                        )}
+                        {project.serviceType && (
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <Briefcase className="w-4 h-4 text-[#0284C7]" />
+                            <span>{project.serviceType}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <Link 
+                        to={`/portfolio/${project.slug}`}
+                        className="inline-flex items-center gap-2 text-[#0284C7] font-bold hover:text-[#0369A1] transition-colors group/btn"
+                      >
+                        عرض التفاصيل
+                        <ChevronLeft className="w-4 h-4 transform group-hover/btn:-translate-x-1 transition-transform" />
+                      </Link>
+                    </div>
+                  </motion.div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+            <button className="swiper-button-prev-portfolio absolute top-1/2 -left-4 md:-left-12 -translate-y-1/2 z-10 bg-white shadow-lg p-3 rounded-full text-[#0284C7] hover:bg-[#0284C7] hover:text-white transition-colors hidden sm:block">
+              <ChevronLeft className="w-6 h-6" />
             </button>
-            
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative max-w-5xl w-full bg-[#111827] rounded-sm overflow-hidden shadow-2xl flex flex-col md:flex-row"
-            >
-              <div className="w-full md:w-2/3 h-[40vh] md:h-[70vh]">
-                <img
-                  src={selectedProject.image}
-                  alt={selectedProject.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="w-full md:w-1/3 p-8 flex flex-col justify-center border-t md:border-t-0 md:border-r border-gray-800">
-                <span className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-2">
-                  {selectedProject.category}
-                </span>
-                <h4 className="text-white text-3xl font-bold mb-4">{selectedProject.title}</h4>
-                <p className="text-gray-400 text-lg leading-relaxed mb-8">
-                  {selectedProject.description}
-                </p>
-                
-                <a
-                  href={`https://wa.me/${phoneNumber}?text=${encodeURIComponent(`مرحباً، أود الاستفسار عن مشروع ${selectedProject.title}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-3 bg-[#25D366] text-white px-6 py-4 text-lg font-bold rounded-sm hover:bg-[#128C7E] transition-colors w-full"
+            <button className="swiper-button-next-portfolio absolute top-1/2 -right-4 md:-right-12 -translate-y-1/2 z-10 bg-white shadow-lg p-3 rounded-full text-[#0284C7] hover:bg-[#0284C7] hover:text-white transition-colors hidden sm:block">
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </div>
+        ) : (
+          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <AnimatePresence>
+              {filteredProjects.map((project, index) => (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  key={project.id}
+                  className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col"
                 >
-                  <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
-                  </svg>
-                  استفسار عبر واتساب
-                </a>
-              </div>
-            </motion.div>
+                  <Link to={`/portfolio/${project.slug}`} className="block relative h-72 overflow-hidden shrink-0">
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors z-10 duration-500" />
+                    <img
+                      src={project.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                      alt={project.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
+                    />
+                    <div className="absolute top-4 right-4 z-20">
+                      <span className="bg-white/90 backdrop-blur-sm text-[#0F172A] text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+                        {project.category}
+                      </span>
+                    </div>
+                  </Link>
+                  
+                  <div className="p-6 flex flex-col flex-grow">
+                    <Link to={`/portfolio/${project.slug}`}>
+                      <h4 className="text-xl font-bold text-[#0F172A] mb-2 group-hover:text-[#0284C7] transition-colors">
+                        {project.title}
+                      </h4>
+                    </Link>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {project.description}
+                    </p>
+                    
+                    <div className="flex flex-col gap-2 mb-6 mt-auto">
+                      {project.location && (
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <MapPin className="w-4 h-4 text-[#0284C7]" />
+                          <span>{project.location}</span>
+                        </div>
+                      )}
+                      {project.serviceType && (
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Briefcase className="w-4 h-4 text-[#0284C7]" />
+                          <span>{project.serviceType}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <Link 
+                      to={`/portfolio/${project.slug}`}
+                      className="inline-flex items-center gap-2 text-[#0284C7] font-bold hover:text-[#0369A1] transition-colors group/btn"
+                    >
+                      عرض التفاصيل
+                      <ChevronLeft className="w-4 h-4 transform group-hover/btn:-translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </motion.div>
         )}
-      </AnimatePresence>
+        
+        {(!limit && filteredProjects.length === 0) && (
+          <div className="text-center py-12 text-gray-500">
+            لا توجد مشاريع في هذا التصنيف حالياً.
+          </div>
+        )}
+
+        {limit && projects.length > limit && (
+          <div className="text-center mt-12">
+            <Link 
+              to="/portfolio"
+              className="inline-flex items-center gap-2 bg-transparent text-[#0F172A] border-2 border-gray-200 px-8 py-3 rounded-full font-bold hover:border-[#0284C7] hover:text-[#0284C7] transition-all"
+            >
+              عرض كل المشاريع
+              <ChevronLeft className="w-5 h-5" />
+            </Link>
+          </div>
+        )}
+      </div>
     </section>
   );
 }

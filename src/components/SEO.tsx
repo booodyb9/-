@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useContent } from '../contexts/ContentContext';
 
 interface SEOProps {
   title?: string;
@@ -7,15 +8,25 @@ interface SEOProps {
   keywords?: string;
   image?: string;
   path?: string;
+  structuredData?: any;
 }
 
-export default function SEO({ title, description, keywords, image, path = '' }: SEOProps) {
+export default function SEO({ title, description, keywords, image, path = '', structuredData }: SEOProps) {
   const { language } = useLanguage();
-
+  const { getContent } = useContent();
+  const settingsContent = getContent('site_settings');
+  
+  let siteSettings: any = {};
+  if (settingsContent?.body) {
+    try {
+      siteSettings = JSON.parse(settingsContent.body);
+    } catch(e) {}
+  }
+  
   const defaultSeoData = {
     ar: {
-      title: 'شركة زجاج الرياض | تركيب زجاج الرياض | واجهات، كبائن شاور، ومرايا',
-      description: 'شركة زجاج الرياض لتركيب وتفصيل الزجاج في الرياض. متخصصون في الواجهات الزجاجية (ستركشر)، القواطع المكتبية، كبائن الشاور، المرايا الديكورية، وزجاج السيكوريت بأسعار منافسة وجودة عالية.',
+      title: siteSettings.defaultMetaTitle || 'شركة زجاج الرياض | تركيب زجاج الرياض | واجهات، كبائن شاور، ومرايا',
+      description: siteSettings.defaultMetaDescription || 'شركة زجاج الرياض لتركيب وتفصيل الزجاج في الرياض. متخصصون في الواجهات الزجاجية (ستركشر)، القواطع المكتبية، كبائن الشاور، المرايا الديكورية، وزجاج السيكوريت بأسعار منافسة وجودة عالية.',
       keywords: 'زجاج الرياض, شركة زجاج الرياض, تركيب زجاج بالرياض, محلات زجاج في الرياض, مصنع زجاج الرياض, زجاج سيكوريت الرياض, تفصيل زجاج بالرياض, كبائن شاور الرياض, واجهات زجاجية الرياض, قواطع زجاجية للمكاتب, مرايا ديكور الرياض, أبواب زجاجية',
     },
     en: {
@@ -26,7 +37,7 @@ export default function SEO({ title, description, keywords, image, path = '' }: 
   };
 
   const defaultData = defaultSeoData[language];
-  const pageTitle = title ? `${title} | ${language === 'ar' ? 'شركة زجاج الرياض' : 'Riyadh Glass Company'}` : defaultData.title;
+  const pageTitle = title ? `${title}` : defaultData.title;
   const pageDescription = description || defaultData.description;
   const pageKeywords = keywords || defaultData.keywords;
   
@@ -34,6 +45,21 @@ export default function SEO({ title, description, keywords, image, path = '' }: 
   const baseUrl = 'https://riyadh-glass.ai.studio';
   const url = `${baseUrl}${path}`;
   const ogImage = image || `${baseUrl}/og-image.jpg`;
+
+  const defaultStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": siteSettings.companyName || "شركة زجاج الرياض",
+    "image": siteSettings.logoUrl || ogImage,
+    "description": pageDescription,
+    "url": baseUrl,
+    "telephone": siteSettings.phoneNumber || "+966510233706",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "الرياض",
+      "addressCountry": "SA"
+    }
+  };
 
   return (
     <Helmet>
@@ -69,6 +95,10 @@ export default function SEO({ title, description, keywords, image, path = '' }: 
       <link rel="alternate" href={url} hrefLang="ar" />
       <link rel="alternate" href={url} hrefLang="en" />
       <link rel="alternate" href={url} hrefLang="x-default" />
+
+      <script type="application/ld+json">
+        {JSON.stringify(structuredData || defaultStructuredData)}
+      </script>
     </Helmet>
   );
 }

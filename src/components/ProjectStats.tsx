@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useContent } from '../contexts/ContentContext';
 import {
   BarChart,
   Bar,
@@ -12,9 +13,32 @@ import {
   AreaChart,
   Area
 } from 'recharts';
+import { TrendingUp, Users, CheckCircle, Clock } from 'lucide-react';
+import { useMemo } from 'react';
 
 export default function ProjectStats() {
   const { language } = useLanguage();
+  const { getContent } = useContent();
+  const statsContent = getContent('project_stats');
+  
+  const statsCards = useMemo(() => {
+    if (statsContent?.body) {
+      try {
+        const parsed = JSON.parse(statsContent.body);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return [];
+  }, [statsContent]);
+  
+  const getIcon = (name: string) => {
+    switch(name?.toLowerCase()) {
+      case 'users': return <Users className="w-8 h-8 text-[#0284C7]" />;
+      case 'checkcircle': return <CheckCircle className="w-8 h-8 text-[#0284C7]" />;
+      case 'clock': return <Clock className="w-8 h-8 text-[#0284C7]" />;
+      default: return <TrendingUp className="w-8 h-8 text-[#0284C7]" />;
+    }
+  };
 
   const timelineDataAr = [
     { name: 'واجهات', days: 14 },
@@ -52,7 +76,7 @@ export default function ProjectStats() {
   const efficiencyData = language === 'ar' ? efficiencyDataAr : efficiencyDataEn;
 
   return (
-    <section className="py-24 bg-white relative overflow-hidden">
+    <section className="py-24 bg-transparent relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -74,6 +98,27 @@ export default function ProjectStats() {
           </p>
         </motion.div>
 
+        {statsCards.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
+            {statsCards.map((stat, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: idx * 0.1 }}
+                className="bg-white/80 backdrop-blur-md rounded-2xl p-6 text-center border border-gray-100 hover:border-[#0284C7]/30 transition-colors shadow-sm"
+              >
+                <div className="mx-auto w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4">
+                  {getIcon(stat.icon)}
+                </div>
+                <h4 className="text-3xl font-extrabold text-[#0F172A] mb-2" dir="ltr">{stat.value}</h4>
+                <p className="text-gray-600 font-medium">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Timeline Chart */}
           <motion.div
@@ -81,7 +126,7 @@ export default function ProjectStats() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-gray-50 p-6 rounded-sm border border-gray-100"
+            className="bg-white/80 backdrop-blur-md p-6 rounded-2xl border border-gray-100"
           >
             <h4 className="text-xl font-bold text-[#0F172A] mb-6 text-center">
               {language === 'ar' ? 'متوسط وقت تنفيذ المشاريع (بالأيام)' : 'Average Project Timeline (Days)'}
@@ -122,7 +167,7 @@ export default function ProjectStats() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-gray-50 p-6 rounded-sm border border-gray-100"
+            className="bg-white/80 backdrop-blur-md p-6 rounded-2xl border border-gray-100"
           >
             <h4 className="text-xl font-bold text-[#0F172A] mb-6 text-center">
               {language === 'ar' ? 'تطور كفاءة استخدام المواد والتوفير (%)' : 'Material Efficiency & Savings Progress (%)'}

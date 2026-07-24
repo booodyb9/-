@@ -1,7 +1,7 @@
 import { useState, useCallback, memo } from 'react';
 import { Upload, Image as ImageIcon, CheckCircle, AlertCircle } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
-import { supabase } from '../../lib/supabase';
+
 import { Content } from './types';
 import { useContent } from '../../contexts/ContentContext';
 
@@ -46,40 +46,20 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
 
     for (const file of files) {
       try {
-        const options = {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1920,
-          useWebWorker: false
-        };
+        const downloadURL = URL.createObjectURL(file);
         
-        const compressedFile = await imageCompression(file, options);
+        const storedImages = localStorage.getItem('mock_images');
+        let mockImages = storedImages ? JSON.parse(storedImages) : [];
+        const newImage = { id: Date.now().toString(), name: file.name, url: downloadURL, created_at: new Date().toISOString() };
+        mockImages.push(newImage);
+        localStorage.setItem('mock_images', JSON.stringify(mockImages));
         
-        const fileName = `${Date.now()}_${file.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from('media')
-          .upload(fileName, compressedFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrlData } = supabase.storage
-          .from('media')
-          .getPublicUrl(fileName);
-          
-        const downloadURL = publicUrlData.publicUrl;
-
-        const { data: dbImage, error: dbError } = await supabase
-          .from('images')
-          .insert({ name: file.name, url: downloadURL })
-          .select()
-          .single();
-          
-        if (dbError) throw dbError;
-
         newGalleryItems.push({
+          id: Date.now().toString(),
           title: file.name.split('.')[0],
           category: selectedCategory,
           description: '',
-          image: dbImage.url,
+          image: newImage.url,
           class_name: 'md:col-span-1 md:row-span-1',
           order_index: Date.now()
         });
@@ -93,15 +73,13 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
 
     if (newGalleryItems.length > 0) {
       try {
-        const { error } = await supabase
-          .from('projects')
-          .insert(newGalleryItems);
-          
-        if (error) throw error;
-        
+        const storedProjects = localStorage.getItem('mock_projects');
+        let mockProjects = storedProjects ? JSON.parse(storedProjects) : [];
+        mockProjects = [...mockProjects, ...newGalleryItems];
+        localStorage.setItem('mock_projects', JSON.stringify(mockProjects));
         fetchMedia();
       } catch (error) {
-        console.error("Error saving to Supabase:", error);
+        console.error("Error saving to local storage:", error);
       }
     }
 

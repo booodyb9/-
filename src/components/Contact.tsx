@@ -13,26 +13,42 @@ export default function Contact() {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const { getContent } = useContent();
   const contactContent = getContent('contact_content');
+  const companyInfoContent = getContent('company_info');
+
+  const companyInfo = typeof companyInfoContent?.body === 'string' ? JSON.parse(companyInfoContent.body) : [];
+  
+  const getCompanyValue = (key: string, fallback: string) => {
+    try {
+      const item = companyInfo.find((i: any) => i.key === key);
+      return item ? item.value : fallback;
+    } catch {
+      return fallback;
+    }
+  };
 
   const handleSubmit = async (e: import("react").FormEvent) => {
     e.preventDefault();
     setStatus('submitting');
     
     try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
+      // Mock submit
+      const storedMessages = localStorage.getItem('mock_messages');
+      let mockMessages = storedMessages ? JSON.parse(storedMessages) : [];
+      mockMessages.push({
+        id: Date.now().toString(),
+        name: formData.name,
+        email: formData.phone,
+        message: formData.message,
+        created_at: new Date().toISOString(),
+        is_read: false
       });
-      
-      if (res.ok) {
+      localStorage.setItem('mock_messages', JSON.stringify(mockMessages));
+      window.dispatchEvent(new Event('mock-data-update'));
+
+      setTimeout(() => {
         setStatus('success');
         setFormData({ name: '', phone: '', service: '', message: '' });
-      } else {
-        setStatus('error');
-      }
+      }, 500);
     } catch (err) {
       console.error(err);
       setStatus('error');
@@ -76,51 +92,51 @@ export default function Contact() {
             className="lg:col-span-2 space-y-8"
           >
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-white/5 text-[#0284C7] rounded-sm flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 bg-transparent/5 text-[#0284C7] rounded-sm flex items-center justify-center shrink-0">
                 <MapPin className="h-6 w-6" />
               </div>
               <div>
                 <h4 className="text-xl font-bold mb-2">موقعنا</h4>
                 <p className="text-gray-400 leading-relaxed">
-                  طريق الملك فهد، حي العليا<br />
-                  الرياض، المملكة العربية السعودية
+                  {getCompanyValue('address', 'طريق الملك فهد، حي العليا')}<br />
+                  {getCompanyValue('address_details', 'الرياض، المملكة العربية السعودية')}
                 </p>
               </div>
             </div>
 
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-white/5 text-[#0284C7] rounded-sm flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 bg-transparent/5 text-[#0284C7] rounded-sm flex items-center justify-center shrink-0">
                 <Phone className="h-6 w-6" />
               </div>
               <div>
                 <h4 className="text-xl font-bold mb-2">اتصل بنا</h4>
                 <p className="text-gray-400 leading-relaxed" dir="ltr">
-                  +966 51 023 3706<br />
+                  {getCompanyValue('phone', '+966 51 023 3706')}<br />
                 </p>
               </div>
             </div>
 
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-white/5 text-[#0284C7] rounded-sm flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 bg-transparent/5 text-[#0284C7] rounded-sm flex items-center justify-center shrink-0">
                 <Mail className="h-6 w-6" />
               </div>
               <div>
                 <h4 className="text-xl font-bold mb-2">البريد الإلكتروني</h4>
                 <p className="text-gray-400 leading-relaxed">
-                  info@glassvision-ksa.com
+                  {getCompanyValue('email', 'info@glassvision-ksa.com')}
                 </p>
               </div>
             </div>
 
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-white/5 text-[#0284C7] rounded-sm flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 bg-transparent/5 text-[#0284C7] rounded-sm flex items-center justify-center shrink-0">
                 <Clock className="h-6 w-6" />
               </div>
               <div>
                 <h4 className="text-xl font-bold mb-2">ساعات العمل</h4>
                 <p className="text-gray-400 leading-relaxed">
-                  الأحد - الخميس: 8 صباحاً - 6 مساءً<br />
-                  الجمعة: مغلق
+                  {getCompanyValue('working_hours', 'الأحد - الخميس: 8 صباحاً - 6 مساءً')}<br />
+                  {getCompanyValue('working_hours_friday', 'الجمعة: مغلق')}
                 </p>
               </div>
             </div>
@@ -132,7 +148,7 @@ export default function Contact() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-white p-10 shadow-2xl text-gray-900 border border-gray-200"
+              className="bg-transparent p-10 shadow-2xl text-gray-900 border border-gray-200"
             >
               <h4 className="text-3xl font-extrabold text-[#0F172A] mb-8">أرسل لنا رسالة</h4>
               
