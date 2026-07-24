@@ -3,8 +3,8 @@ export interface Message {
   name: string;
   email: string;
   message: string;
-  createdAt: string;
-  isRead: boolean;
+  created_at: string;
+  is_read: boolean;
 }
 
 export interface Content {

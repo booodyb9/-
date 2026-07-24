@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useContent } from '../../contexts/ContentContext';
+import { saveContent } from '../../lib/supabase';
 import { LayoutTemplate, GripVertical, Eye, EyeOff, Save } from 'lucide-react';
 
 const AVAILABLE_SECTIONS = [
@@ -43,26 +44,7 @@ export default function HomepageBuilder() {
     try {
       updateContent('homepage_sections', JSON.stringify(sections));
       
-      const stored = localStorage.getItem('mock_contents');
-      let currentContents = stored ? JSON.parse(stored) : [];
-      
-      const index = currentContents.findIndex((c: any) => c.key === 'homepage_sections');
-      const newObj = {
-        id: 'homepage_sections',
-        key: 'homepage_sections',
-        title: 'ترتيب الصفحة الرئيسية',
-        type: 'array',
-        body: JSON.stringify(sections),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      if (index >= 0) {
-        currentContents[index] = newObj;
-      } else {
-        currentContents.push(newObj);
-      }
-      localStorage.setItem('mock_contents', JSON.stringify(currentContents));
+      await saveContent('homepage_sections', 'ترتيب الصفحة الرئيسية', 'array', JSON.stringify(sections));
 
       alert('تم حفظ الترتيب بنجاح');
     } catch (e) {

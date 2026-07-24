@@ -40,7 +40,7 @@ const Messages = memo(({ messages, loading }: MessagesProps) => {
                   </a>
                 </div>
                 <span className="text-xs text-gray-500">
-                  {new Date(msg.createdAt).toLocaleDateString('ar-SA')}
+                  {new Date(msg.created_at).toLocaleDateString('ar-SA')}
                 </span>
               </div>
               <p className="text-gray-700 mt-3 whitespace-pre-wrap">{msg.message}</p>

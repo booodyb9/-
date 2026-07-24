@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { supabase } from '../lib/supabase';
 
 
 export default function ChatBubble() {
@@ -17,18 +18,8 @@ export default function ChatBubble() {
     
     setIsSubmitting(true);
     try {
-      const storedMessages = localStorage.getItem('mock_messages');
-      let mockMessages = storedMessages ? JSON.parse(storedMessages) : [];
-      mockMessages.push({
-        id: Date.now().toString(),
-        name,
-        email,
-        message: `[سؤال عبر المحادثة السريعة]: ${message}`,
-        created_at: new Date().toISOString(),
-        is_read: false
-      });
-      localStorage.setItem('mock_messages', JSON.stringify(mockMessages));
-      window.dispatchEvent(new Event('mock-data-update'));
+      const { error } = await supabase.from("messages").insert([{ name, email, message: `[سؤال عبر المحادثة السريعة]: ${message}`, is_read: false }]);
+      if (error) throw error;
 
       setIsSuccess(true);
       setTimeout(() => {

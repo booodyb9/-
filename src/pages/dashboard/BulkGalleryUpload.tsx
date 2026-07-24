@@ -1,6 +1,8 @@
 import { useState, useCallback, memo } from 'react';
 import { Upload, Image as ImageIcon, CheckCircle, AlertCircle } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
+import { supabase, saveContent } from '../../lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Content } from './types';
 import { useContent } from '../../contexts/ContentContext';
@@ -31,31 +33,46 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
   const handleBulkUpload = useCallback(async (e: import("react").ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []) as File[];
     if (!files.length) return;
-
+    
     if (!confirm(`هل أنت متأكد من رفع ${files.length} صورة إلى قسم "${selectedCategory}"؟`)) {
       e.target.value = '';
       return;
     }
-
+    
     setUploading(true);
     setProgress({ total: files.length, current: 0, failed: 0 });
-
+    
     const newGalleryItems = [];
     let current = 0;
     let failed = 0;
-
+    
     for (const file of files) {
       try {
-        const downloadURL = URL.createObjectURL(file);
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${uuidv4()}.${fileExt}`;
+        const filePath = `${fileName}`;
         
-        const storedImages = localStorage.getItem('mock_images');
-        let mockImages = storedImages ? JSON.parse(storedImages) : [];
-        const newImage = { id: Date.now().toString(), name: file.name, url: downloadURL, created_at: new Date().toISOString() };
-        mockImages.push(newImage);
-        localStorage.setItem('mock_images', JSON.stringify(mockImages));
+        const { error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(filePath, file);
+          
+        if (uploadError) throw uploadError;
+        
+        const { data: pubData } = supabase.storage.from('media').getPublicUrl(filePath);
+        
+        const newImage = { 
+          id: uuidv4(), 
+          name: file.name, 
+          url: pubData.publicUrl, 
+          type: 'image',
+          size: file.size,
+          created_at: new Date().toISOString() 
+        };
+        
+        await supabase.from('media').insert([newImage]);
         
         newGalleryItems.push({
-          id: Date.now().toString(),
+          id: uuidv4(),
           title: file.name.split('.')[0],
           category: selectedCategory,
           description: '',
@@ -70,19 +87,25 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
       }
       setProgress({ total: files.length, current, failed });
     }
-
+    
     if (newGalleryItems.length > 0) {
       try {
-        const storedProjects = localStorage.getItem('mock_projects');
-        let mockProjects = storedProjects ? JSON.parse(storedProjects) : [];
+        const { data: currentContentData } = await supabase.from('contents').select('*').eq('key', 'premium_portfolio_projects').single();
+        
+        let mockProjects = [];
+        if (currentContentData && currentContentData.body) {
+           mockProjects = JSON.parse(currentContentData.body);
+        }
+        
         mockProjects = [...mockProjects, ...newGalleryItems];
-        localStorage.setItem('mock_projects', JSON.stringify(mockProjects));
+        
+        await saveContent('premium_portfolio_projects', 'Premium Portfolio Projects', 'json', JSON.stringify(mockProjects));
         fetchMedia();
       } catch (error) {
-        console.error("Error saving to local storage:", error);
+        console.error("Error saving to supabase:", error);
       }
     }
-
+    
     setUploading(false);
     setTimeout(() => setProgress(null), 3000);
     e.target.value = '';

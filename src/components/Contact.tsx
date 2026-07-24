@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import { useContent } from '../contexts/ContentContext';
+import { supabase } from '../lib/supabase';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -31,24 +32,17 @@ export default function Contact() {
     setStatus('submitting');
     
     try {
-      // Mock submit
-      const storedMessages = localStorage.getItem('mock_messages');
-      let mockMessages = storedMessages ? JSON.parse(storedMessages) : [];
-      mockMessages.push({
-        id: Date.now().toString(),
+      const { error } = await supabase.from('messages').insert([{
         name: formData.name,
-        email: formData.phone,
-        message: formData.message,
-        created_at: new Date().toISOString(),
+        email: formData.phone, // storing phone in email field as in original
+        message: `[الخدمة: ${formData.service}] - ${formData.message}`,
         is_read: false
-      });
-      localStorage.setItem('mock_messages', JSON.stringify(mockMessages));
-      window.dispatchEvent(new Event('mock-data-update'));
-
-      setTimeout(() => {
-        setStatus('success');
-        setFormData({ name: '', phone: '', service: '', message: '' });
-      }, 500);
+      }]);
+      if (error) throw error;
+      
+      setStatus('success');
+      setFormData({ name: '', phone: '', service: '', message: '' });
+      setTimeout(() => setStatus('idle'), 3000);
     } catch (err) {
       console.error(err);
       setStatus('error');

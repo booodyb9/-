@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, ChevronUp, ChevronDown, Upload } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
+import { supabase } from '../../lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 
 interface ArrayEditorProps {
@@ -68,9 +70,7 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
   const handleImageUpload = async (e: import("react").ChangeEvent<HTMLInputElement>, index: number, key: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploadingIndex({ index, key });
-
     try {
       const options = {
         maxSizeMB: 1,
@@ -80,14 +80,28 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
       
       const compressedFile = await imageCompression(file, options);
       
-      const downloadURL = URL.createObjectURL(compressedFile);
-      const newImage = { id: Date.now().toString(), name: file.name, url: downloadURL, created_at: new Date().toISOString() };
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `${fileName}`;
       
-      const storedImages = localStorage.getItem('mock_images');
-      let mockImages = storedImages ? JSON.parse(storedImages) : [];
-      mockImages.push(newImage);
-      localStorage.setItem('mock_images', JSON.stringify(mockImages));
-
+      const { error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(filePath, compressedFile);
+        
+      if (uploadError) throw uploadError;
+      
+      const { data } = supabase.storage.from('media').getPublicUrl(filePath);
+      
+      const newImage = { 
+        id: uuidv4(), 
+        name: file.name, 
+        url: data.publicUrl, 
+        type: 'image',
+        size: compressedFile.size,
+        created_at: new Date().toISOString() 
+      };
+      
+      await supabase.from('media').insert([newImage]);
       updateItem(index, key, newImage.url);
     } catch (error) {
       console.error("Upload error:", error);

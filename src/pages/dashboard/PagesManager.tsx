@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Edit3, Trash2, GripVertical, Settings } from 'lucide-react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { supabase, saveContent } from '../../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
@@ -49,28 +50,8 @@ export default function PagesManager({ pages, fetchContents }: Props) {
 
     setSaving(true);
     try {
-      const stored = localStorage.getItem('mock_contents');
-      let currentContents = stored ? JSON.parse(stored) : [];
+      await saveContent(editingPage.key, editingPage.parsed.title, 'page', JSON.stringify(editingPage.parsed));
       
-      const payload = {
-        id: uuidv4(),
-        key: editingPage.key,
-        title: editingPage.parsed.title,
-        type: 'page',
-        body: JSON.stringify(editingPage.parsed),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      const existingIdx = currentContents.findIndex((c: any) => c.key === editingPage.key);
-      if (existingIdx >= 0) {
-        currentContents[existingIdx] = payload;
-      } else {
-        currentContents.push(payload);
-      }
-
-      localStorage.setItem('mock_contents', JSON.stringify(currentContents));
-      window.dispatchEvent(new Event('mock-data-update'));
       
       alert('تم الحفظ بنجاح');
       fetchContents();
@@ -86,11 +67,8 @@ export default function PagesManager({ pages, fetchContents }: Props) {
   const handleDelete = async (key: string) => {
     if (!confirm('هل أنت متأكد من حذف هذه الصفحة؟')) return;
     try {
-      const stored = localStorage.getItem('mock_contents');
-      let currentContents = stored ? JSON.parse(stored) : [];
-      currentContents = currentContents.filter((c: any) => c.key !== key);
-      localStorage.setItem('mock_contents', JSON.stringify(currentContents));
-      window.dispatchEvent(new Event('mock-data-update'));
+      await saveContent(editingPage.key, editingPage.parsed.title, 'page', JSON.stringify(editingPage.parsed));
+      
       
       fetchContents();
     } catch (error: any) {

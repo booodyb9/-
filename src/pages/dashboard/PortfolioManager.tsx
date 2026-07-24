@@ -4,6 +4,7 @@ import { Plus, Edit2, Trash2, Eye, EyeOff, Star, Copy, Image as ImageIcon, Save,
 import { PortfolioProject } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { saveContent } from '../../lib/supabase';
 
 interface Props {
   contents: Content[];
@@ -46,29 +47,10 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
   const saveProjects = async (newProjects: PortfolioProject[]) => {
     setSaving(true);
     try {
-      let contentItems = [];
-      const stored = localStorage.getItem('mock_contents');
-      if (stored) {
-        contentItems = JSON.parse(stored);
-      }
-      const existingIdx = contentItems.findIndex((c: any) => c.key === 'premium_portfolio_projects');
-      if (existingIdx >= 0) {
-        contentItems[existingIdx].body = JSON.stringify(newProjects);
-      } else {
-        contentItems.push({
-          id: uuidv4(),
-          key: 'premium_portfolio_projects',
-          title: 'Premium Portfolio Projects',
-          type: 'json',
-          body: JSON.stringify(newProjects),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-      }
-      localStorage.setItem('mock_contents', JSON.stringify(contentItems));
+      await saveContent('premium_portfolio_projects', 'Premium Portfolio Projects', 'json', JSON.stringify(newProjects));
       
       // Dispatch storage event to trigger cross-tab sync and Context reload
-      window.dispatchEvent(new Event('storage'));
+      
       fetchContents();
     } catch (e) {
       console.error(e);

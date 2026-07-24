@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Upload, Trash2, Copy, Search, File, Image as ImageIcon, Video, Folder, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
 import { MediaFile } from './types';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '../../lib/supabase';
 
 interface Props {
   mediaFiles: MediaFile[];
@@ -22,35 +23,30 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
     try {
       const files = Array.from(e.target.files);
       const newFiles = await Promise.all(files.map(async (file: File) => {
-        // Read file as base64 (since we don't have a real backend)
-        return new Promise<MediaFile>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const result = event.target?.result as string;
-            resolve({
-              id: uuidv4(),
-              name: file.name,
-              url: result,
-              type: file.type.startsWith('image') ? 'image' : file.type.startsWith('video') ? 'video' : 'document',
-              size: file.size,
-              created_at: new Date().toISOString()
-            });
-          };
-          reader.readAsDataURL(file);
-        });
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${uuidv4()}.${fileExt}`;
+        const filePath = `${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(filePath, file);
+          
+        if (uploadError) throw uploadError;
+        
+        const { data } = supabase.storage.from('media').getPublicUrl(filePath);
+        
+        return {
+          id: uuidv4(),
+          name: file.name,
+          url: data.publicUrl,
+          type: file.type.startsWith('image') ? 'image' : file.type.startsWith('video') ? 'video' : 'document',
+          size: file.size,
+          created_at: new Date().toISOString()
+        };
       }));
-
-      const stored = localStorage.getItem('mock_media');
-      let currentMedia = stored ? JSON.parse(stored) : [];
-      currentMedia = [...newFiles, ...currentMedia];
       
-      // We might hit local storage limits, so just slice to keep it reasonable if it's too big,
-      // but for this task we'll just save it.
-      try {
-        localStorage.setItem('mock_media', JSON.stringify(currentMedia));
-      } catch (e) {
-        alert("Local storage quota exceeded! Please clear some images.");
-      }
+      const { error } = await supabase.from('media').insert(newFiles);
+      if (error) throw error;
       
       fetchMedia();
     } catch (err) {
@@ -61,14 +57,22 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
     }
   };
 
-  const handleDelete = (id: string | number) => {
+  const handleDelete = async (id: string | number) => {
     if (!confirm('Are you sure you want to delete this file?')) return;
-    const stored = localStorage.getItem('mock_media');
-    if (stored) {
-      let currentMedia = JSON.parse(stored);
-      currentMedia = currentMedia.filter((m: MediaFile) => m.id !== id);
-      localStorage.setItem('mock_media', JSON.stringify(currentMedia));
+    try {
+      const fileToDelete = mediaFiles.find(m => m.id === id);
+      if (fileToDelete && fileToDelete.url) {
+        // try to extract path from URL
+        const urlParts = fileToDelete.url.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        await supabase.storage.from('media').remove([fileName]);
+      }
+      const { error } = await supabase.from('media').delete().eq('id', id);
+      if (error) throw error;
       fetchMedia();
+    } catch (err) {
+      console.error(err);
+      alert('Delete failed');
     }
   };
 

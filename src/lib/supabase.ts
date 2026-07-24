@@ -11,3 +11,14 @@ export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder-key'
 );
+
+export const saveContent = async (key: string, title: string, type: string, body: string) => {
+  const { error } = await supabase.from('contents').upsert({
+    key,
+    title,
+    type,
+    body,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'key' });
+  if (error) throw error;
+};

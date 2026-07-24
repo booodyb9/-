@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Content } from '../pages/dashboard/types';
+import { supabase } from '../lib/supabase';
 
 interface ContentContextType {
   contents: Content[];
@@ -16,12 +17,11 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const fetchContents = async () => {
     try {
-      // Mock data
-      const stored = localStorage.getItem('mock_contents');
-      if (stored) {
-        setContents(JSON.parse(stored));
-      } else {
-        setContents([]);
+      const { data, error } = await supabase.from('contents').select('*');
+      if (error) {
+        console.error("Error fetching contents from Supabase:", error);
+      } else if (data) {
+        setContents(data as Content[]);
       }
     } catch (err) {
       console.error("Error fetching contents:", err);
@@ -32,17 +32,20 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchContents();
-    
-    const handleStorageChange = () => {
-      fetchContents();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('mock-data-update', handleStorageChange);
-    
+
+    const channel = supabase
+      .channel('contents_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contents' },
+        (payload) => {
+          fetchContents();
+        }
+      )
+      .subscribe();
+
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('mock-data-update', handleStorageChange);
+      supabase.removeChannel(channel);
     };
   }, []);
 
@@ -62,3 +65,4 @@ export function useContent() {
   }
   return context;
 }
+

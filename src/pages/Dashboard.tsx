@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import DashboardLayout from './dashboard/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
+import { useContent } from '../contexts/ContentContext';
 import { LogOut, Edit3, Cloud, Image, Mail, Upload } from 'lucide-react';
 import Messages from './dashboard/Messages';
 import MediaLibrary from './dashboard/MediaLibrary';
@@ -15,11 +16,13 @@ import PortfolioManager from './dashboard/PortfolioManager';
 import SiteSettings from './dashboard/SiteSettings';
 import { Message, Content, MediaFile } from './dashboard/types';
 
+import { supabase } from '../lib/supabase';
+
 export default function Dashboard() {
-  const { user, loading, signInWithGoogle, logout, token, accessToken, isAdmin } = useAuth();
+  const { user, loading, signInWithGoogle, logout, token, isAdmin } = useAuth();
+  const { contents, refreshContent: fetchContents } = useContent();
   
   const [messages, setMessages] = useState<Message[]>([]);
-  const [contents, setContents] = useState<Content[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [activeTab, setActiveTab] = useState<'home' | 'messages' | 'content' | 'pages' | 'drive' | 'media' | 'bulk_upload' | 'forms' | 'settings' | 'services' | 'portfolio' | 'blog' | 'testimonials' | 'faq' | 'partners' | 'homepage_builder' | 'navigation' | 'seo' | 'social' | 'users' | 'roles' | 'activity' | 'backup'>('home');
   const [isBackingUp, setIsBackingUp] = useState(false);
@@ -27,8 +30,9 @@ export default function Dashboard() {
 
   const fetchMedia = useCallback(async () => {
     try {
-      const stored = localStorage.getItem('mock_media');
-      setMediaFiles(stored ? JSON.parse(stored) : []);
+      const { data, error } = await supabase.from('media').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      setMediaFiles(data as MediaFile[]);
     } catch (error) {
       console.error("Failed to fetch media:", error);
     }
@@ -37,9 +41,9 @@ export default function Dashboard() {
   const fetchMessages = useCallback(async () => {
     setLoadingMessages(true);
     try {
-      const stored = localStorage.getItem('mock_messages');
-      const data = stored ? JSON.parse(stored) : [];
-      setMessages(data.map((m: any) => ({ ...m, createdAt: m.created_at })) as any);
+      const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      setMessages(data as any);
     } catch (error) {
       console.error("Failed to fetch messages:", error);
     } finally {
@@ -47,21 +51,32 @@ export default function Dashboard() {
     }
   }, []);
 
-  const fetchContents = useCallback(async () => {
-    try {
-      const stored = localStorage.getItem('mock_contents');
-      const data = stored ? JSON.parse(stored) : [];
-      setContents(data as any);
-    } catch (error) {
-      console.error("Failed to fetch contents:", error);
-    }
-  }, []);
+  
 
   useEffect(() => {
     if (user && isAdmin) {
       fetchMessages();
       fetchContents();
       fetchMedia();
+      
+      const mediaChannel = supabase
+        .channel('media_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'media' }, () => {
+          fetchMedia();
+        })
+        .subscribe();
+        
+      const messagesChannel = supabase
+        .channel('messages_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+          fetchMessages();
+        })
+        .subscribe();
+        
+      return () => {
+        supabase.removeChannel(mediaChannel);
+        supabase.removeChannel(messagesChannel);
+      };
     }
   }, [user, isAdmin, fetchMessages, fetchContents, fetchMedia]);
 

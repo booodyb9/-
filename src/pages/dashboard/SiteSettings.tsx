@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Content } from './types';
 import { Save, Image as ImageIcon } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { saveContent } from '../../lib/supabase';
 
 interface Props {
   contents: Content[];
@@ -24,28 +25,8 @@ export default function SiteSettings({ contents, fetchContents }: Props) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const stored = localStorage.getItem('mock_contents');
-      let contentItems = [];
-      if (stored) {
-        contentItems = JSON.parse(stored);
-      }
-      const existingIdx = contentItems.findIndex((c: any) => c.key === 'site_settings');
-      if (existingIdx >= 0) {
-        contentItems[existingIdx].body = JSON.stringify(settings);
-        contentItems[existingIdx].updated_at = new Date().toISOString();
-      } else {
-        contentItems.push({
-          id: uuidv4(),
-          key: 'site_settings',
-          title: 'Site Settings',
-          type: 'json',
-          body: JSON.stringify(settings),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-      }
-      localStorage.setItem('mock_contents', JSON.stringify(contentItems));
-      window.dispatchEvent(new Event('storage'));
+      await saveContent('site_settings', 'Site Settings', 'json', JSON.stringify(settings));
+      
       fetchContents();
       alert('تم حفظ الإعدادات بنجاح');
     } catch (e) {

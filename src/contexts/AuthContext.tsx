@@ -1,18 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-
-export interface User {
-  id: string;
-  email?: string;
-  user_metadata?: {
-    avatar_url?: string;
-    full_name?: string;
-  };
-}
-
-export interface Session {
-  access_token: string;
-  user: User;
-}
+import { supabase } from '../lib/supabase';
+import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
@@ -33,38 +21,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Mock local session
-    const storedAuth = localStorage.getItem('mock_auth');
-    if (storedAuth) {
-      try {
-        const parsed = JSON.parse(storedAuth);
-        setSession(parsed.session);
-        setUser(parsed.user);
-        setIsAdmin(true); // default to admin for mock
-      } catch (e) {
-        console.error("Failed to parse mock auth", e);
-      }
-    }
-    setLoading(false);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsAdmin(!!session?.user);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsAdmin(!!session?.user);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signInWithGoogle = async () => {
     try {
-      const mockUser = {
-        id: 'mock_user_id',
-        email: 'admin@example.com',
-        user_metadata: {
-          full_name: 'Admin User',
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/admin'
         }
-      };
-      const mockSession = {
-        access_token: 'mock_token',
-        user: mockUser
-      };
-      localStorage.setItem('mock_auth', JSON.stringify({ session: mockSession, user: mockUser }));
-      setUser(mockUser);
-      setSession(mockSession);
-      setIsAdmin(true);
+      });
+      if (error) throw error;
     } catch (error) {
       console.error("Error signing in", error);
     }
@@ -72,10 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      localStorage.removeItem('mock_auth');
-      setUser(null);
-      setSession(null);
-      setIsAdmin(false);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     } catch (error) {
       console.error("Error signing out", error);
     }
@@ -103,3 +85,4 @@ export function useAuth() {
   }
   return context;
 }
+

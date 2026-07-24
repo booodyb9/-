@@ -5,6 +5,7 @@ import 'react-quill/dist/quill.snow.css';
 import { Content } from './types';
 import ArrayEditor from './ArrayEditor';
 import { useContent } from '../../contexts/ContentContext';
+import { saveContent } from '../../lib/supabase';
 
 interface ContentManagerProps {
   contents: Content[];
@@ -220,16 +221,7 @@ export default function ContentManager({ contents, fetchContents, token, filterK
     try {
       
       // Mock update
-      const stored = localStorage.getItem('mock_contents');
-      let currentContents = stored ? JSON.parse(stored) : [];
-      
-      const index = currentContents.findIndex((c: any) => c.key === editingContent.key);
-      if (index >= 0) {
-        currentContents[index] = { ...editingContent, updated_at: new Date().toISOString() };
-      } else {
-        currentContents.push({ ...editingContent, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
-      }
-      localStorage.setItem('mock_contents', JSON.stringify(currentContents));
+      await saveContent(editingContent.key, editingContent.title, editingContent.type, editingContent.body);
       
       // Also update context directly for instant feedback
       updateContent(editingContent.key, editingContent.body);
