@@ -7,6 +7,7 @@ interface ContentContextType {
   loading: boolean;
   getContent: (key: string) => Content | undefined;
   refreshContent: () => Promise<void>;
+  updateContent: (key: string, body: string) => void;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -51,8 +52,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const getContent = (key: string) => contents.find(c => c.key === key);
 
+  const updateContent = (key: string, body: string) => {
+    setContents(prev => prev.map(c => c.key === key ? { ...c, body } : c));
+  };
+
   return (
-    <ContentContext.Provider value={{ contents, loading, getContent, refreshContent: fetchContents }}>
+    <ContentContext.Provider value={{ contents, loading, getContent, refreshContent: fetchContents, updateContent }}>
       {children}
     </ContentContext.Provider>
   );

@@ -91,12 +91,18 @@ export default function Dashboard() {
       };
       
       const fileContent = JSON.stringify(backupData, null, 2);
-      console.log('Mock Backup Content:', fileContent);
+      const blob = new Blob([fileContent], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
       
-      setTimeout(() => {
-        alert('تم إنشاء النسخة الاحتياطية الوهمية بنجاح!');
-        setIsBackingUp(false);
-      }, 1000);
+      alert('تم تحميل النسخة الاحتياطية بنجاح!');
+      setIsBackingUp(false);
     } catch (error) {
       console.error('Error backing up:', error);
       alert('حدث خطأ أثناء النسخ الاحتياطي');
@@ -141,11 +147,11 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout activeTab={activeTab} setActiveTab={setActiveTab as any}>
-      {activeTab === 'home' && <DashboardHome />}
+      {activeTab === 'home' && <DashboardHome messages={messages} contents={contents} mediaFiles={mediaFiles} />}
       {activeTab === 'messages' && <Messages messages={messages} loading={loadingMessages} />}
       {activeTab === 'media' && <MediaLibrary mediaFiles={mediaFiles} fetchMedia={fetchMedia} />}
       {activeTab === 'bulk_upload' && <BulkGalleryUpload token={token as any} contents={contents} fetchContents={fetchContents} fetchMedia={fetchMedia as any} />}
-      {activeTab === 'drive' && <DriveBackup isBackingUp={isBackingUp} accessToken={accessToken as any} backupToDrive={backupToDrive} />}
+      {activeTab === 'backup' && <DriveBackup isBackingUp={isBackingUp} accessToken={accessToken as any} backupToDrive={backupToDrive} />}
       {activeTab === 'pages' && <PagesManager pages={contents.filter(c => c.type === 'page')} fetchContents={fetchContents} />}
       
       {/* Specific Content Managers */}

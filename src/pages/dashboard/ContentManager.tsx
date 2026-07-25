@@ -220,7 +220,7 @@ export default function ContentManager({ contents, fetchContents, token, filterK
     setSavingContent(true);
     try {
       
-      // Mock update
+      
       await saveContent(editingContent.key, editingContent.title, editingContent.type, editingContent.body);
       
       // Also update context directly for instant feedback

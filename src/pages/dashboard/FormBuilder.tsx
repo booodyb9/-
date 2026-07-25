@@ -1,22 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useContent } from '../../contexts/ContentContext';
+import { saveContent } from '../../lib/supabase';
 import { Plus, Trash2, Edit2, FileText, Settings, GripVertical } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 const DraggableAny = Draggable as any;
 
 export default function FormBuilder() {
-  const [forms, setForms] = useState([
-    { id: '1', title: 'نموذج اتصل بنا الأساسي', fields: [
-      { id: 'f1', label: 'الاسم', type: 'text', required: true },
-      { id: 'f2', label: 'البريد الإلكتروني', type: 'email', required: true },
-      { id: 'f3', label: 'الرسالة', type: 'textarea', required: true }
-    ]},
-    { id: '2', title: 'طلب عرض سعر', fields: [
-      { id: 'f1', label: 'الاسم', type: 'text', required: true },
-      { id: 'f2', label: 'رقم الهاتف', type: 'tel', required: true },
-      { id: 'f3', label: 'نوع الخدمة', type: 'select', options: ['تركيب زجاج', 'صيانة', 'استشارة'], required: true }
-    ]}
-  ]);
+  const { getContent, updateContent, refreshContent } = useContent();
+  const formsContent = getContent('custom_forms');
+  
+  const [forms, setForms] = useState<any[]>([]);
+  
+  useEffect(() => {
+    if (formsContent && formsContent.body) {
+      try {
+        setForms(JSON.parse(formsContent.body));
+      } catch (e) {
+        console.error('Failed to parse forms content', e);
+      }
+    } else {
+      setForms([
+        { id: '1', title: 'نموذج اتصل بنا الأساسي', fields: [
+          { id: 'f1', label: 'الاسم', type: 'text', required: true },
+          { id: 'f2', label: 'البريد الإلكتروني', type: 'email', required: true },
+          { id: 'f3', label: 'الرسالة', type: 'textarea', required: true }
+        ]},
+        { id: '2', title: 'طلب عرض سعر', fields: [
+          { id: 'f1', label: 'الاسم', type: 'text', required: true },
+          { id: 'f2', label: 'رقم الهاتف', type: 'tel', required: true },
+          { id: 'f3', label: 'نوع الخدمة', type: 'select', options: ['تركيب زجاج', 'صيانة', 'استشارة'], required: true }
+        ]}
+      ]);
+    }
+  }, [formsContent]);
+
+  const saveFormsToDb = async (newForms: any[]) => {
+    setForms(newForms);
+    const bodyStr = JSON.stringify(newForms);
+    updateContent('custom_forms', bodyStr);
+    try {
+      await saveContent('custom_forms', 'Custom Forms', 'json', bodyStr);
+      refreshContent();
+    } catch (e) {
+      console.error('Failed to save forms', e);
+      alert('حدث خطأ أثناء الحفظ');
+    }
+  };
 
   const [editingForm, setEditingForm] = useState<any>(null);
 
@@ -40,7 +70,7 @@ export default function FormBuilder() {
             <button onClick={() => setEditingForm(null)} className="px-4 py-2 border rounded">إلغاء</button>
             <button 
               onClick={() => {
-                setForms(forms.map(f => f.id === editingForm.id ? editingForm : f));
+                saveFormsToDb(forms.map(f => f.id === editingForm.id ? editingForm : f));
                 setEditingForm(null);
               }} 
               className="px-4 py-2 bg-[#0284C7] text-white rounded font-bold"

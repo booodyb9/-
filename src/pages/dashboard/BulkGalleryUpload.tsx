@@ -92,14 +92,14 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
       try {
         const { data: currentContentData } = await supabase.from('contents').select('*').eq('key', 'premium_portfolio_projects').single();
         
-        let mockProjects = [];
+        let projects = [];
         if (currentContentData && currentContentData.body) {
-           mockProjects = JSON.parse(currentContentData.body);
+           projects = JSON.parse(currentContentData.body);
         }
         
-        mockProjects = [...mockProjects, ...newGalleryItems];
+        projects = [...projects, ...newGalleryItems];
         
-        await saveContent('premium_portfolio_projects', 'Premium Portfolio Projects', 'json', JSON.stringify(mockProjects));
+        await saveContent('premium_portfolio_projects', 'Premium Portfolio Projects', 'json', JSON.stringify(projects));
         fetchMedia();
       } catch (error) {
         console.error("Error saving to supabase:", error);
