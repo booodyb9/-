@@ -79,8 +79,8 @@ export default function Process() {
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto mb-20"
         >
-          <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-3">آلية العمل</h2>
-          <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight">
+          <h2 className="text-[#0ea5e9] text-sm font-bold tracking-widest uppercase mb-4">آلية العمل</h2>
+          <h3 className="text-4xl md:text-5xl font-extrabold text-[#0F172A] leading-tight tracking-tight">
             خطوات التنفيذ
           </h3>
           <p className="text-gray-600 mt-6 leading-relaxed">
@@ -100,9 +100,9 @@ export default function Process() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="flex flex-col items-center text-center"
+                className="flex flex-col items-center text-center group"
               >
-                <div className="w-20 h-20 bg-white border-4 border-gray-50 rounded-full flex items-center justify-center text-[#0284C7] shadow-sm mb-6 relative">
+                <div className="w-24 h-24 bg-white border border-gray-100 rounded-full flex items-center justify-center text-[#0ea5e9] shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-8 relative group-hover:scale-110 transition-transform duration-500">
                   {renderIcon(step.icon, index)}
                   <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#0F172A] text-white text-sm font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
                     {index + 1}

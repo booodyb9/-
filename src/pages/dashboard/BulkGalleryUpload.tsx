@@ -15,17 +15,19 @@ interface BulkGalleryUploadProps {
 }
 
 const CATEGORIES = [
-  'واجهات زجاجية',
-  'قواطع داخلية',
-  'أبواب ونوافذ',
-  'واجهات معارض',
-  'مرايا ديكور',
-  'كبائن شاور',
-  'درابزين زجاج',
+  'واجهات زجاجية (Glass Facades)',
+  'أبواب زجاجية (Glass Doors)',
+  'كبائن شاور (Shower Cabins)',
+  'مرايا (Mirrors)',
+  'زجاج مكاتب (Office Glass)',
+  'درابزين (Railings)',
+  'سكني (Residential)',
+  'تجاري (Commercial)',
+  'أخرى (Other)'
 ];
 
 const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: BulkGalleryUploadProps) => {
-  const { refreshContent } = useContent();
+  const { refreshContent, updateContent } = useContent();
   const [selectedCategory, setSelectedCategory] = useState<string>(CATEGORIES[0]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<{ total: number; current: number; failed: number } | null>(null);
@@ -48,37 +50,48 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
     
     for (const file of files) {
       try {
+        const options = { maxWidthOrHeight: 1920, useWebWorker: false };
+        const compressedFile = await imageCompression(file, options);
         const fileExt = file.name.split('.').pop();
         const fileName = `${uuidv4()}.${fileExt}`;
         const filePath = `${fileName}`;
         
         const { error: uploadError } = await supabase.storage
           .from('media')
-          .upload(filePath, file);
+          .upload(filePath, compressedFile);
           
         if (uploadError) throw uploadError;
         
         const { data: pubData } = supabase.storage.from('media').getPublicUrl(filePath);
         
         const newImage = { 
-          id: uuidv4(), 
-          name: file.name, 
-          url: pubData.publicUrl, 
-          type: 'image',
-          size: file.size,
-          created_at: new Date().toISOString() 
+          name: file.name,
+          url: pubData.publicUrl,
+          storage_path: `media/${filePath}`
         };
         
-        await supabase.from('media').insert([newImage]);
+        const { error: insertError } = await supabase.from('media').insert([newImage]);
+        if (insertError) console.error("Media insert error:", insertError);
         
+        const newId = uuidv4();
         newGalleryItems.push({
-          id: uuidv4(),
+          id: newId,
+          slug: newId,
           title: file.name.split('.')[0],
           category: selectedCategory,
           description: '',
-          image: newImage.url,
-          class_name: 'md:col-span-1 md:row-span-1',
-          order_index: Date.now()
+          location: '',
+          serviceType: '',
+          client: '',
+          completionDate: '',
+          materialsUsed: '',
+          coverImage: newImage.url,
+          galleryImages: [newImage.url],
+          isFeatured: true,
+          isHidden: false,
+          order: Date.now(),
+          seoTitle: '',
+          seoDescription: ''
         });
         current++;
       } catch (error) {
@@ -100,7 +113,9 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
         projects = [...projects, ...newGalleryItems];
         
         await saveContent('premium_portfolio_projects', 'Premium Portfolio Projects', 'json', JSON.stringify(projects));
+        updateContent('premium_portfolio_projects', JSON.stringify(projects));
         fetchMedia();
+        refreshContent();
       } catch (error) {
         console.error("Error saving to supabase:", error);
       }

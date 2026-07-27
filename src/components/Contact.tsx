@@ -50,7 +50,7 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="py-24 bg-[#111827] text-white relative overflow-hidden">
+    <section id="contact" className="py-24 bg-[#0F172A] text-white relative overflow-hidden">
       <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div 
@@ -60,13 +60,13 @@ export default function Contact() {
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto mb-16"
         >
-          <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-3">تواصل معنا</h2>
+          <h2 className="text-[#0ea5e9] text-sm font-bold tracking-widest uppercase mb-4">تواصل معنا</h2>
           
           {contactContent?.body ? (
             <div className="prose prose-lg prose-invert mx-auto mb-6" dangerouslySetInnerHTML={{ __html: contactContent.body }} />
           ) : (
             <>
-              <h3 className="text-3xl md:text-5xl font-extrabold mb-6">
+              <h3 className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">
                 مستعدون لتنفيذ مشروعك القادم
               </h3>
               <p className="text-lg text-gray-400">
@@ -86,7 +86,7 @@ export default function Contact() {
             className="lg:col-span-2 space-y-8"
           >
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-transparent/5 text-[#0284C7] rounded-sm flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 bg-white/5 text-[#0ea5e9] rounded-2xl shadow-inner border border-white/10 flex items-center justify-center shrink-0">
                 <MapPin className="h-6 w-6" />
               </div>
               <div>
@@ -99,7 +99,7 @@ export default function Contact() {
             </div>
 
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-transparent/5 text-[#0284C7] rounded-sm flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 bg-white/5 text-[#0ea5e9] rounded-2xl shadow-inner border border-white/10 flex items-center justify-center shrink-0">
                 <Phone className="h-6 w-6" />
               </div>
               <div>
@@ -111,7 +111,7 @@ export default function Contact() {
             </div>
 
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-transparent/5 text-[#0284C7] rounded-sm flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 bg-white/5 text-[#0ea5e9] rounded-2xl shadow-inner border border-white/10 flex items-center justify-center shrink-0">
                 <Mail className="h-6 w-6" />
               </div>
               <div>
@@ -123,7 +123,7 @@ export default function Contact() {
             </div>
 
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-transparent/5 text-[#0284C7] rounded-sm flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 bg-white/5 text-[#0ea5e9] rounded-2xl shadow-inner border border-white/10 flex items-center justify-center shrink-0">
                 <Clock className="h-6 w-6" />
               </div>
               <div>
@@ -142,7 +142,7 @@ export default function Contact() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-transparent p-10 shadow-2xl text-gray-900 border border-gray-200"
+              className="bg-white rounded-3xl p-10 sm:p-12 shadow-[0_20px_60px_rgb(0,0,0,0.3)] text-[#0F172A] border border-gray-100"
             >
               <h4 className="text-3xl font-extrabold text-[#0F172A] mb-8">أرسل لنا رسالة</h4>
               
@@ -167,7 +167,7 @@ export default function Contact() {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full px-4 py-3 border-2 border-gray-200 focus:border-[#0284C7] transition-colors bg-[#F9FAFB] outline-none rounded-none"
+                      className="w-full px-4 py-3 border-2 border-gray-200 focus:border-[#0ea5e9] focus:ring-4 focus:ring-[#0ea5e9]/10 transition-all bg-gray-50 outline-none rounded-xl"
                       placeholder="أحمد محمد"
                     />
                   </div>
@@ -180,7 +180,7 @@ export default function Contact() {
                       value={formData.phone}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
                       dir="ltr"
-                      className="w-full px-4 py-3 border-2 border-gray-200 focus:border-[#0284C7] transition-colors bg-[#F9FAFB] outline-none rounded-none text-right"
+                      className="w-full px-4 py-3 border-2 border-gray-200 focus:border-[#0ea5e9] focus:ring-4 focus:ring-[#0ea5e9]/10 transition-all bg-gray-50 outline-none rounded-xl text-right"
                       placeholder="+966 5X XXX XXXX"
                     />
                   </div>
@@ -192,7 +192,7 @@ export default function Contact() {
                     id="service"
                     value={formData.service}
                     onChange={(e) => setFormData({...formData, service: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-200 focus:border-[#0284C7] transition-colors bg-[#F9FAFB] outline-none rounded-none appearance-none"
+                    className="w-full px-4 py-3 border-2 border-gray-200 focus:border-[#0ea5e9] focus:ring-4 focus:ring-[#0ea5e9]/10 transition-all bg-gray-50 outline-none rounded-xl appearance-none"
                   >
                     <option value="">اختر الخدمة...</option>
                     <option value="facade">واجهات زجاجية</option>
@@ -211,7 +211,7 @@ export default function Contact() {
                     value={formData.message}
                     onChange={(e) => setFormData({...formData, message: e.target.value})}
                     rows={4}
-                    className="w-full px-4 py-3 border-2 border-gray-200 focus:border-[#0284C7] transition-colors bg-[#F9FAFB] outline-none rounded-none resize-none"
+                    className="w-full px-4 py-3 border-2 border-gray-200 focus:border-[#0ea5e9] focus:ring-4 focus:ring-[#0ea5e9]/10 transition-all bg-gray-50 outline-none rounded-xl resize-none"
                     placeholder="اكتب تفاصيل مشروعك أو استفسارك هنا..."
                   ></textarea>
                 </div>

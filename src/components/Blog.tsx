@@ -55,10 +55,10 @@ export default function Blog() {
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto mb-16"
         >
-          <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-3">
+          <h2 className="text-[#0ea5e9] text-sm font-bold tracking-widest uppercase mb-4">
             المدونة والمعرفة
           </h2>
-          <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight mb-4">
+          <h3 className="text-4xl md:text-5xl font-extrabold text-[#0F172A] leading-tight mb-6 tracking-tight">
             أحدث المقالات والنصائح
           </h3>
           
@@ -79,7 +79,7 @@ export default function Blog() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="bg-white rounded-sm border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col"
+              className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-2 group flex flex-col"
             >
               <div className="relative h-48 overflow-hidden bg-gray-200">
                 {post.image && typeof post.image === 'string' && post.image.trim() !== '' && (
@@ -89,7 +89,7 @@ export default function Blog() {
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                 )}
-                <div className="absolute top-4 right-4 bg-[#0284C7] text-white text-xs font-bold px-3 py-1 rounded-sm">
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md text-[#0ea5e9] text-xs font-bold px-4 py-1.5 rounded-full shadow-sm">
                   {post.category}
                 </div>
               </div>
@@ -98,14 +98,14 @@ export default function Blog() {
                   <Calendar className="h-4 w-4 ml-2" />
                   <time>{post.date}</time>
                 </div>
-                <h4 className="text-xl font-bold text-[#0F172A] mb-3 line-clamp-2 hover:text-[#0284C7] transition-colors cursor-pointer">
+                <h4 className="text-xl font-bold text-[#0F172A] mb-3 line-clamp-2 hover:text-[#0ea5e9] transition-colors cursor-pointer">
                   {post.title}
                 </h4>
                 <p className="text-gray-600 mb-6 line-clamp-3 flex-grow">
                   {post.excerpt}
                 </p>
                 <div className="mt-auto">
-                  <Link to={`/blog/${encodeURIComponent(post.title.replace(/\s+/g, '-').toLowerCase())}`} className="flex items-center text-[#0284C7] font-bold group-hover:text-[#0369A1] transition-colors">
+                  <Link to={`/blog/${encodeURIComponent(post.title.replace(/\s+/g, '-').toLowerCase())}`} className="flex items-center text-[#0ea5e9] font-bold group-hover:text-[#0369A1] transition-colors">
                     اقرأ المزيد
                     <ArrowLeft className="h-4 w-4 mr-2 transform group-hover:-translate-x-1 transition-transform" />
                   </Link>

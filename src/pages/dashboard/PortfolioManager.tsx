@@ -5,6 +5,7 @@ import { PortfolioProject } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { saveContent } from '../../lib/supabase';
+import { useContent } from '../../contexts/ContentContext';
 
 interface Props {
   contents: Content[];
@@ -25,6 +26,7 @@ const CATEGORIES = [
 ];
 
 export default function PortfolioManager({ contents, fetchContents, token }: Props) {
+  const { updateContent } = useContent();
   const [projects, setProjects] = useState<PortfolioProject[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [currentProject, setCurrentProject] = useState<Partial<PortfolioProject>>({});
@@ -48,6 +50,7 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
     setSaving(true);
     try {
       await saveContent('premium_portfolio_projects', 'Premium Portfolio Projects', 'json', JSON.stringify(newProjects));
+      updateContent('premium_portfolio_projects', JSON.stringify(newProjects));
       
       // Dispatch storage event to trigger cross-tab sync and Context reload
       
@@ -98,6 +101,7 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
   };
 
   const handleEdit = (project: PortfolioProject) => {
+    if (!project.slug) project.slug = project.id;
     setCurrentProject({ ...project });
     setIsEditing(true);
   };

@@ -16,6 +16,7 @@ export interface Content {
 }
 
 export interface MediaFile {
+  storage_path?: string;
   id: string | number;
   name: string;
   url: string;

@@ -11,7 +11,6 @@ const AVAILABLE_SECTIONS = [
   { id: 'visualizer', label: 'متخيل الزجاج (Visualizer)' },
   { id: 'stats', label: 'الإحصائيات (Stats)' },
   { id: 'partners', label: 'شركاء النجاح (Partners)' },
-  { id: 'portfolio', label: 'معرض الأعمال (Portfolio)' },
   { id: 'testimonials', label: 'آراء العملاء (Testimonials)' },
   { id: 'faq', label: 'الأسئلة الشائعة (FAQ)' },
   { id: 'blog', label: 'المدونة (Blog)' },
@@ -101,7 +100,7 @@ export default function HomepageBuilder() {
 
       <div className="space-y-3">
         {sections.map((section, idx) => (
-          <div key={section.id} className={`border rounded-lg p-4 flex items-center gap-4 transition-colors ${section.isVisible ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-60'}`}>
+          <div key={`${section.id}-${idx}`} className={`border rounded-lg p-4 flex items-center gap-4 transition-colors ${section.isVisible ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-60'}`}>
             <div className="flex flex-col gap-1">
                <button onClick={() => moveUp(idx)} className="text-gray-400 hover:text-gray-700" disabled={idx === 0}>↑</button>
                <button onClick={() => moveDown(idx)} className="text-gray-400 hover:text-gray-700" disabled={idx === sections.length - 1}>↓</button>

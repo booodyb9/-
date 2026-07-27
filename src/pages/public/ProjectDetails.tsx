@@ -36,7 +36,7 @@ export default function ProjectDetails() {
     if (portfolioContent && portfolioContent.body) {
       try {
         const projects: PortfolioProject[] = JSON.parse(portfolioContent.body);
-        const found = projects.find(p => p.slug === slug);
+        const found = projects.find(p => p.slug === slug || p.id === slug);
         setProject(found || null);
         
         if (found) {
@@ -82,7 +82,8 @@ export default function ProjectDetails() {
     );
   }
 
-  const allImages = [project.coverImage, ...(project.galleryImages || [])].filter(Boolean);
+  const allImages = [
+    ...(project.image && !project.coverImage ? [project.image] : []),project.coverImage, ...(project.galleryImages || [])].filter(Boolean);
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);

@@ -36,12 +36,9 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
         const { data } = supabase.storage.from('media').getPublicUrl(filePath);
         
         return {
-          id: uuidv4(),
           name: file.name,
           url: data.publicUrl,
-          type: file.type.startsWith('image') ? 'image' : file.type.startsWith('video') ? 'video' : 'document',
-          size: file.size,
-          created_at: new Date().toISOString()
+          storage_path: `media/${filePath}`
         };
       }));
       
@@ -61,11 +58,15 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
     if (!confirm('Are you sure you want to delete this file?')) return;
     try {
       const fileToDelete = mediaFiles.find(m => m.id === id);
-      if (fileToDelete && fileToDelete.url) {
-        // try to extract path from URL
-        const urlParts = fileToDelete.url.split('/');
-        const fileName = urlParts[urlParts.length - 1];
-        await supabase.storage.from('media').remove([fileName]);
+      if (fileToDelete) {
+        if (fileToDelete.storage_path) {
+           const path = fileToDelete.storage_path.replace('media/', '');
+           await supabase.storage.from('media').remove([path]);
+        } else if (fileToDelete.url) {
+           const urlParts = fileToDelete.url.split('/');
+           const fileName = urlParts[urlParts.length - 1];
+           await supabase.storage.from('media').remove([fileName]);
+        }
       }
       const { error } = await supabase.from('media').delete().eq('id', id);
       if (error) throw error;
@@ -92,7 +93,7 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
 
   const filteredMedia = mediaFiles.filter(m => {
     const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filter === 'all' || m.type === filter;
+    const matchesFilter = filter === 'all' || (m.type === filter || (filter === 'image' && m.url && m.url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i)) || (filter === 'video' && m.url && m.url.match(/\.(mp4|webm|ogg)$/i)));
     return matchesSearch && matchesFilter;
   });
 
@@ -142,9 +143,9 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
             {filteredMedia.map(file => (
               <div key={file.id} className="group relative border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-gray-50 cursor-pointer" onClick={() => onSelect && onSelect(file.url)}>
                 <div className="aspect-square bg-gray-100 flex items-center justify-center relative">
-                  {file.type === 'image' ? (
+                  {file.url && file.url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) ? (
                     <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
-                  ) : file.type === 'video' ? (
+                  ) : file.url && file.url.match(/\.(mp4|webm|ogg)$/i) ? (
                     <Video className="w-12 h-12 text-gray-400" />
                   ) : (
                     <File className="w-12 h-12 text-gray-400" />

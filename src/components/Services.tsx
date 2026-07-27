@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Home, Building, Maximize, Droplets, LayoutGrid, Store } from 'lucide-react';
+import { Home, Building, Maximize, Droplets, LayoutGrid, Store, ArrowLeft } from 'lucide-react';
 import CostCalculator from './CostCalculator';
 import { useContent } from '../contexts/ContentContext';
 
@@ -45,7 +45,7 @@ const defaultServices = [
 ];
 
 const renderIcon = (iconName: string) => {
-  const props = { className: "h-8 w-8" };
+  const props = { className: "h-6 w-6" };
   switch (iconName) {
     case 'Building': return <Building {...props} />;
     case 'LayoutGrid': return <LayoutGrid {...props} />;
@@ -60,10 +60,9 @@ const renderIcon = (iconName: string) => {
 export default function Services() {
   const phoneNumber = "966510233706";
   const { getContent } = useContent();
-
   const introContent = getContent('services_intro');
   const itemsContent = getContent('services_items');
-
+  
   const services = useMemo(() => {
     if (itemsContent?.body) {
       try {
@@ -77,75 +76,95 @@ export default function Services() {
   }, [itemsContent]);
 
   return (
-    <section id="services" className="py-24 bg-transparent">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="services" className="py-24 bg-gray-50 relative overflow-hidden">
+      {/* Premium Background Elements */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-blue-100/50 to-transparent blur-3xl rounded-full pointer-events-none opacity-60"></div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center max-w-3xl mx-auto mb-16"
+          className="text-center max-w-3xl mx-auto mb-20"
         >
-          <h2 className="text-[#0284C7] text-sm font-bold uppercase tracking-widest mb-3">خدماتنا</h2>
-          <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight mb-6">
-            حلول زجاجية متكاملة لكل احتياجاتك
+          <h2 className="text-[#0284C7] text-sm font-bold uppercase tracking-widest mb-4">
+            خدماتنا
+          </h2>
+          <h3 className="text-4xl md:text-5xl font-extrabold text-[#0F172A] leading-[1.15] mb-6 tracking-tight">
+            حلول هندسية متكاملة <br /> للواجهات والقواطع
           </h3>
           
           {introContent?.body ? (
-            <div className="prose prose-lg mx-auto text-gray-600 mb-8" dangerouslySetInnerHTML={{ __html: introContent.body }} />
+            <div className="prose prose-lg mx-auto text-gray-500 mb-8" dangerouslySetInnerHTML={{ __html: introContent.body }} />
           ) : (
-            <p className="text-lg text-gray-600 mb-8">
-              نقدم مجموعة واسعة من خدمات تركيب الزجاج باستخدام أفضل الخامات العالمية وبأيدي فنيين محترفين.
+            <p className="text-lg text-gray-500 mb-8 font-light">
+              نقدم مجموعة واسعة من خدمات تركيب الزجاج باستخدام أفضل الخامات العالمية وبأيدي فنيين محترفين، لتلبية كافة متطلبات المشاريع السكنية والتجارية.
             </p>
           )}
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-24">
           {services.map((service, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-white/80 backdrop-blur-md overflow-hidden shadow-sm hover:shadow-2xl transition-shadow duration-300 group border border-gray-200 flex flex-col rounded-2xl"
+              transition={{ duration: 0.6, delay: (index % 3) * 0.1 }}
+              className="group relative bg-white rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-500 border border-gray-100 flex flex-col hover:-translate-y-2"
             >
-              <div className="h-48 overflow-hidden relative shrink-0">
+              <div className="h-56 overflow-hidden relative shrink-0">
                 {service.image && typeof service.image === 'string' && service.image.trim() !== '' && (
                   <img
                     src={service.image}
                     alt={service.title}
                     loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </div>
-              <div className="p-8 flex flex-col flex-grow">
-                <div className="w-14 h-14 bg-[#0284C7]/10 text-[#0284C7] flex items-center justify-center mb-6 group-hover:bg-[#0284C7] group-hover:text-white transition-colors duration-300 rounded-sm shrink-0">
+                {/* Elegant Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/80 via-[#0F172A]/20 to-transparent opacity-80" />
+                
+                {/* Icon positioned over image */}
+                <div className="absolute bottom-6 right-6 w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white border border-white/30 shadow-lg transform group-hover:scale-110 transition-transform duration-500">
                   {renderIcon(service.icon)}
                 </div>
-                <h4 className="text-xl font-bold text-[#0F172A] mb-3">{service.title}</h4>
-                <p className="text-gray-600 leading-relaxed flex-grow mb-6">
+              </div>
+              
+              <div className="p-8 flex flex-col flex-grow bg-white">
+                <h4 className="text-xl font-bold text-[#0F172A] mb-4 group-hover:text-[#0284C7] transition-colors">
+                  {service.title}
+                </h4>
+                <p className="text-gray-500 leading-relaxed text-sm flex-grow mb-8 font-light line-clamp-3">
                   {service.description}
                 </p>
                 
-                <a
-                  href={`https://wa.me/${phoneNumber}?text=${encodeURIComponent(`مرحباً، أود الاستفسار عن خدمة ${service.title}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-auto inline-flex items-center justify-center gap-2 w-full border-2 border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white px-4 py-3 text-sm font-bold rounded-sm transition-colors group/btn ripple btn-base"
-                >
-                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
-                  </svg>
-                  طلب الخدمة عبر واتساب
-                </a>
+                <div className="mt-auto flex flex-col sm:flex-row gap-3">
+                  <Link
+                    to={`/services/${service.title.replace(/\s+/g, '-').toLowerCase()}`}
+                    className="flex-1 inline-flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-[#0F172A] px-4 py-3 text-sm font-semibold rounded-xl transition-colors group/btn"
+                  >
+                    التفاصيل
+                    <ArrowLeft className="w-4 h-4 transform group-hover/btn:-translate-x-1 transition-transform" />
+                  </Link>
+                  <a
+                    href={`https://wa.me/${phoneNumber}?text=${encodeURIComponent(`مرحباً، أود الاستفسار عن خدمة ${service.title}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-2 bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366] hover:text-white px-4 py-3 text-sm font-semibold rounded-xl transition-colors group/btn"
+                  >
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+                    </svg>
+                    طلب واتساب
+                  </a>
+                </div>
               </div>
             </motion.div>
           ))}
         </div>
-
+        
         <CostCalculator />
       </div>
     </section>

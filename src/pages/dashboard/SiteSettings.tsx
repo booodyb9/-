@@ -3,6 +3,7 @@ import { Content } from './types';
 import { Save, Image as ImageIcon } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { saveContent } from '../../lib/supabase';
+import { useContent } from '../../contexts/ContentContext';
 
 interface Props {
   contents: Content[];
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function SiteSettings({ contents, fetchContents }: Props) {
+  const { updateContent } = useContent();
   const [settings, setSettings] = useState<any>({});
   const [saving, setSaving] = useState(false);
 
@@ -26,6 +28,7 @@ export default function SiteSettings({ contents, fetchContents }: Props) {
     setSaving(true);
     try {
       await saveContent('site_settings', 'Site Settings', 'json', JSON.stringify(settings));
+      updateContent('site_settings', JSON.stringify(settings));
       
       fetchContents();
       alert('تم حفظ الإعدادات بنجاح');

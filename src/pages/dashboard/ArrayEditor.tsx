@@ -93,15 +93,13 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
       const { data } = supabase.storage.from('media').getPublicUrl(filePath);
       
       const newImage = { 
-        id: uuidv4(), 
-        name: file.name, 
-        url: data.publicUrl, 
-        type: 'image',
-        size: compressedFile.size,
-        created_at: new Date().toISOString() 
-      };
+         name: file.name,
+         url: data.publicUrl,
+         storage_path: `media/${filePath}`
+       };
       
-      await supabase.from('media').insert([newImage]);
+      const { error: insertError } = await supabase.from('media').insert([newImage]);
+      if (insertError) console.error("Media insert error:", insertError);
       updateItem(index, key, newImage.url);
     } catch (error) {
       console.error("Upload error:", error);

@@ -107,7 +107,7 @@ export default function ProjectStats() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: idx * 0.1 }}
-                className="bg-white/80 backdrop-blur-md rounded-2xl p-6 text-center border border-gray-100 hover:border-[#0284C7]/30 transition-colors shadow-sm"
+                className="bg-white rounded-3xl p-8 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] border border-gray-100 transition-all duration-500 hover:-translate-y-1"
               >
                 <div className="mx-auto w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4">
                   {getIcon(stat.icon)}
@@ -126,7 +126,7 @@ export default function ProjectStats() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-white/80 backdrop-blur-md p-6 rounded-2xl border border-gray-100"
+            className="bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100"
           >
             <h4 className="text-xl font-bold text-[#0F172A] mb-6 text-center">
               {language === 'ar' ? 'متوسط وقت تنفيذ المشاريع (بالأيام)' : 'Average Project Timeline (Days)'}
@@ -167,7 +167,7 @@ export default function ProjectStats() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-white/80 backdrop-blur-md p-6 rounded-2xl border border-gray-100"
+            className="bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100"
           >
             <h4 className="text-xl font-bold text-[#0F172A] mb-6 text-center">
               {language === 'ar' ? 'تطور كفاءة استخدام المواد والتوفير (%)' : 'Material Efficiency & Savings Progress (%)'}

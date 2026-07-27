@@ -6,7 +6,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (e: string, p: string) => Promise<{error: any}>;
+  signUpWithEmail: (e: string, p: string) => Promise<{error: any}>;
   logout: () => Promise<void>;
   token: string | null;
   isAdmin: boolean;
@@ -20,37 +21,105 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsAdmin(!!session?.user);
-      setLoading(false);
-    });
+useEffect(() => {
+    let mounted = true;
+
+    const checkAdmin = async (userId: string | undefined) => {
+      if (!userId) {
+        if (mounted) {
+          setIsAdmin(false);
+          setLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('admins')
+          .select('user_id')
+          .eq('user_id', userId)
+          .single();
+
+        if (mounted) {
+          setIsAdmin(!!data);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+        if (mounted) {
+          setIsAdmin(false);
+          setLoading(false);
+        }
+      }
+    };
+
+    const initializeAuth = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (mounted) {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await checkAdmin(session.user.id);
+        } else {
+          setIsAdmin(false);
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsAdmin(!!session?.user);
-      setLoading(false);
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (mounted) {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // If login happens or state changes, we might briefly be loading again
+          // but let's just do a check without showing a loading spinner to avoid flashing
+          // Actually, we probably should show a loader or just check silently
+          setLoading(true);
+          await checkAdmin(session.user.id);
+        } else {
+          setIsAdmin(false);
+          setLoading(false);
+        }
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const signInWithGoogle = async () => {
+const signInWithEmail = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/admin'
-        }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-      if (error) throw error;
+      return { error };
     } catch (error) {
       console.error("Error signing in", error);
+      return { error };
+    }
+  };
+
+  const signUpWithEmail = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      return { error };
+    } catch (error) {
+      console.error("Error signing up", error);
+      return { error };
     }
   };
 
@@ -68,7 +137,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user, 
       session,
       loading, 
-      signInWithGoogle, 
+      signInWithEmail,
+       signUpWithEmail, 
       logout, 
       token: session?.access_token || null, 
       isAdmin 

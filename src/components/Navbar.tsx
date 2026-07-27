@@ -169,12 +169,12 @@ export default function Navbar() {
         className="fixed top-0 left-0 right-0 h-1 bg-[#0284C7] origin-left rtl:origin-right z-[60]"
         style={{ scaleX }}
       />
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-sm' : 'bg-white border-b border-transparent'}`}>
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm' : 'bg-white border-b border-gray-100'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer">
-            <div className="w-8 h-8 bg-[#0284C7] rounded-sm flex items-center justify-center text-white">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#0284C7] to-[#0369A1] rounded-lg shadow-sm flex items-center justify-center text-white">
               <Building2 className="h-5 w-5" />
             </div>
             <span className="font-bold text-2xl text-[#0F172A] tracking-tight">
@@ -218,7 +218,7 @@ export default function Navbar() {
               </button>
               <Link
                 to="/contact"
-                className="bg-[#111827] text-white px-6 py-2 text-sm font-semibold hover:bg-gray-800 transition-colors flex items-center gap-2"
+                className="bg-[#0F172A] text-white px-6 py-2.5 text-sm font-semibold rounded-full hover:bg-[#0284C7] hover:shadow-lg hover:shadow-[#0284C7]/20 transition-all duration-300 flex items-center gap-2"
               >
                 <Phone className="h-4 w-4" />
                 <span>{language === 'ar' ? 'اطلب تسعيرة' : 'Get a Quote'}</span>
@@ -285,7 +285,7 @@ export default function Navbar() {
                 <Link
                   to="/contact"
                   onClick={() => setIsOpen(false)}
-                  className="w-full text-center bg-[#111827] text-white px-6 py-3 font-semibold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                  className="w-full text-center bg-[#0F172A] text-white px-6 py-3 font-semibold rounded-full hover:bg-[#0284C7] transition-all duration-300 flex items-center justify-center gap-2"
                 >
                   <Phone className="h-4 w-4" />
                   <span>{language === 'ar' ? 'اطلب تسعيرة الآن' : 'Get a Quote Now'}</span>

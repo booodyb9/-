@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react';
+import { useMemo } from 'react';
+import { motion } from 'motion/react';
+import { ChevronRight, ChevronLeft, ArrowUpRight, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useContent } from '../contexts/ContentContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -10,10 +10,8 @@ import 'swiper/css/effect-fade';
 import 'swiper/css/navigation';
 
 const defaultHeroImages = [
-  { url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', alt: 'تركيب واجهات زجاجية حديثة في الرياض' },
-  { url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', alt: 'قواطع زجاجية للمكاتب والشركات' },
-  { url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', alt: 'كبائن شاور زجاجية عصرية' },
-  { url: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', alt: 'درابزين زجاجي للسلالم بأعلى معايير الأمان' }
+  { url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', alt: 'واجهات زجاجية حديثة' },
+  { url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', alt: 'قواطع زجاجية' }
 ];
 
 export default function Hero() {
@@ -21,159 +19,142 @@ export default function Hero() {
   const { getContent } = useContent();
   const heroContent = getContent('hero_content');
   const heroImagesContent = getContent('hero_images');
-
+  
   const heroImages = useMemo(() => {
     if (heroImagesContent?.body) {
       try {
         const parsed = JSON.parse(heroImagesContent.body);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const filtered = parsed.filter((img: any) => img.url && typeof img.url === 'string' && img.url.trim() !== '');
-          if (filtered.length > 0) return filtered;
-        }
-      } catch (e) {
-        console.error("Failed to parse hero images", e);
-      }
+        const filtered = parsed.filter((img: any) => img.url && typeof img.url === 'string' && img.url.trim() !== '');
+        if (filtered.length > 0) return filtered;
+      } catch (e) {}
     }
     return defaultHeroImages;
   }, [heroImagesContent]);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15, delayChildren: 0.2 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30, filter: 'blur(10px)' },
+    visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
+  };
+
   return (
-    <div className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden min-h-[90vh] flex items-center bg-[#F9FAFB]">
-      {/* Background with overlay */}
+    <div className="relative min-h-[90vh] md:min-h-screen flex items-center overflow-hidden bg-[#0a0a0a]">
+      {/* Background Slider */}
       <div className="absolute inset-0 z-0">
         <Swiper
           modules={[Autoplay, EffectFade, Navigation, Keyboard, Parallax]}
           effect="fade"
-          autoplay={{
-            delay: 5000,
-            disableOnInteraction: false,
-          }}
-          loop={heroImages.length > 1}
-          navigation={{
-            nextEl: '.swiper-button-next-custom',
-            prevEl: '.swiper-button-prev-custom',
-          }}
-          keyboard={{ enabled: true }}
+          speed={1500}
           parallax={true}
+          autoplay={{ delay: 6000, disableOnInteraction: false }}
+          keyboard={{ enabled: true }}
+          navigation={{ nextEl: '.swiper-button-next-custom', prevEl: '.swiper-button-prev-custom' }}
           className="w-full h-full group"
         >
-          {heroImages.map((img, index) => (
-            <SwiperSlide key={index} className="overflow-hidden">
-              <div 
-                className="w-full h-full"
-                data-swiper-parallax="20%"
-                data-swiper-parallax-scale="1.05"
-              >
+          {heroImages.map((img: any, index: number) => (
+            <SwiperSlide key={index} className="overflow-hidden bg-black">
+              <div className="w-full h-full" data-swiper-parallax="20%" data-swiper-parallax-scale="1.05">
                 <img
                   src={img.url}
                   alt={img.alt}
-                  className="w-full h-full object-cover grayscale opacity-30 transform transition-transform duration-10000 hover:scale-110"
+                  className="w-full h-full object-cover opacity-50 transform transition-transform duration-[15000ms] ease-linear hover:scale-110"
                 />
               </div>
             </SwiperSlide>
           ))}
           
-          {/* Custom Navigation */}
-          <div className="absolute inset-y-0 right-0 z-50 flex items-center pr-4 md:pr-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <button className="swiper-button-next-custom bg-white/10 hover:bg-white/20 backdrop-blur-md p-3 rounded-full text-[#0284C7] transition-all transform hover:scale-110">
-              <ChevronRight className="w-6 h-6" />
+          <div className="absolute inset-y-0 right-0 z-50 flex items-center pr-4 md:pr-8 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            <button className="swiper-button-next-custom bg-black/20 hover:bg-black/40 border border-white/10 backdrop-blur-md p-4 rounded-full text-white transition-all transform hover:scale-105 active:scale-95">
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
-          <div className="absolute inset-y-0 left-0 z-50 flex items-center pl-4 md:pl-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <button className="swiper-button-prev-custom bg-white/10 hover:bg-white/20 backdrop-blur-md p-3 rounded-full text-[#0284C7] transition-all transform hover:scale-110">
-              <ChevronLeft className="w-6 h-6" />
+          <div className="absolute inset-y-0 left-0 z-50 flex items-center pl-4 md:pl-8 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            <button className="swiper-button-prev-custom bg-black/20 hover:bg-black/40 border border-white/10 backdrop-blur-md p-4 rounded-full text-white transition-all transform hover:scale-105 active:scale-95">
+              <ChevronLeft className="w-5 h-5" />
             </button>
           </div>
         </Swiper>
-        <div className="absolute inset-0 bg-gradient-to-l from-[#F9FAFB]/95 via-[#F9FAFB]/80 to-transparent md:from-[#F9FAFB] md:via-[#F9FAFB]/90 md:to-transparent ltr:bg-gradient-to-r z-10 pointer-events-none"></div>
+        
+        {/* Architectural Gradients & Noise */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10 z-10 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10 pointer-events-none rtl:bg-gradient-to-l"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full pt-20">
         <div className="max-w-3xl">
           <motion.div
             initial="hidden"
             animate="visible"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: { staggerChildren: 0.2 }
-              }
-            }}
+            variants={containerVariants}
           >
-            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }}>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-[#0284C7] text-xs font-bold uppercase tracking-tighter mb-6">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-sm bg-[#0284C7] opacity-75"></span>
-                  <span className="relative inline-flex rounded-sm h-2.5 w-2.5 bg-[#0284C7]"></span>
+            <motion.div variants={itemVariants} className="mb-8 inline-block">
+              <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0284C7] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0284C7]"></span>
                 </span>
-                {language === 'ar' ? 'الشركة الرائدة في الرياض' : 'Leading Company in Riyadh'}
+                <span className="text-white/80 text-xs font-semibold tracking-widest uppercase">
+                  {language === 'ar' ? 'الشركة الرائدة في الرياض' : 'Leading Company in Riyadh'}
+                </span>
               </div>
             </motion.div>
             
             {heroContent?.body ? (
               <motion.div 
-                variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }}
-                className="prose prose-lg prose-h1:text-4xl prose-h1:md:text-7xl prose-h1:font-extrabold prose-h1:text-[#0F172A] prose-h1:leading-[1.1] prose-h1:mb-6 prose-p:text-lg prose-p:md:text-xl prose-p:text-gray-600 prose-p:mb-8 prose-p:leading-relaxed prose-p:max-w-2xl" 
+                variants={itemVariants}
+                className="prose prose-invert prose-lg prose-h1:text-5xl prose-h1:md:text-7xl prose-h1:font-bold prose-h1:text-white prose-h1:leading-[1.1] prose-h1:mb-6 prose-p:text-lg prose-p:md:text-xl prose-p:text-gray-300 prose-p:mb-10 prose-p:leading-relaxed prose-p:max-w-2xl" 
                 dangerouslySetInnerHTML={{ __html: heroContent.body }} 
               />
             ) : (
               <>
-                <motion.h1 variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-4xl md:text-7xl font-extrabold text-[#0F172A] leading-[1.1] mb-6">
+                <motion.h1 variants={itemVariants} className="text-5xl md:text-7xl lg:text-[5rem] font-bold text-white leading-[1.05] tracking-tight mb-8">
                   {language === 'ar' ? (
-                    <>نصمم وننفذ أرقى أعمال <span className="text-[#0284C7]">الزجاج الحديث</span></>
+                    <>أرقى أعمال <br/><span className="text-[#0284C7] italic pr-2">الزجاج الحديث</span></>
                   ) : (
-                    <>Design & Build Premium <span className="text-[#0284C7]">Modern Glass</span></>
+                    <>Premium <br/><span className="text-[#0284C7] italic">Modern Glass</span></>
                   )}
                 </motion.h1>
                 
-                <motion.p variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl">
+                <motion.p variants={itemVariants} className="text-lg md:text-xl text-gray-300 mb-10 leading-relaxed max-w-2xl font-light">
                   {language === 'ar' 
-                    ? 'نقدم حلولاً مبتكرة وعصرية لتركيب الزجاج للمشاريع التجارية والسكنية في جميع أنحاء الرياض. جودة عالية، دقة في التنفيذ، وأسعار تنافسية.'
-                    : 'We provide innovative and modern glass installation solutions for commercial and residential projects across Riyadh. High quality, precise execution, and competitive prices.'
+                    ? 'نقدم حلولاً مبتكرة وعصرية لتركيب الزجاج للمشاريع التجارية والسكنية في جميع أنحاء الرياض. جودة عالية، دقة في التنفيذ، وتصاميم هندسية متطورة.'
+                    : 'We provide innovative and modern glass installation solutions for commercial and residential projects across Riyadh. High quality, precise execution, and advanced architectural designs.'
                   }
                 </motion.p>
               </>
             )}
 
-            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="flex flex-col sm:flex-row gap-4">
-              <a
-                href={`https://wa.me/966510233706?text=${encodeURIComponent('مرحباً، أود الحصول على تسعيرة لخدمات تركيب الزجاج.')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-[#25D366] text-white px-8 py-4 font-bold text-lg hover:bg-[#128C7E] flex items-center justify-center gap-2 group ripple btn-base"
-              >
-                <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
-                </svg>
-                {language === 'ar' ? 'تواصل عبر واتساب' : 'Contact via WhatsApp'}
-              </a>
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-5">
               <a
                 href="#services"
-                className="bg-transparent text-[#111827] border-2 border-[#111827] px-8 py-4 font-bold text-lg hover:bg-gray-50 flex items-center justify-center ripple btn-base"
+                className="group relative flex items-center justify-center gap-3 bg-white text-black px-8 py-4 font-semibold text-base overflow-hidden rounded-none hover:text-white transition-colors duration-300"
               >
-                {language === 'ar' ? 'استكشف خدماتنا' : 'Explore Services'}
+                <div className="absolute inset-0 bg-black translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
+                <span className="relative z-10">{language === 'ar' ? 'استكشف مشاريعنا' : 'Explore Projects'}</span>
+                {language === 'ar' ? <ArrowLeft className="w-4 h-4 relative z-10 group-hover:-translate-x-1 transition-transform" /> : <ArrowUpRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />}
+              </a>
+              <a
+                href={`https://wa.me/966510233706?text=${encodeURIComponent('مرحباً، أود الحصول على تسعيرة.')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-center gap-3 bg-white/5 border border-white/20 backdrop-blur-md text-white px-8 py-4 font-semibold text-base hover:bg-white/10 transition-colors duration-300"
+              >
+                {language === 'ar' ? 'طلب تسعيرة' : 'Request Quote'}
               </a>
             </motion.div>
-
-            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="mt-12 flex flex-wrap gap-6 items-center text-sm font-bold text-gray-600">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-[#0284C7]" />
-                <span>{language === 'ar' ? 'ضمان يصل لـ 10 سنوات' : 'Up to 10 Years Warranty'}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-[#0284C7]" />
-                <span>{language === 'ar' ? 'تنفيذ سريع واحترافي' : 'Fast & Professional Execution'}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-[#0284C7]" />
-                <span>{language === 'ar' ? 'معاينة مجانية للموقع' : 'Free Site Inspection'}</span>
-              </div>
-            </motion.div>
-
           </motion.div>
         </div>
       </div>
+      
+      {/* Decorative Bottom Line */}
+      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20"></div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Plus, Edit3, Trash2, GripVertical, Settings } from 'lucide-react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { supabase, saveContent } from '../../lib/supabase';
+import { useContent } from '../../contexts/ContentContext';
 import { v4 as uuidv4 } from 'uuid';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
@@ -20,6 +21,8 @@ const AVAILABLE_SECTIONS = [
 const DraggableAny = Draggable as any;
 
 export default function PagesManager({ pages, fetchContents }: Props) {
+  const parsedPages = pages.map(p => ({ ...p, parsed: p.parsed || (p.body ? JSON.parse(p.body) : {}) }));
+  const { updateContent } = useContent();
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editingPage, setEditingPage] = useState<any>(null);
   const [saving, setSaving] = useState(false);
@@ -51,6 +54,7 @@ export default function PagesManager({ pages, fetchContents }: Props) {
     setSaving(true);
     try {
       await saveContent(editingPage.key, editingPage.parsed.title, 'page', JSON.stringify(editingPage.parsed));
+      updateContent(editingPage.key, JSON.stringify(editingPage.parsed));
       
       
       alert('تم الحفظ بنجاح');
@@ -67,9 +71,9 @@ export default function PagesManager({ pages, fetchContents }: Props) {
   const handleDelete = async (key: string) => {
     if (!confirm('هل أنت متأكد من حذف هذه الصفحة؟')) return;
     try {
-      await saveContent(editingPage.key, editingPage.parsed.title, 'page', JSON.stringify(editingPage.parsed));
       
-      
+      const { error } = await supabase.from('contents').delete().eq('key', key);
+      if (error) throw error;
       fetchContents();
     } catch (error: any) {
       alert('خطأ: ' + error.message);
@@ -278,11 +282,11 @@ export default function PagesManager({ pages, fetchContents }: Props) {
             </tr>
           </thead>
           <tbody>
-            {pages.length === 0 ? (
+            {parsedPages.length === 0 ? (
                 <tr>
                     <td colSpan={4} className="p-8 text-center text-gray-500">لا توجد صفحات إضافية، يمكنك إنشاء صفحة جديدة.</td>
                 </tr>
-            ) : pages.map((page: any) => (
+            ) : parsedPages.map((page: any) => (
               <tr key={page.key} className="border-b hover:bg-gray-50">
                 <td className="p-4 font-bold text-gray-900">{page.parsed.title}</td>
                 <td className="p-4 text-left" dir="ltr"><a href={`/${page.parsed.slug}`} target="_blank" className="text-blue-600 hover:underline">/{page.parsed.slug}</a></td>

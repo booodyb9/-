@@ -43,11 +43,11 @@ export default function CostCalculator() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6 }}
-      className="mt-20 bg-white border border-gray-200 shadow-xl overflow-hidden max-w-4xl mx-auto"
+      className="mt-20 bg-white border border-gray-100 rounded-3xl shadow-[0_20px_60px_rgb(0,0,0,0.08)] overflow-hidden max-w-4xl mx-auto"
     >
       <div className="grid grid-cols-1 md:grid-cols-2">
         <div className="p-8 md:p-10 bg-[#0F172A] text-white flex flex-col justify-center">
-          <div className="w-12 h-12 bg-[#0284C7]/20 text-[#0284C7] flex items-center justify-center mb-6 rounded-sm">
+          <div className="w-14 h-14 bg-white/10 text-[#0ea5e9] flex items-center justify-center mb-6 rounded-2xl shadow-inner border border-white/5">
             <Calculator className="h-6 w-6" />
           </div>
           <h4 className="text-2xl font-bold mb-4">حاسبة التكلفة التقديرية</h4>
@@ -65,7 +65,7 @@ export default function CostCalculator() {
                 className="bg-white/5 border border-white/10 p-6 rounded-sm"
               >
                 <div className="text-sm text-gray-400 mb-2">التكلفة التقديرية (ريال سعودي)</div>
-                <div className="text-3xl font-extrabold text-[#0284C7] mb-2 flex items-baseline gap-2">
+                <div className="text-4xl font-extrabold text-[#0ea5e9] mb-2 flex items-baseline gap-2">
                   <span>{estimatedMin.toLocaleString()}</span>
                   <span className="text-lg text-gray-400 font-normal">-</span>
                   <span>{estimatedMax.toLocaleString()}</span>
@@ -96,7 +96,7 @@ export default function CostCalculator() {
               <button 
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full flex items-center justify-between bg-gray-50 border border-gray-200 text-gray-900 p-3 focus:outline-none focus:border-[#0284C7] transition-colors"
+                className="w-full flex items-center justify-between bg-gray-50 rounded-xl border border-gray-200 text-gray-900 p-3 focus:outline-none focus:border-[#0ea5e9] focus:ring-2 focus:ring-[#0ea5e9]/20 transition-all"
               >
                 <span>{selectedType.name}</span>
                 <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
@@ -108,12 +108,12 @@ export default function CostCalculator() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 shadow-xl max-h-60 overflow-y-auto z-30"
+                    className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-gray-100 shadow-xl max-h-60 overflow-y-auto z-30"
                   >
                     {glassTypes.map(type => (
                       <div 
                         key={type.id}
-                        className={`p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 border-b border-gray-50 last:border-0 ${selectedGlass === type.id ? 'bg-[#0284C7]/5 text-[#0284C7] font-bold' : 'text-gray-700'}`}
+                        className={`p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 border-b border-gray-50 last:border-0 ${selectedGlass === type.id ? 'bg-[#0284C7]/5 text-[#0ea5e9] font-bold' : 'text-gray-700'}`}
                         onClick={() => {
                           setSelectedGlass(type.id);
                           setIsDropdownOpen(false);
@@ -121,7 +121,7 @@ export default function CostCalculator() {
                       >
                         <span>{type.name}</span>
                         <div className="relative group p-1" onClick={(e) => e.stopPropagation()}>
-                          <Info className="h-4 w-4 text-gray-400 group-hover:text-[#0284C7] transition-colors" />
+                          <Info className="h-4 w-4 text-gray-400 group-hover:text-[#0ea5e9] transition-colors" />
                           <div className="absolute top-full end-0 mt-2 hidden group-hover:block w-48 bg-[#0F172A] text-white text-xs p-3 rounded-sm shadow-xl z-50 pointer-events-none">
                             <div className="absolute -top-1 end-2 w-2 h-2 bg-[#0F172A] transform rotate-45"></div>
                             {type.description}
@@ -148,7 +148,7 @@ export default function CostCalculator() {
                     placeholder="مثال: 3.5"
                     value={width}
                     onChange={(e) => setWidth(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 p-3 pl-10 focus:outline-none focus:border-[#0284C7] transition-colors"
+                    className="w-full bg-gray-50 rounded-xl border border-gray-200 text-gray-900 p-3 pl-10 focus:outline-none focus:border-[#0ea5e9] focus:ring-2 focus:ring-[#0ea5e9]/20 transition-all"
                   />
                 </div>
               </div>
@@ -165,7 +165,7 @@ export default function CostCalculator() {
                     placeholder="مثال: 2.8"
                     value={height}
                     onChange={(e) => setHeight(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 p-3 pl-10 focus:outline-none focus:border-[#0284C7] transition-colors"
+                    className="w-full bg-gray-50 rounded-xl border border-gray-200 text-gray-900 p-3 pl-10 focus:outline-none focus:border-[#0ea5e9] focus:ring-2 focus:ring-[#0ea5e9]/20 transition-all"
                   />
                 </div>
               </div>
@@ -174,7 +174,7 @@ export default function CostCalculator() {
             <div className="pt-4 mt-6 border-t border-gray-100 relative z-10">
               <a 
                 href="#contact"
-                className="w-full flex items-center justify-center gap-2 bg-[#0284C7] text-white p-4 font-bold hover:bg-[#0369A1] transition-colors group"
+                className="w-full flex items-center justify-center gap-2 bg-[#0F172A] text-white p-4 font-bold rounded-xl hover:bg-[#0ea5e9] transition-all duration-300 group shadow-lg hover:shadow-[#0ea5e9]/20"
               >
                 <span>طلب تسعيرة دقيقة</span>
                 <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />

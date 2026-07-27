@@ -270,7 +270,7 @@ export default function ContentManager({ contents, fetchContents, token, filterK
           <div className="bg-white" dir="ltr">
             <ReactQuill 
               theme="snow" 
-              value={editingContent.body} 
+              value={editingContent.body || ''} 
               onChange={(val) => setEditingContent({ ...editingContent, body: val })}
               modules={modules}
               className="h-64 mb-12"
@@ -278,7 +278,7 @@ export default function ContentManager({ contents, fetchContents, token, filterK
           </div>
         ) : section.type === 'array' && section.schema ? (
           <ArrayEditor 
-            value={editingContent.body}
+            value={editingContent.body || ''}
             onChange={(val) => setEditingContent({ ...editingContent, body: val })}
             schema={section.schema}
           />

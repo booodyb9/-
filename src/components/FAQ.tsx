@@ -57,8 +57,8 @@ export default function FAQ() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-3">الأسئلة الشائعة</h2>
-          <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight">
+          <h2 className="text-[#0ea5e9] text-sm font-bold tracking-widest uppercase mb-4">الأسئلة الشائعة</h2>
+          <h3 className="text-4xl md:text-5xl font-extrabold text-[#0F172A] leading-tight tracking-tight">
             إجابات لاستفساراتكم
           </h3>
         </motion.div>
@@ -71,7 +71,7 @@ export default function FAQ() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
-              className="bg-white border-2 border-gray-200 hover:border-[#0284C7] transition-colors duration-300"
+              className="bg-white border border-gray-100 rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:border-[#0ea5e9]/30 transition-all duration-300"
             >
               <button
                 onClick={() => toggleFAQ(index)}
@@ -79,7 +79,7 @@ export default function FAQ() {
               >
                 <span className="font-bold text-lg text-[#0F172A]">{faq.question}</span>
                 <ChevronDown 
-                  className={`h-5 w-5 text-[#0284C7] transition-transform duration-300 flex-shrink-0 ${openIndex === index ? 'rotate-180' : ''}`}
+                  className={`h-6 w-6 text-[#0ea5e9] transition-transform duration-300 flex-shrink-0 ${openIndex === index ? 'rotate-180' : ''}`}
                 />
               </button>
               

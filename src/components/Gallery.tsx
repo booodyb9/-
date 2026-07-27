@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Search, ChevronRight, ChevronLeft, MapPin, Briefcase } from 'lucide-react';
+import { X, Search, ChevronRight, ChevronLeft, MapPin, Briefcase, ArrowUpRight, ZoomIn, ArrowLeft } from 'lucide-react';
 import { useContent } from '../contexts/ContentContext';
 import { PortfolioProject } from '../pages/dashboard/types';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Pagination, Navigation } from 'swiper/modules';
+import { Autoplay, Pagination, Navigation, Keyboard } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
@@ -14,6 +14,9 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
   const [activeCategory, setActiveCategory] = useState('الكل');
   const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState<PortfolioProject[]>([]);
+  const [totalProjects, setTotalProjects] = useState(0);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
   const { getContent } = useContent();
   const portfolioContent = getContent('premium_portfolio_projects');
 
@@ -24,9 +27,12 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
         if (Array.isArray(parsed)) {
           let validProjects = parsed.filter(p => !p.isHidden);
           validProjects.sort((a, b) => (a.order || 0) - (b.order || 0));
+          
           if (featuredOnly) {
             validProjects = validProjects.filter(p => p.isFeatured);
           }
+          setTotalProjects(validProjects.length);
+          
           if (limit) {
             validProjects = validProjects.slice(0, limit);
           }
@@ -60,61 +66,113 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
     return result;
   }, [projects, activeCategory, searchQuery]);
 
+  // Prevent scrolling when lightbox is open
+  useEffect(() => {
+    if (lightboxIndex !== null) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => { document.body.style.overflow = 'auto'; };
+  }, [lightboxIndex]);
+
+  const handleNext = () => {
+    if (lightboxIndex !== null && lightboxIndex < filteredProjects.length - 1) {
+      setLightboxIndex(lightboxIndex + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (lightboxIndex !== null && lightboxIndex > 0) {
+      setLightboxIndex(lightboxIndex - 1);
+    }
+  };
+
+  const currentLightboxProject = lightboxIndex !== null ? filteredProjects[lightboxIndex] : null;
+
   return (
-    <section className="py-24 bg-transparent relative overflow-hidden" id="portfolio">
+    <section className="py-24 bg-gray-50 relative overflow-hidden" id="portfolio">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <motion.div
+        
+        {limit ? (
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-3">
+                المشاريع المميزة
+              </h2>
+              <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight mb-6">
+                استكشف أعمالنا
+              </h3>
+            </motion.div>
+          </div>
+        ) : (
+          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="max-w-2xl"
+            >
+              <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-3">
+                معرض الأعمال
+              </h2>
+              <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight mb-6">
+                مشاريع نفخر بها
+              </h3>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="w-full md:w-auto"
+            >
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="ابحث في المشاريع..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full md:w-72 pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0284C7] focus:border-transparent transition-all bg-white shadow-sm"
+                  dir="rtl"
+                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {!limit && categories.length > 1 && (
+          <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            className="flex flex-wrap items-center gap-2 mb-12"
           >
-            <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-3">
-              معرض الأعمال
-            </h2>
-            <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight mb-6">
-              مشاريع نفخر بها
-            </h3>
-            <p className="text-gray-600 text-lg leading-relaxed">
-              تصفح أحدث مشاريعنا المتميزة في توريد وتركيب الزجاج، واكتشف جودة تنفيذنا ودقة تفاصيلنا في مختلف القطاعات.
-            </p>
-          </motion.div>
-        </div>
-
-        {/* Filters and Search */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
-          <div className="flex flex-wrap justify-center md:justify-start gap-3 w-full md:w-auto">
             {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
                 className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${
                   activeCategory === category
-                    ? 'bg-[#0284C7] text-white shadow-md scale-105'
-                    : 'bg-transparent text-gray-600 hover:bg-gray-100 hover:text-[#0284C7] shadow-sm'
+                    ? 'bg-[#0F172A] text-white shadow-md'
+                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                 }`}
               >
                 {category}
               </button>
             ))}
-          </div>
-          
-          {!limit && (
-            <div className="relative w-full md:w-80">
-              <input
-                type="text"
-                placeholder="ابحث في المشاريع..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0284C7] focus:border-transparent transition-all shadow-sm bg-transparent"
-              />
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            </div>
-          )}
-        </div>
+          </motion.div>
+        )}
 
-        {/* Projects Display */}
+        {/* Horizontal Slider (If Limit is provided) */}
         {limit ? (
           <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0 pb-12">
             <Swiper
@@ -141,69 +199,51 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.4, delay: index * 0.1 }}
-                    className="group bg-white/80 backdrop-blur-md rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 h-full flex flex-col"
+                    className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 h-[450px] flex flex-col cursor-pointer"
+                    onClick={() => setLightboxIndex(filteredProjects.indexOf(project))}
                   >
-                    <Link to={`/portfolio/${project.slug}`} className="block relative h-72 overflow-hidden shrink-0">
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors z-10 duration-500" />
+                    <div className="absolute inset-0 z-0">
                       <img
-                        src={project.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                        src={project.coverImage || project.image || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'}
                         alt={project.title}
                         loading="lazy"
                         className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
                       />
-                      <div className="absolute top-4 right-4 z-20">
-                        <span className="bg-white/90 backdrop-blur-sm text-[#0F172A] text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
-                          {project.category}
-                        </span>
-                      </div>
-                    </Link>
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/90 via-[#0F172A]/40 to-transparent transition-opacity duration-300" />
+                    </div>
                     
-                    <div className="p-6 flex flex-col flex-grow">
-                      <Link to={`/portfolio/${project.slug}`}>
-                        <h4 className="text-xl font-bold text-[#0F172A] mb-2 group-hover:text-[#0284C7] transition-colors">
-                          {project.title}
-                        </h4>
-                      </Link>
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    <div className="absolute top-4 right-4 z-20">
+                      <span className="bg-white/20 backdrop-blur-md border border-white/20 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-sm">
+                        {project.category}
+                      </span>
+                    </div>
+
+                    <div className="relative z-10 flex flex-col justify-end h-full p-6 text-white translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                      <h4 className="text-2xl font-bold mb-2">{project.title}</h4>
+                      <p className="text-gray-300 text-sm mb-4 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
                         {project.description}
                       </p>
                       
-                      <div className="flex flex-col gap-2 mb-6 mt-auto">
-                        {project.location && (
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <MapPin className="w-4 h-4 text-[#0284C7]" />
-                            <span>{project.location}</span>
-                          </div>
-                        )}
-                        {project.serviceType && (
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <Briefcase className="w-4 h-4 text-[#0284C7]" />
-                            <span>{project.serviceType}</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <Link 
-                        to={`/portfolio/${project.slug}`}
-                        className="inline-flex items-center gap-2 text-[#0284C7] font-bold hover:text-[#0369A1] transition-colors group/btn"
-                      >
+                      <div className="flex items-center gap-2 text-[#0284C7] font-bold mt-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200">
                         عرض التفاصيل
-                        <ChevronLeft className="w-4 h-4 transform group-hover/btn:-translate-x-1 transition-transform" />
-                      </Link>
+                        <ArrowLeft className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" />
+                      </div>
                     </div>
                   </motion.div>
                 </SwiperSlide>
               ))}
             </Swiper>
-            <button className="swiper-button-prev-portfolio absolute top-1/2 -left-4 md:-left-12 -translate-y-1/2 z-10 bg-white shadow-lg p-3 rounded-full text-[#0284C7] hover:bg-[#0284C7] hover:text-white transition-colors hidden sm:block">
-              <ChevronLeft className="w-6 h-6" />
+            
+            <button className="swiper-button-prev-portfolio absolute top-1/2 -left-4 md:-left-12 -translate-y-1/2 z-10 bg-white shadow-lg p-4 rounded-full text-[#0284C7] hover:bg-[#0F172A] hover:text-white transition-all hidden sm:flex items-center justify-center">
+              <ChevronLeft className="w-5 h-5" />
             </button>
-            <button className="swiper-button-next-portfolio absolute top-1/2 -right-4 md:-right-12 -translate-y-1/2 z-10 bg-white shadow-lg p-3 rounded-full text-[#0284C7] hover:bg-[#0284C7] hover:text-white transition-colors hidden sm:block">
-              <ChevronRight className="w-6 h-6" />
+            <button className="swiper-button-next-portfolio absolute top-1/2 -right-4 md:-right-12 -translate-y-1/2 z-10 bg-white shadow-lg p-4 rounded-full text-[#0284C7] hover:bg-[#0F172A] hover:text-white transition-all hidden sm:flex items-center justify-center">
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
         ) : (
-          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          /* Premium Masonry Grid */
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
             <AnimatePresence>
               {filteredProjects.map((project, index) => (
                 <motion.div
@@ -211,82 +251,158 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
                   initial={{ opacity: 0, scale: 0.9, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  transition={{ duration: 0.4, delay: (index % 10) * 0.05 }}
                   key={project.id}
-                  className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col"
+                  className="break-inside-avoid relative group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer"
+                  onClick={() => setLightboxIndex(filteredProjects.indexOf(project))}
                 >
-                  <Link to={`/portfolio/${project.slug}`} className="block relative h-72 overflow-hidden shrink-0">
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors z-10 duration-500" />
-                    <img
-                      src={project.coverImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
-                      alt={project.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
-                    />
-                    <div className="absolute top-4 right-4 z-20">
-                      <span className="bg-white/90 backdrop-blur-sm text-[#0F172A] text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
-                        {project.category}
-                      </span>
-                    </div>
-                  </Link>
-                  
-                  <div className="p-6 flex flex-col flex-grow">
-                    <Link to={`/portfolio/${project.slug}`}>
-                      <h4 className="text-xl font-bold text-[#0F172A] mb-2 group-hover:text-[#0284C7] transition-colors">
-                        {project.title}
-                      </h4>
-                    </Link>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {project.description}
-                    </p>
-                    
-                    <div className="flex flex-col gap-2 mb-6 mt-auto">
-                      {project.location && (
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <MapPin className="w-4 h-4 text-[#0284C7]" />
-                          <span>{project.location}</span>
+                  <div className="relative overflow-hidden w-full" style={{ paddingBottom: index % 3 === 0 ? '120%' : index % 2 === 0 ? '80%' : '100%' }}>
+                    <div className="absolute inset-0 z-0">
+                      <img
+                        src={project.coverImage || project.image || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'}
+                        alt={project.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
+                      />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-6">
+                        <div className="flex justify-end">
+                          <span className="bg-white/20 backdrop-blur-md border border-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                            {project.category}
+                          </span>
                         </div>
-                      )}
-                      {project.serviceType && (
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Briefcase className="w-4 h-4 text-[#0284C7]" />
-                          <span>{project.serviceType}</span>
+                        <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                          <h4 className="text-xl font-bold text-white mb-2">{project.title}</h4>
+                          <p className="text-gray-200 text-sm line-clamp-2 mb-4">{project.description}</p>
+                          <div className="inline-flex items-center gap-2 text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                            <ZoomIn className="w-4 h-4" />
+                            عرض المشروع
+                          </div>
                         </div>
-                      )}
+                      </div>
                     </div>
-                    
-                    <Link 
-                      to={`/portfolio/${project.slug}`}
-                      className="inline-flex items-center gap-2 text-[#0284C7] font-bold hover:text-[#0369A1] transition-colors group/btn"
-                    >
-                      عرض التفاصيل
-                      <ChevronLeft className="w-4 h-4 transform group-hover/btn:-translate-x-1 transition-transform" />
-                    </Link>
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
-          </motion.div>
-        )}
-        
-        {(!limit && filteredProjects.length === 0) && (
-          <div className="text-center py-12 text-gray-500">
-            لا توجد مشاريع في هذا التصنيف حالياً.
           </div>
         )}
 
-        {limit && projects.length > limit && (
+        {(!limit && filteredProjects.length === 0) && (
+          <div className="text-center py-24 text-gray-500">
+            لا توجد مشاريع في هذا التصنيف حالياً.
+          </div>
+        )}
+        
+        {limit && totalProjects > limit && (
           <div className="text-center mt-12">
             <Link 
               to="/portfolio"
-              className="inline-flex items-center gap-2 bg-transparent text-[#0F172A] border-2 border-gray-200 px-8 py-3 rounded-full font-bold hover:border-[#0284C7] hover:text-[#0284C7] transition-all"
+              className="inline-flex items-center gap-3 bg-[#0F172A] text-white px-8 py-4 rounded-full font-bold hover:bg-[#0284C7] hover:shadow-lg hover:shadow-[#0284C7]/20 transition-all duration-300 group"
             >
               عرض كل المشاريع
-              <ChevronLeft className="w-5 h-5" />
+              <ArrowLeft className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" />
             </Link>
           </div>
         )}
       </div>
+
+      {/* Fullscreen Lightbox */}
+      <AnimatePresence>
+        {lightboxIndex !== null && currentLightboxProject && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-xl"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setLightboxIndex(null);
+              if (e.key === 'ArrowRight') handlePrev();
+              if (e.key === 'ArrowLeft') handleNext();
+            }}
+            tabIndex={0}
+          >
+            <button
+              onClick={() => setLightboxIndex(null)}
+              className="absolute top-6 right-6 z-[110] text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-3 rounded-full transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            {lightboxIndex > 0 && (
+              <button
+                onClick={handlePrev}
+                className="absolute left-6 top-1/2 -translate-y-1/2 z-[110] text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-4 rounded-full transition-colors"
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </button>
+            )}
+
+            {lightboxIndex < filteredProjects.length - 1 && (
+              <button
+                onClick={handleNext}
+                className="absolute right-6 top-1/2 -translate-y-1/2 z-[110] text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-4 rounded-full transition-colors"
+              >
+                <ChevronRight className="w-8 h-8" />
+              </button>
+            )}
+
+            <div className="max-w-6xl w-full mx-4 flex flex-col md:flex-row gap-8 items-center justify-center h-full py-20 outline-none">
+              <motion.div
+                key={currentLightboxProject.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+                className="relative w-full md:w-2/3 h-[50vh] md:h-[80vh] flex items-center justify-center"
+              >
+                <img
+                  src={currentLightboxProject.coverImage || currentLightboxProject.image}
+                  alt={currentLightboxProject.title}
+                  className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
+                />
+              </motion.div>
+              
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="w-full md:w-1/3 text-white space-y-6"
+              >
+                <div>
+                  <span className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-2 block">
+                    {currentLightboxProject.category}
+                  </span>
+                  <h3 className="text-3xl md:text-5xl font-bold mb-4">{currentLightboxProject.title}</h3>
+                  <p className="text-gray-300 text-lg leading-relaxed">{currentLightboxProject.description}</p>
+                </div>
+                
+                <div className="space-y-3 pt-6 border-t border-white/10">
+                  {currentLightboxProject.location && (
+                    <div className="flex items-center gap-3 text-gray-300">
+                      <MapPin className="w-5 h-5 text-[#0284C7]" />
+                      <span>{currentLightboxProject.location}</span>
+                    </div>
+                  )}
+                  {currentLightboxProject.serviceType && (
+                    <div className="flex items-center gap-3 text-gray-300">
+                      <Briefcase className="w-5 h-5 text-[#0284C7]" />
+                      <span>{currentLightboxProject.serviceType}</span>
+                    </div>
+                  )}
+                </div>
+
+                <Link
+                  to={`/portfolio/${currentLightboxProject.slug || currentLightboxProject.id}`}
+                  className="mt-8 inline-flex items-center gap-2 bg-[#0284C7] hover:bg-[#0284C7] text-white px-8 py-4 rounded-full font-bold transition-colors w-full justify-center group"
+                >
+                  التفاصيل الكاملة للمشروع
+                  <ArrowLeft className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" />
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

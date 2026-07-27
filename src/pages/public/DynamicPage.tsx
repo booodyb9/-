@@ -46,25 +46,21 @@ export default function DynamicPage() {
   useEffect(() => {
     if (loading) return;
     
-    // Look for a page that matches this slug
-    const pageContent = contents.find(c => c.key.startsWith('page_') && c.type === 'page');
-    if (pageContent && pageContent.body) {
+    const pages = contents.filter(c => c.key.startsWith('page_') && c.type === 'page');
+    for (const p of pages) {
+      if (!p.body) continue;
       try {
-        const pages = contents.filter(c => c.key.startsWith('page_') && c.type === 'page');
-        for (const p of pages) {
-            const data = JSON.parse(p.body);
-            if (data.slug === slug) {
-                // If it's a draft, only admins can see it
-                if (data.status === 'draft' && !isAdmin) {
-                   setPageData('not_found');
-                   return;
-                }
-                setPageData(data);
-                return;
-            }
+        const data = JSON.parse(p.body);
+        if (data.slug === slug) {
+          if (data.status === 'draft' && !isAdmin) {
+             setPageData('not_found');
+             return;
+          }
+          setPageData(data);
+          return;
         }
-      } catch (e) {
-          console.error(e);
+      } catch (err) {
+        console.error("Error parsing page JSON", err);
       }
     }
     

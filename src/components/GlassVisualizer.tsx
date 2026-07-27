@@ -76,7 +76,7 @@ export default function GlassVisualizer() {
             <div className="prose prose-lg mx-auto text-gray-600" dangerouslySetInnerHTML={{ __html: visualizerContent.body }} />
           ) : (
             <>
-              <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-3">
+              <h2 className="text-[#0ea5e9] text-sm font-bold tracking-widest uppercase mb-4">
                 {language === 'ar' ? 'المحاكي البصري' : 'Visualizer'}
               </h2>
               <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight">
@@ -100,7 +100,7 @@ export default function GlassVisualizer() {
                 onClick={() => setActiveStyle(style.id)}
                 className={`p-4 border-2 transition-all flex items-center justify-between font-bold ${
                   activeStyle === style.id 
-                    ? 'border-[#0284C7] bg-white text-[#0F172A] shadow-md' 
+                    ? 'border-[#0284C7] bg-gray-50 text-[#0F172A] shadow-md' 
                     : 'border-transparent bg-gray-100 text-gray-500 hover:bg-gray-200'
                 }`}
               >
