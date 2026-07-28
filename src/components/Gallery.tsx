@@ -10,6 +10,70 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
+
+const defaultProjects: PortfolioProject[] = ([
+  {
+    id: '1',
+    title: 'واجهات برج المكاتب',
+    category: 'واجهات زجاجية',
+    coverImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    description: 'تركيب واجهة كرتن وول للمبنى بالكامل مع زجاج مزدوج عازل للحرارة والصوت.',
+    isFeatured: true,
+    isHidden: false,
+    order: 1
+  },
+  {
+    id: '2',
+    title: 'قواطع شركة التقنية',
+    category: 'قواطع مكتبية',
+    coverImage: 'https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    description: 'تنفيذ قواطع زجاجية ذكية عازلة للصوت لمكاتب الإدارة وقاعات الاجتماعات.',
+    isFeatured: true,
+    isHidden: false,
+    order: 2
+  },
+  {
+    id: '3',
+    title: 'فيلا حي النرجس',
+    category: 'درابزين وسلالم',
+    coverImage: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    description: 'تصميم وتركيب درابزين زجاجي سيكوريت 12 ملم للسلالم الداخلية والشرفات.',
+    isFeatured: true,
+    isHidden: false,
+    order: 3
+  },
+  {
+    id: '4',
+    title: 'شاور كابين الفاخر',
+    category: 'كبائن شاور',
+    coverImage: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    description: 'كابينة شاور زجاجية بتصميم عصري وإكسسوارات مقاومة للصدأ.',
+    isFeatured: true,
+    isHidden: false,
+    order: 4
+  },
+  {
+    id: '5',
+    title: 'مرايا النادي الرياضي',
+    category: 'مرايا ديكورية',
+    coverImage: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    description: 'تغطية جدران النادي بالكامل بمرايا كريستال عالية الجودة مع إضاءة ليد.',
+    isFeatured: false,
+    isHidden: false,
+    order: 5
+  },
+  {
+    id: '6',
+    title: 'أبواب المعرض التجاري',
+    category: 'أبواب سيكوريت',
+    coverImage: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    description: 'أبواب زجاجية سحاب أوتوماتيكية لمعرض تجاري بآلية فتح وإغلاق سلسة.',
+    isFeatured: true,
+    isHidden: false,
+    order: 6
+  }
+] as unknown as PortfolioProject[]);
+
 export default function Gallery({ limit, featuredOnly }: { limit?: number, featuredOnly?: boolean }) {
   const [activeCategory, setActiveCategory] = useState('الكل');
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,27 +85,31 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
   const portfolioContent = getContent('premium_portfolio_projects');
 
   useEffect(() => {
+    let baseProjects = defaultProjects;
+    
     if (portfolioContent?.body) {
       try {
         const parsed = JSON.parse(portfolioContent.body);
-        if (Array.isArray(parsed)) {
-          let validProjects = parsed.filter(p => !p.isHidden);
-          validProjects.sort((a, b) => (a.order || 0) - (b.order || 0));
-          
-          if (featuredOnly) {
-            validProjects = validProjects.filter(p => p.isFeatured);
-          }
-          setTotalProjects(validProjects.length);
-          
-          if (limit) {
-            validProjects = validProjects.slice(0, limit);
-          }
-          setProjects(validProjects);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          baseProjects = parsed;
         }
       } catch (e) {
         console.error("Failed to parse portfolio projects", e);
       }
     }
+    
+    let validProjects = baseProjects.filter(p => !p.isHidden);
+    validProjects.sort((a, b) => (a.order || 0) - (b.order || 0));
+    
+    if (featuredOnly) {
+      validProjects = validProjects.filter(p => p.isFeatured !== false); // Ensure featured shows if not explicitly false
+    }
+    setTotalProjects(validProjects.length);
+    
+    if (limit) {
+      validProjects = validProjects.slice(0, limit);
+    }
+    setProjects(validProjects);
   }, [portfolioContent, limit, featuredOnly]);
 
   const categories = useMemo(() => {
@@ -203,10 +271,10 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
                     onClick={() => setLightboxIndex(filteredProjects.indexOf(project))}
                   >
                     <div className="absolute inset-0 z-0">
-                      <img
+                      <img loading="lazy" decoding="async" 
                         src={project.coverImage || project.image || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'}
                         alt={project.title}
-                        loading="lazy"
+                        
                         className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/90 via-[#0F172A]/40 to-transparent transition-opacity duration-300" />
@@ -234,10 +302,10 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
               ))}
             </Swiper>
             
-            <button className="swiper-button-prev-portfolio absolute top-1/2 -left-4 md:-left-12 -translate-y-1/2 z-10 bg-white shadow-lg p-4 rounded-full text-[#0284C7] hover:bg-[#0F172A] hover:text-white transition-all hidden sm:flex items-center justify-center">
+            <button className="swiper-button-prev-portfolio absolute top-1/2 -left-4 md:-left-12 -translate-y-1/2 z-10 bg-white shadow-lg p-4 rounded-full text-[#0284C7] hover:bg-[#0F172A] hover:text-white transition-all hidden sm:flex items-center justify-center" aria-label="Previous Slide">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <button className="swiper-button-next-portfolio absolute top-1/2 -right-4 md:-right-12 -translate-y-1/2 z-10 bg-white shadow-lg p-4 rounded-full text-[#0284C7] hover:bg-[#0F172A] hover:text-white transition-all hidden sm:flex items-center justify-center">
+            <button className="swiper-button-next-portfolio absolute top-1/2 -right-4 md:-right-12 -translate-y-1/2 z-10 bg-white shadow-lg p-4 rounded-full text-[#0284C7] hover:bg-[#0F172A] hover:text-white transition-all hidden sm:flex items-center justify-center" aria-label="Next Slide">
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
@@ -258,10 +326,10 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
                 >
                   <div className="relative overflow-hidden w-full" style={{ paddingBottom: index % 3 === 0 ? '120%' : index % 2 === 0 ? '80%' : '100%' }}>
                     <div className="absolute inset-0 z-0">
-                      <img
+                      <img loading="lazy" decoding="async" 
                         src={project.coverImage || project.image || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'}
                         alt={project.title}
-                        loading="lazy"
+                        
                         className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
                       />
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-6">
@@ -322,7 +390,7 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
             tabIndex={0}
           >
             <button
-              onClick={() => setLightboxIndex(null)}
+              aria-label="Close Lightbox" onClick={() => setLightboxIndex(null)}
               className="absolute top-6 right-6 z-[110] text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-3 rounded-full transition-colors"
             >
               <X className="w-6 h-6" />
@@ -355,7 +423,7 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
                 transition={{ duration: 0.3 }}
                 className="relative w-full md:w-2/3 h-[50vh] md:h-[80vh] flex items-center justify-center"
               >
-                <img
+                <img loading="lazy" decoding="async" 
                   src={currentLightboxProject.coverImage || currentLightboxProject.image}
                   alt={currentLightboxProject.title}
                   className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"

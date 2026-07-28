@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useContent } from '../contexts/ContentContext';
@@ -11,9 +12,11 @@ interface SEOProps {
   structuredData?: any;
 }
 
-export default function SEO({ title, description, keywords, image, path = '', structuredData }: SEOProps) {
+export default function SEO({ title, description, keywords, image, structuredData }: SEOProps) {
   const { language } = useLanguage();
   const { getContent } = useContent();
+  const location = useLocation();
+  const path = location.pathname;
   const settingsContent = getContent('site_settings');
   
   let siteSettings: any = {};
@@ -36,6 +39,7 @@ export default function SEO({ title, description, keywords, image, path = '', st
     }
   };
 
+  
   const defaultData = defaultSeoData[language];
   const pageTitle = title ? `${title}` : defaultData.title;
   const pageDescription = description || defaultData.description;
@@ -46,19 +50,108 @@ export default function SEO({ title, description, keywords, image, path = '', st
   const url = `${baseUrl}${path}`;
   const ogImage = image || `${baseUrl}/og-image.jpg`;
 
-  const defaultStructuredData = {
+  const pathParts = path.split('/').filter(p => p);
+  const breadcrumbList = {
+    "@type": "BreadcrumbList",
+    "@id": `${url}#breadcrumb`,
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": language === 'ar' ? 'الرئيسية' : 'Home',
+        "item": baseUrl
+      },
+      ...pathParts.map((part, index) => ({
+        "@type": "ListItem",
+        "position": index + 2,
+        "name": decodeURIComponent(part),
+        "item": `${baseUrl}/${pathParts.slice(0, index + 1).join('/')}`
+      }))
+    ]
+  };
+
+
+    const defaultStructuredData = {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "name": siteSettings.companyName || "شركة زجاج الرياض",
-    "image": siteSettings.logoUrl || ogImage,
-    "description": pageDescription,
-    "url": baseUrl,
-    "telephone": siteSettings.phoneNumber || "+966510233706",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "الرياض",
-      "addressCountry": "SA"
-    }
+    "@graph": [
+            {
+        "@type": "HomeAndConstructionBusiness",
+        "@id": `${baseUrl}/#organization`,
+        "name": siteSettings.companyName || "شركة زجاج الرياض",
+        "url": baseUrl,
+        "logo": siteSettings.logoUrl || ogImage,
+        "image": siteSettings.logoUrl || ogImage,
+        "description": pageDescription,
+        "telephone": siteSettings.phoneNumber || "+966510233706",
+        "priceRange": siteSettings.priceRange || "$$",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": siteSettings.streetAddress || "طريق الملك فهد",
+          "addressLocality": siteSettings.addressLocality || "الرياض",
+          "addressRegion": siteSettings.addressRegion || "منطقة الرياض",
+          "postalCode": siteSettings.postalCode || "12211",
+          "addressCountry": "SA"
+        },
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": siteSettings.latitude || 24.7136,
+          "longitude": siteSettings.longitude || 46.6753
+        },
+        "openingHoursSpecification": {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": siteSettings.openingDays || [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Saturday"
+          ],
+          "opens": siteSettings.opensAt || "08:00",
+          "closes": siteSettings.closesAt || "22:00"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": siteSettings.ratingValue || "5.0",
+          "reviewCount": siteSettings.reviewCount || "150"
+        },
+        "areaServed": siteSettings.areaServed || "الرياض",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": siteSettings.phoneNumber || "+966510233706",
+          "contactType": "customer service",
+          "availableLanguage": ["Arabic", "English"]
+        },
+        "sameAs": siteSettings.socialLinks ? Object.values(siteSettings.socialLinks).filter(Boolean) : [
+          "https://twitter.com/riyadhglass",
+          "https://facebook.com/riyadhglass",
+          "https://instagram.com/riyadhglass"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${baseUrl}/#website`,
+        "url": baseUrl,
+        "name": siteSettings.companyName || "شركة زجاج الرياض",
+        "publisher": {
+          "@id": `${baseUrl}/#organization`
+        },
+        "inLanguage": "ar-SA"
+      },
+      {
+        "@type": "WebPage",
+        "@id": `${url}#webpage`,
+        "url": url,
+        "name": pageTitle,
+        "isPartOf": {
+          "@id": `${baseUrl}/#website`
+        },
+        "description": pageDescription,
+        "inLanguage": "ar-SA",
+        "breadcrumb": { "@id": `${url}#breadcrumb` }
+      },
+      breadcrumbList
+    ]
   };
 
   return (
@@ -96,9 +189,17 @@ export default function SEO({ title, description, keywords, image, path = '', st
       <link rel="alternate" href={url} hrefLang="en" />
       <link rel="alternate" href={url} hrefLang="x-default" />
 
+      
       <script type="application/ld+json">
-        {JSON.stringify(structuredData || defaultStructuredData)}
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            ...(defaultStructuredData["@graph"] as any[]),
+            ...(structuredData ? (Array.isArray(structuredData) ? structuredData : [structuredData]) : [])
+          ]
+        })}
       </script>
+
     </Helmet>
   );
 }

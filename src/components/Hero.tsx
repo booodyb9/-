@@ -64,6 +64,8 @@ export default function Hero() {
                 <img
                   src={img.url}
                   alt={img.alt}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  fetchPriority={index === 0 ? "high" : "auto"}
                   className="w-full h-full object-cover opacity-50 transform transition-transform duration-[15000ms] ease-linear hover:scale-110"
                 />
               </div>
@@ -71,12 +73,12 @@ export default function Hero() {
           ))}
           
           <div className="absolute inset-y-0 right-0 z-50 flex items-center pr-4 md:pr-8 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-            <button className="swiper-button-next-custom bg-black/20 hover:bg-black/40 border border-white/10 backdrop-blur-md p-4 rounded-full text-white transition-all transform hover:scale-105 active:scale-95">
+            <button className="swiper-button-next-custom bg-black/20 hover:bg-black/40 border border-white/10 backdrop-blur-md p-4 rounded-full text-white transition-all transform hover:scale-105 active:scale-95" aria-label="Next Slide">
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
           <div className="absolute inset-y-0 left-0 z-50 flex items-center pl-4 md:pl-8 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-            <button className="swiper-button-prev-custom bg-black/20 hover:bg-black/40 border border-white/10 backdrop-blur-md p-4 rounded-full text-white transition-all transform hover:scale-105 active:scale-95">
+            <button className="swiper-button-prev-custom bg-black/20 hover:bg-black/40 border border-white/10 backdrop-blur-md p-4 rounded-full text-white transition-all transform hover:scale-105 active:scale-95" aria-label="Previous Slide">
               <ChevronLeft className="w-5 h-5" />
             </button>
           </div>

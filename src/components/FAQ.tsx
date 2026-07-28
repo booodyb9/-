@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
@@ -49,6 +50,23 @@ export default function FAQ() {
 
   return (
     <section id="faq" className="py-24 bg-gray-50 relative overflow-hidden">
+      
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": faqs.map(faq => ({
+              "@type": "Question",
+              "name": faq.question,
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": faq.answer
+              }
+            }))
+          })}
+        </script>
+      </Helmet>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}

@@ -366,7 +366,7 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
                         
                         <div className="w-16 h-16 rounded overflow-hidden bg-gray-100 flex-shrink-0">
                           {project.coverImage ? (
-                            <img src={project.coverImage} alt={project.title} className="w-full h-full object-cover" />
+                            <img loading="lazy" decoding="async" src={project.coverImage} alt={project.title} className="w-full h-full object-cover" />
                           ) : (
                             <ImageIcon className="w-8 h-8 text-gray-400 m-auto mt-4" />
                           )}

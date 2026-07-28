@@ -29,7 +29,7 @@ export default function ServiceDetails() {
       <>
         <Navbar />
         <main className="min-h-screen pt-32 pb-12 px-4 flex flex-col items-center justify-center">
-          <h1 className="text-3xl font-bold mb-4">جاري التحميل أو الخدمة غير موجودة</h1>
+          <div className="text-3xl font-bold mb-4">جاري التحميل أو الخدمة غير موجودة</div>
           <Link to="/services" className="text-[#0284C7] hover:underline font-bold">العودة للخدمات</Link>
         </main>
         <Footer />
@@ -39,16 +39,29 @@ export default function ServiceDetails() {
 
   return (
     <>
-      <SEO 
+            <SEO 
         title={`${service.title} | شركة زجاج الرياض`} 
         description={service.description}
+        image={service.image}
+        structuredData={{
+          "@type": "Service",
+          "name": service.title,
+          "description": service.description,
+          "provider": {
+            "@type": "HomeAndConstructionBusiness",
+            "name": "شركة زجاج الرياض",
+            "image": "https://riyadh-glass.ai.studio/og-image.jpg"
+          },
+          "image": service.image,
+          "areaServed": "الرياض"
+        }}
       />
       <Navbar />
       <main className="min-h-screen pt-24 pb-12 px-4 max-w-7xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
           {service.image && (
             <div className="h-[400px] w-full overflow-hidden">
-              <img src={service.image} alt={service.title} className="w-full h-full object-cover" />
+              <img loading="lazy" decoding="async" src={service.image} alt={service.title} className="w-full h-full object-cover" />
             </div>
           )}
           <div className="p-8 md:p-12">

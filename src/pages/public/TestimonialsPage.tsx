@@ -9,7 +9,15 @@ export default function TestimonialsPage() {
     <>
       <SEO title="آراء العملاء | شركة زجاج الرياض" description="صفحة آراء العملاء لموقع شركة زجاج الرياض" />
       <Navbar />
-      <main className="pt-20 min-h-screen">
+      <main className="min-h-screen">
+
+      <div className="bg-[#0F172A] text-white pt-32 pb-16 text-center px-4">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4">آراء العملاء</h1>
+          <p className="text-lg text-gray-300">ماذا يقول عملاؤنا عن خدماتنا</p>
+        </div>
+      </div>
+
         <Testimonials />
       </main>
       <Footer />

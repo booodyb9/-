@@ -3,16 +3,14 @@ import re
 with open('src/components/Footer.tsx', 'r') as f:
     content = f.read()
 
-content = content.replace(
-    '<Building2 className="h-6 w-6 text-[#0284C7]" />',
-    '<div className="w-8 h-8 bg-gradient-to-br from-[#0284C7] to-[#0369A1] rounded-lg shadow-sm flex items-center justify-center text-white"><Building2 className="h-5 w-5" /></div>'
-)
+import_link = "import { Link } from 'react-router-dom';\n"
+if "import { Link" not in content:
+    content = content.replace("import { Facebook", import_link + "import { Facebook")
 
-# And add hover effect for social icons
-content = content.replace(
-    'className="w-10 h-10 rounded-sm bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-[#0284C7] hover:text-white transition-colors"',
-    'className="w-10 h-10 rounded-full bg-gray-800/50 border border-gray-700 flex items-center justify-center text-gray-400 hover:bg-[#0284C7] hover:border-[#0284C7] hover:text-white transition-all duration-300"'
-)
+sitemap_link = '            <Link to="/sitemap" className="text-gray-400 hover:text-white text-sm transition-colors mt-2 md:mt-0 md:ml-6">خريطة الموقع</Link>'
+if "خريطة الموقع" not in content:
+    content = content.replace('<div className="mt-8 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center">',
+                              '<div className="mt-8 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center">\n' + sitemap_link)
 
 with open('src/components/Footer.tsx', 'w') as f:
     f.write(content)

@@ -265,7 +265,7 @@ export default function Navbar() {
                 <Link
                   key={link.name}
                   to={link.href}
-                  onClick={() => setIsOpen(false)}
+                  aria-label="Close Mobile Menu" onClick={() => setIsOpen(false)}
                   className="block px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-[#111827] text-sm uppercase tracking-widest font-medium transition-colors"
                 >
                   {link.name}
@@ -284,7 +284,7 @@ export default function Navbar() {
                 </button>
                 <Link
                   to="/contact"
-                  onClick={() => setIsOpen(false)}
+                  aria-label="Close Mobile Menu" onClick={() => setIsOpen(false)}
                   className="w-full text-center bg-[#0F172A] text-white px-6 py-3 font-semibold rounded-full hover:bg-[#0284C7] transition-all duration-300 flex items-center justify-center gap-2"
                 >
                   <Phone className="h-4 w-4" />

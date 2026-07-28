@@ -74,7 +74,7 @@ export default function ProjectDetails() {
         <Navbar />
         <main className="min-h-screen pt-32 pb-12 px-4 flex flex-col items-center justify-center bg-gray-50">
           <div className="w-16 h-16 border-4 border-[#0284C7] border-t-transparent rounded-full animate-spin mb-6"></div>
-          <h1 className="text-2xl font-bold text-gray-600 mb-4">جاري التحميل...</h1>
+          <div className="text-2xl font-bold text-gray-600 mb-4">جاري التحميل...</div>
           <Link to="/portfolio" className="text-[#0284C7] hover:underline font-bold">العودة لمعرض الأعمال</Link>
         </main>
         <Footer />
@@ -110,7 +110,7 @@ export default function ProjectDetails() {
       {/* Hero Banner with Cover Image */}
       <section className="relative pt-20 lg:pt-24 min-h-[60vh] flex flex-col justify-end">
         <div className="absolute inset-0 z-0">
-          <img src={project.coverImage} alt={project.title} className="w-full h-full object-cover" />
+          <img loading="lazy" decoding="async" src={project.coverImage} alt={project.title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-black/30" />
         </div>
         
@@ -244,16 +244,15 @@ export default function ProjectDetails() {
                     onMouseDown={(e) => { setIsDragging(true); handleMove(e.clientX); }}
                     onTouchStart={(e) => { setIsDragging(true); handleMove(e.touches[0].clientX); }}
                   >
-                    <img src={project.afterImage} loading="lazy" alt="بعد التنفيذ" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+                    <img loading="lazy" decoding="async" src={project.afterImage} alt="بعد التنفيذ" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
                     <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-gray-900 font-bold px-4 py-1.5 rounded-full shadow-sm z-10 text-sm">بعد</div>
                     
                     <div 
                       className="absolute inset-y-0 right-0 overflow-hidden"
                       style={{ width: `${100 - sliderPosition}%` }}
                     >
-                      <img 
-                        src={project.beforeImage} 
-                        loading="lazy"
+                      <img loading="lazy" decoding="async" 
+                        src={project.beforeImage}
                         alt="قبل التنفيذ" 
                         className="absolute inset-y-0 right-0 h-full object-cover max-w-none" 
                         style={{ width: `${sliderRef.current?.offsetWidth || 0}px` }}
@@ -290,7 +289,7 @@ export default function ProjectDetails() {
                   >
                     {allImages.map((src, index) => (
                       <SwiperSlide key={index} className="cursor-pointer" onClick={() => openLightbox(index)}>
-                        <img src={src} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" alt={`صورة ${index + 1}`} loading="lazy" />
+                        <img loading="lazy" decoding="async" src={src} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" alt={`صورة ${index + 1}`} />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                           <span className="opacity-0 group-hover:opacity-100 text-white font-bold bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm transition-all transform scale-90 group-hover:scale-100">
                             تكبير الصورة
@@ -315,7 +314,7 @@ export default function ProjectDetails() {
                   >
                     {allImages.map((src, index) => (
                       <SwiperSlide key={index} className="rounded-xl overflow-hidden cursor-pointer opacity-60 hover:opacity-100 [&.swiper-slide-thumb-active]:opacity-100 [&.swiper-slide-thumb-active]:border-2 [&.swiper-slide-thumb-active]:border-[#0284C7] transition-all h-20 md:h-24">
-                        <img src={src} className="w-full h-full object-cover" alt={`مصغرة ${index + 1}`} loading="lazy" />
+                        <img loading="lazy" decoding="async" src={src} className="w-full h-full object-cover" alt={`مصغرة ${index + 1}`} />
                       </SwiperSlide>
                     ))}
                   </Swiper>
@@ -335,7 +334,7 @@ export default function ProjectDetails() {
               {relatedProjects.map((relProject) => (
                 <Link to={`/portfolio/${relProject.slug}`} key={relProject.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 block">
                   <div className="h-60 relative overflow-hidden">
-                    <img src={relProject.coverImage} alt={relProject.title} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out" loading="lazy" />
+                    <img loading="lazy" decoding="async" src={relProject.coverImage} alt={relProject.title} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out" />
                     <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300"></div>
                   </div>
                   <div className="p-6">

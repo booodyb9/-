@@ -154,7 +154,7 @@ export default function Features() {
             >
               {/* Premium Image Container */}
               <div className="aspect-[4/5] md:aspect-square overflow-hidden rounded-[2.5rem] shadow-2xl relative">
-                <img
+                <img loading="lazy" decoding="async"
                   src={featureImage}
                   alt="Modern office interior with glass partitions"
                   className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-[10000ms] ease-out"

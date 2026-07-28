@@ -162,7 +162,7 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
                     </label>
                     {item[field.key] && typeof item[field.key] === 'string' && item[field.key].trim() !== '' && (
                       <div className="relative w-full h-40 rounded-lg border border-gray-200 overflow-hidden group">
-                         <img src={item[field.key]} alt="Preview" className="w-full h-full object-cover" />
+                         <img loading="lazy" decoding="async" src={item[field.key]} alt="Preview" className="w-full h-full object-cover" />
                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                            <p className="text-white text-sm font-bold">تم رفع الصورة بنجاح</p>
                          </div>

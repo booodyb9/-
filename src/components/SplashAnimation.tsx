@@ -53,14 +53,14 @@ export default function SplashAnimation() {
           <div className="relative z-10 flex flex-col items-center justify-center">
             {/* Logo Text Reveal */}
             <div className="overflow-hidden pb-4">
-              <motion.h1 
+              <motion.div 
                 initial={{ y: "100%", opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1], delay: 0.3 }}
                 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight"
               >
                 {language === 'ar' ? 'شركة زجاج الرياض' : 'Riyadh Glass Company'}
-              </motion.h1>
+              </motion.div>
             </div>
             
             {/* Subtitle / Line Reveal */}

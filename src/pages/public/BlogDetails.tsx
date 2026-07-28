@@ -30,7 +30,7 @@ export default function BlogDetails() {
       <>
         <Navbar />
         <main className="min-h-screen pt-32 pb-12 px-4 flex flex-col items-center justify-center">
-          <h1 className="text-3xl font-bold mb-4">جاري التحميل أو المقال غير موجود</h1>
+          <div className="text-3xl font-bold mb-4">جاري التحميل أو المقال غير موجود</div>
           <Link to="/blog" className="text-[#0284C7] hover:underline font-bold">العودة للمدونة</Link>
         </main>
         <Footer />
@@ -40,16 +40,36 @@ export default function BlogDetails() {
 
   return (
     <>
-      <SEO 
+            <SEO 
         title={`${post.title} | المدونة | شركة زجاج الرياض`} 
         description={post.excerpt}
+        image={post.image}
+        structuredData={{
+          "@type": "BlogPosting",
+          "headline": post.title,
+          "image": post.image,
+          "author": {
+            "@type": "Organization",
+            "name": "شركة زجاج الرياض"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "شركة زجاج الرياض",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://riyadh-glass.ai.studio/og-image.jpg"
+            }
+          },
+          "datePublished": post.date,
+          "description": post.excerpt
+        }}
       />
       <Navbar />
       <main className="min-h-screen pt-24 pb-12 px-4 max-w-4xl mx-auto">
         <article className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
           {post.image && (
             <div className="h-[400px] w-full overflow-hidden">
-              <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+              <img loading="lazy" decoding="async" src={post.image} alt={post.title} className="w-full h-full object-cover" />
             </div>
           )}
           <div className="p-8 md:p-12">

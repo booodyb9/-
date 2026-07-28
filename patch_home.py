@@ -1,32 +1,51 @@
 import re
 
-with open('src/pages/dashboard/DashboardHome.tsx', 'r') as f:
+with open('src/pages/public/Home.tsx', 'r') as f:
     content = f.read()
 
-new_comp = """
-export default function DashboardHome({ messages = [], contents = [], mediaFiles = [] }: any) {
-  const unreadMessages = messages.filter((m: any) => !m.is_read).length;
-  
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">نظرة عامة على الموقع</h2>
-        <div className="text-sm text-gray-500">آخر تحديث: منذ لحظات</div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="إجمالي الزيارات" value="-" trend="" isUp={true} icon={Eye} color="text-blue-600" bg="bg-blue-50" />
-        <StatCard title="رسائل جديدة" value={unreadMessages.toString()} trend="" isUp={true} icon={MessageSquare} color="text-green-600" bg="bg-green-50" />
-        <StatCard title="الصفحات النشطة" value={contents.length.toString()} trend="" isUp={true} icon={FileText} color="text-purple-600" bg="bg-purple-50" />
-        <StatCard title="الوسائط المرفوعة" value={mediaFiles.length.toString()} trend="" isUp={true} icon={Image} color="text-orange-600" bg="bg-orange-50" />
-      </div>
-"""
+old_map = """        {orderedSections.map((section: any) => {
+          if (!section.isVisible) return null;
+          
+          switch (section.id) {
+            case 'hero': return <Hero key="hero" />;
+            
+            case 'services': return <Services key="services" />;
+            case 'portfolio': return <div key="portfolio"><Gallery limit={6} featuredOnly /></div>;
+            case 'features': return <Features key="features" />;
+            case 'visualizer': return <GlassVisualizer key="visualizer" />;
+            case 'stats': return <ProjectStats key="stats" />;
+            case 'partners': return <TrustedPartners key="partners" />;
+            // Future compatibility with other sections
+            default: return null;
+          }
+        })}"""
 
-content = re.sub(
-    r"export default function DashboardHome\(\) \{.*?<div className=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4\">.*?</div>",
-    new_comp.strip(),
-    content, flags=re.DOTALL
-)
+new_map = """        {orderedSections.map((section: any, index: number) => {
+          if (!section.isVisible) return null;
+          
+          const key = `${section.id}-${index}`;
+          switch (section.id) {
+            case 'hero': return <Hero key={key} />;
+            case 'services': return <Services key={key} />;
+            case 'portfolio': return <div key={key}><Gallery limit={6} featuredOnly /></div>;
+            case 'features': return <Features key={key} />;
+            case 'visualizer': return <GlassVisualizer key={key} />;
+            case 'stats': return <ProjectStats key={key} />;
+            case 'partners': return <TrustedPartners key={key} />;
+            default: return null;
+          }
+        })}"""
 
-with open('src/pages/dashboard/DashboardHome.tsx', 'w') as f:
+if old_map in content:
+    content = content.replace(old_map, new_map)
+else:
+    # use regex
+    content = re.sub(
+        r'\{orderedSections\.map\(\(section: any\) => \{.*?\n\s+if \(\!section\.isVisible\) return null;\s+switch \(section\.id\) \{.*?default: return null;\s+\}\s+\}\)\}',
+        new_map,
+        content,
+        flags=re.DOTALL
+    )
+
+with open('src/pages/public/Home.tsx', 'w') as f:
     f.write(content)

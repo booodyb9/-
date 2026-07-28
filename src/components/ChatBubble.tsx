@@ -59,7 +59,7 @@ export default function ChatBubble() {
                 <MessageCircle className="w-5 h-5" />
                 <h3 className="font-bold text-sm">محادثة سريعة</h3>
               </div>
-              <button onClick={() => setIsOpen(false)} className="hover:bg-[#0369A1] p-1 rounded-full transition-colors">
+              <button aria-label="إغلاق المحادثة" onClick={() => setIsOpen(false)} className="hover:bg-[#0369A1] p-1 rounded-full transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -104,8 +104,7 @@ export default function ChatBubble() {
                     className="w-full text-sm pr-3 pl-10 py-2 border border-gray-200 rounded-full focus:ring-1 focus:ring-[#0284C7] focus:border-[#0284C7] outline-none"
                     required
                   />
-                  <button
-                    type="submit"
+                  <button aria-label="إرسال" type="submit"
                     disabled={isSubmitting || !name || !email || !message}
                     className="absolute left-1.5 top-1.5 p-1.5 bg-[#0284C7] text-white rounded-full hover:bg-[#0369A1] transition-colors disabled:opacity-50"
                   >

@@ -230,7 +230,7 @@ export default function PagesManager({ pages, fetchContents }: Props) {
                 className="w-full border p-2 rounded text-left mb-2" dir="ltr"
               />
               {editingPage.parsed.featuredImage && (
-                <img src={editingPage.parsed.featuredImage} alt="Preview" className="w-full h-32 object-cover rounded" />
+                <img loading="lazy" decoding="async" src={editingPage.parsed.featuredImage} alt="Preview" className="w-full h-32 object-cover rounded" />
               )}
             </div>
 

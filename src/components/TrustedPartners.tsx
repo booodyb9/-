@@ -40,14 +40,14 @@ export default function TrustedPartners() {
         <div className="animate-marquee whitespace-nowrap flex items-center gap-12 py-4">
           {[...partners, ...partners, ...partners].map((partner, index) => (
             <div key={index} className="w-48 h-24 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] flex items-center justify-center p-4 filter grayscale hover:grayscale-0 transition-all duration-500 border border-gray-100 hover:-translate-y-1">
-              <img src={partner.logo} alt={partner.name} className="max-w-full max-h-full object-contain opacity-70 hover:opacity-100" />
+              <img loading="lazy" decoding="async" src={partner.logo} alt={partner.name} className="max-w-full max-h-full object-contain opacity-70 hover:opacity-100" />
             </div>
           ))}
         </div>
         <div className="absolute top-0 animate-marquee2 whitespace-nowrap flex items-center gap-12 py-4">
           {[...partners, ...partners, ...partners].map((partner, index) => (
             <div key={index} className="w-48 h-24 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] flex items-center justify-center p-4 filter grayscale hover:grayscale-0 transition-all duration-500 border border-gray-100 hover:-translate-y-1">
-              <img src={partner.logo} alt={partner.name} className="max-w-full max-h-full object-contain opacity-70 hover:opacity-100" />
+              <img loading="lazy" decoding="async" src={partner.logo} alt={partner.name} className="max-w-full max-h-full object-contain opacity-70 hover:opacity-100" />
             </div>
           ))}
         </div>

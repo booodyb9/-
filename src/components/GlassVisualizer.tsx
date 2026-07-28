@@ -116,7 +116,7 @@ export default function GlassVisualizer() {
           <div className="w-full lg:w-2/3 max-w-3xl">
             <div className="relative rounded-sm overflow-hidden shadow-2xl aspect-video bg-gray-200 border-[12px] border-[#0F172A]">
               {/* Background Image (The view outside) */}
-              <img 
+              <img loading="lazy" decoding="async" 
                 src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" 
                 alt="Room view" 
                 className="absolute inset-0 w-full h-full object-cover"

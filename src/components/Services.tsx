@@ -116,10 +116,9 @@ export default function Services() {
             >
               <div className="h-56 overflow-hidden relative shrink-0">
                 {service.image && typeof service.image === 'string' && service.image.trim() !== '' && (
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={service.image}
                     alt={service.title}
-                    loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
                 )}

@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Star, Quote, ChevronRight, ChevronLeft } from 'lucide-react';
@@ -66,6 +67,33 @@ export default function Testimonials() {
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#0284C7]/5 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-[#0284C7]/5 rounded-full blur-3xl pointer-events-none"></div>
 
+      
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "itemListElement": testimonials.map((testimonial, idx) => ({
+              "@type": "Review",
+              "position": idx + 1,
+              "author": {
+                "@type": "Person",
+                "name": testimonial.name
+              },
+              "reviewRating": {
+                "@type": "Rating",
+                "ratingValue": testimonial.rating || 5,
+                "bestRating": 5
+              },
+              "reviewBody": testimonial.content,
+              "itemReviewed": {
+                "@type": "HomeAndConstructionBusiness",
+                "name": "شركة زجاج الرياض"
+              }
+            }))
+          })}
+        </script>
+      </Helmet>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -132,10 +160,10 @@ export default function Testimonials() {
             ))}
           </Swiper>
           
-          <button className="swiper-button-prev-test absolute top-1/2 -left-2 md:-left-6 -translate-y-1/2 z-10 bg-white border border-gray-100 shadow-xl p-3 rounded-full text-[#0284C7] hover:bg-[#0284C7] hover:text-white transition-all hidden sm:flex">
+          <button className="swiper-button-prev-test absolute top-1/2 -left-2 md:-left-6 -translate-y-1/2 z-10 bg-white border border-gray-100 shadow-xl p-3 rounded-full text-[#0284C7] hover:bg-[#0284C7] hover:text-white transition-all hidden sm:flex" aria-label="Previous Slide">
             <ChevronLeft className="w-6 h-6" />
           </button>
-          <button className="swiper-button-next-test absolute top-1/2 -right-2 md:-right-6 -translate-y-1/2 z-10 bg-white border border-gray-100 shadow-xl p-3 rounded-full text-[#0284C7] hover:bg-[#0284C7] hover:text-white transition-all hidden sm:flex">
+          <button className="swiper-button-next-test absolute top-1/2 -right-2 md:-right-6 -translate-y-1/2 z-10 bg-white border border-gray-100 shadow-xl p-3 rounded-full text-[#0284C7] hover:bg-[#0284C7] hover:text-white transition-all hidden sm:flex" aria-label="Next Slide">
             <ChevronRight className="w-6 h-6" />
           </button>
         </div>

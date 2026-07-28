@@ -144,7 +144,7 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
               <div key={file.id} className="group relative border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-gray-50 cursor-pointer" onClick={() => onSelect && onSelect(file.url)}>
                 <div className="aspect-square bg-gray-100 flex items-center justify-center relative">
                   {file.url && file.url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) ? (
-                    <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                    <img loading="lazy" decoding="async" src={file.url} alt={file.name} className="w-full h-full object-cover" />
                   ) : file.url && file.url.match(/\.(mp4|webm|ogg)$/i) ? (
                     <Video className="w-12 h-12 text-gray-400" />
                   ) : (

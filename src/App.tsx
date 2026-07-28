@@ -23,6 +23,7 @@ const SearchPage = React.lazy(() => import('./pages/public/SearchPage'));
 const PrivacyPolicy = React.lazy(() => import('./pages/public/PrivacyPolicy'));
 const Terms = React.lazy(() => import('./pages/public/Terms'));
 const NotFound = React.lazy(() => import('./pages/public/NotFound'));
+const SitemapPage = React.lazy(() => import('./pages/public/SitemapPage'));
 const DynamicPage = React.lazy(() => import('./pages/public/DynamicPage'));
 
 export default function App() {
@@ -48,6 +49,7 @@ export default function App() {
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/request-quote" element={<RequestQuote />} />
                 <Route path="/search" element={<SearchPage />} />
+                <Route path="/sitemap" element={<SitemapPage />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<Terms />} />
                 

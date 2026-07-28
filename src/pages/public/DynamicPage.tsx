@@ -85,7 +85,7 @@ export default function DynamicPage() {
         <SEO title="الصفحة غير موجودة | 404" />
         <Navbar />
         <main className="min-h-screen pt-32 pb-12 px-4 flex flex-col items-center justify-center text-center">
-          <h1 className="text-9xl font-bold text-[#0284C7] mb-4">404</h1>
+          <div className="text-9xl font-bold text-[#0284C7] mb-4">404</div>
           <h2 className="text-3xl font-bold text-gray-900 mb-6">عذراً، الصفحة غير موجودة</h2>
           <p className="text-gray-600 mb-8 max-w-md">يبدو أن الصفحة التي تبحث عنها قد تم نقلها أو حذفها، أو أن الرابط غير صحيح.</p>
           <Link to="/" className="bg-[#0284C7] text-white px-8 py-3 rounded-md hover:bg-[#0369A1] transition-colors font-medium">العودة للرئيسية</Link>
@@ -107,7 +107,7 @@ export default function DynamicPage() {
         
         {pageData.featuredImage && (
             <div className="w-full h-[40vh] md:h-[50vh] relative">
-                <img src={pageData.featuredImage} alt={pageData.title} className="w-full h-full object-cover" />
+                <img loading="lazy" decoding="async" src={pageData.featuredImage} alt={pageData.title} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                     <h1 className="text-4xl md:text-5xl font-bold text-white px-4 text-center">{pageData.title}</h1>
                 </div>
