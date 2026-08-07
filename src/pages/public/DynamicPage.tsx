@@ -1,78 +1,78 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { useContent } from '../../contexts/ContentContext';
-import { useAuth } from '../../contexts/AuthContext';
 
-// Import all sections we can dynamically render
-import Hero from '../../components/Hero';
-import Services from '../../components/Services';
-import Process from '../../components/Process';
-import GlassVisualizer from '../../components/GlassVisualizer';
-import ProjectStats from '../../components/ProjectStats';
-import Features from '../../components/Features';
-import Gallery from '../../components/Gallery';
-import Testimonials from '../../components/Testimonials';
-import TrustedPartners from '../../components/TrustedPartners';
-import FAQ from '../../components/FAQ';
-import Maintenance from '../../components/Maintenance';
-import Blog from '../../components/Blog';
-import Contact from '../../components/Contact';
+const Hero = React.lazy(() => import('../../components/Hero'));
+const Services = React.lazy(() => import('../../components/Services'));
+const Process = React.lazy(() => import('../../components/Process'));
+const GlassVisualizer = React.lazy(() => import('../../components/GlassVisualizer'));
+const ProjectStats = React.lazy(() => import('../../components/ProjectStats'));
+const Features = React.lazy(() => import('../../components/Features'));
+const Gallery = React.lazy(() => import('../../components/Gallery'));
+const Testimonials = React.lazy(() => import('../../components/Testimonials'));
+const TrustedPartners = React.lazy(() => import('../../components/TrustedPartners'));
+const FAQ = React.lazy(() => import('../../components/FAQ'));
+const Maintenance = React.lazy(() => import('../../components/Maintenance'));
+const Blog = React.lazy(() => import('../../components/Blog'));
+const Contact = React.lazy(() => import('../../components/Contact'));
 
-const SectionMap: Record<string, React.FC> = {
-  'Hero': Hero,
-  'Services': Services,
-  'Process': Process,
-  'GlassVisualizer': GlassVisualizer,
-  'ProjectStats': ProjectStats,
-  'Features': Features,
-  'Gallery': Gallery,
-  'Testimonials': Testimonials,
-  'TrustedPartners': TrustedPartners,
-  'FAQ': FAQ,
-  'Maintenance': Maintenance,
-  'Blog': Blog,
-  'Contact': Contact
+type LazySection = React.LazyExoticComponent<React.ComponentType<any>>;
+
+const SectionMap: Record<string, LazySection> = {
+  Hero,
+  Services,
+  Process,
+  GlassVisualizer,
+  ProjectStats,
+  Features,
+  Gallery,
+  Testimonials,
+  TrustedPartners,
+  FAQ,
+  Maintenance,
+  Blog,
+  Contact,
 };
+
+function SectionFallback() {
+  return <div className="min-h-32" aria-hidden="true" />;
+}
 
 export default function DynamicPage() {
   const { slug } = useParams();
   const { contents, loading } = useContent();
-  const { isAdmin } = useAuth();
   const [pageData, setPageData] = useState<any>(null);
 
   useEffect(() => {
     if (loading) return;
-    
-    const pages = contents.filter(c => c.key.startsWith('page_') && c.type === 'page');
-    for (const p of pages) {
-      if (!p.body) continue;
+
+    const pages = contents.filter((content) => content.key.startsWith('page_') && content.type === 'page');
+    for (const page of pages) {
+      if (!page.body) continue;
       try {
-        const data = JSON.parse(p.body);
+        const data = JSON.parse(page.body);
         if (data.slug === slug) {
-          if (data.status === 'draft' && !isAdmin) {
-             setPageData('not_found');
-             return;
-          }
-          setPageData(data);
+          // Drafts are never exposed on the public route. They stay editable in Dashboard.
+          setPageData(data.status === 'draft' ? 'not_found' : data);
           return;
         }
-      } catch (err) {
-        console.error("Error parsing page JSON", err);
+      } catch (error) {
+        console.error('Error parsing page JSON', error);
       }
     }
-    
+
     setPageData('not_found');
-  }, [slug, contents, loading, isAdmin]);
+  }, [slug, contents, loading]);
 
   if (loading || !pageData) {
     return (
       <>
         <Navbar />
-        <main className="min-h-screen pt-32 flex items-center justify-center">
-          <div className="w-12 h-12 border-4 border-[#0284C7] border-t-transparent rounded-full animate-spin"></div>
+        <main className="flex min-h-screen items-center justify-center pt-32">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#0284C7] border-t-transparent" />
         </main>
         <Footer />
       </>
@@ -82,13 +82,13 @@ export default function DynamicPage() {
   if (pageData === 'not_found') {
     return (
       <>
-        <SEO title="الصفحة غير موجودة | 404" />
+        <SEO noindex title="الصفحة غير موجودة | 404" description="الصفحة المطلوبة غير موجودة." />
         <Navbar />
-        <main className="min-h-screen pt-32 pb-12 px-4 flex flex-col items-center justify-center text-center">
-          <div className="text-9xl font-bold text-[#0284C7] mb-4">404</div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">عذراً، الصفحة غير موجودة</h2>
-          <p className="text-gray-600 mb-8 max-w-md">يبدو أن الصفحة التي تبحث عنها قد تم نقلها أو حذفها، أو أن الرابط غير صحيح.</p>
-          <Link to="/" className="bg-[#0284C7] text-white px-8 py-3 rounded-md hover:bg-[#0369A1] transition-colors font-medium">العودة للرئيسية</Link>
+        <main className="flex min-h-screen flex-col items-center justify-center px-4 pb-12 pt-32 text-center">
+          <div className="mb-4 text-9xl font-bold text-[#0284C7]">404</div>
+          <h1 className="mb-6 text-3xl font-bold text-gray-900">عذراً، الصفحة غير موجودة</h1>
+          <p className="mb-8 max-w-md text-gray-600">يبدو أن الصفحة التي تبحث عنها قد تم نقلها أو حذفها، أو أن الرابط غير صحيح.</p>
+          <Link to="/" className="rounded-md bg-[#0284C7] px-8 py-3 font-medium text-white transition-colors hover:bg-[#0369A1]">العودة للرئيسية</Link>
         </main>
         <Footer />
       </>
@@ -97,9 +97,8 @@ export default function DynamicPage() {
 
   return (
     <>
-      
-      <SEO 
-        title={`${pageData.seo?.title || pageData.title} | شركة زجاج الرياض`} 
+      <SEO
+        title={`${pageData.seo?.title || pageData.title} | شركة زجاج الرياض`}
         description={pageData.seo?.description}
         keywords={pageData.seo?.keywords}
         canonical={pageData.seo?.canonical}
@@ -109,45 +108,52 @@ export default function DynamicPage() {
 
       <Navbar />
       <main className="min-h-screen pt-20">
-        
-        {pageData.featuredImage && (
-            <div className="w-full h-[40vh] md:h-[50vh] relative">
-                <img loading="lazy" decoding="async" src={pageData.featuredImage} alt={pageData.title || 'صورة'} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <h1 className="text-4xl md:text-5xl font-bold text-white px-4 text-center">{pageData.title}</h1>
-                </div>
+        {pageData.featuredImage ? (
+          <div className="relative h-[40vh] w-full md:h-[50vh]">
+            <img
+              src={pageData.featuredImage}
+              alt={pageData.title || 'صورة الصفحة'}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <h1 className="px-4 text-center text-4xl font-bold text-white md:text-5xl">{pageData.title}</h1>
             </div>
-        )}
-        
-        {!pageData.featuredImage && (
-            <div className="bg-gray-50 py-12 border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <h1 className="text-4xl font-bold text-gray-900">{pageData.title}</h1>
-                </div>
+          </div>
+        ) : (
+          <div className="border-b border-gray-100 bg-gray-50 py-12">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <h1 className="text-4xl font-bold text-gray-900">{pageData.title}</h1>
             </div>
+          </div>
         )}
-        
+
         {pageData.content && (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 prose prose-lg max-w-none">
-                <div dangerouslySetInnerHTML={{ __html: pageData.content }} />
-            </div>
+          <div className="prose prose-lg mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+            <div dangerouslySetInnerHTML={{ __html: pageData.content }} />
+          </div>
         )}
 
-        {pageData.sections && pageData.sections.map((sectionName: string, index: number) => {
-            if (sectionName === 'CustomHTML') {
-                return (
-                    <div key={`custom-${index}`} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center text-gray-500 border border-dashed border-gray-300 my-8 rounded">
-                        Custom HTML block (not implemented yet)
-                    </div>
-                );
-            }
-            const SectionComponent = SectionMap[sectionName];
-            if (SectionComponent) {
-                return <SectionComponent key={`${sectionName}-${index}`} />;
-            }
-            return null;
-        })}
+        {(pageData.sections || []).map((sectionName: string, index: number) => {
+          if (sectionName === 'CustomHTML') {
+            return (
+              <div key={`custom-${index}`} className="mx-auto my-8 max-w-7xl rounded border border-dashed border-gray-300 px-4 py-12 text-center text-gray-500 sm:px-6 lg:px-8">
+                Custom HTML block (not implemented yet)
+              </div>
+            );
+          }
 
+          const SectionComponent = SectionMap[sectionName];
+          if (!SectionComponent) return null;
+
+          return (
+            <React.Suspense key={`${sectionName}-${index}`} fallback={<SectionFallback />}>
+              <SectionComponent />
+            </React.Suspense>
+          );
+        })}
       </main>
       <Footer />
     </>
