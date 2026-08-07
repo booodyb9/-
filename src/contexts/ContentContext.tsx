@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
-import { Content } from '../pages/dashboard/types';
+import type { Content } from '../pages/dashboard/types';
 import { supabase } from '../lib/supabase';
 
 interface ContentContextType {
@@ -61,28 +61,11 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     await Promise.all([fetchContents(), fetchMedia()]);
   }, [fetchContents, fetchMedia]);
 
+  // Public visitors only need one content request. Dashboard saves explicitly refresh
+  // this state, so a permanent Realtime websocket is unnecessary on every page view.
   useEffect(() => {
-    void forceRefresh();
-
-    const contentsChannel = supabase
-      .channel('contents_changes_ctx')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'contents' }, () => {
-        void fetchContents();
-      })
-      .subscribe();
-
-    const mediaChannel = supabase
-      .channel('media_changes_ctx')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'media' }, () => {
-        void fetchMedia();
-      })
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(contentsChannel);
-      void supabase.removeChannel(mediaChannel);
-    };
-  }, [fetchContents, fetchMedia, forceRefresh]);
+    void fetchContents();
+  }, [fetchContents]);
 
   const getContent = useCallback((key: string) => contents.find((content) => content.key === key), [contents]);
 

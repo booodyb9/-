@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import Navbar from '../../components/Navbar';
 import Hero from '../../components/Hero';
-import GallerySlider from '../../components/GallerySlider';
-import Blog from '../../components/Blog';
+const GallerySlider = React.lazy(() => import('../../components/GallerySlider'));
+const Blog = React.lazy(() => import('../../components/Blog'));
 import SectionCTA from '../../components/SectionCTA';
 import Footer from '../../components/Footer';
 
@@ -331,7 +331,7 @@ export default function Home() {
         </div>
       </section>
       <div className="py-8 bg-[#0a0a0a]"><SectionCTA /></div>
-      <GallerySlider />
+      <React.Suspense fallback={<div className="min-h-40" aria-hidden="true" />}><GallerySlider /></React.Suspense>
       <section id="partners">
         <div className="partners-inner">
           <div className="partners-title">CLIENTS & PARTNERS · عملاؤنا وشركاؤنا</div>
@@ -470,7 +470,7 @@ export default function Home() {
         </div>
       </section>
       <div className="py-8 bg-gray-50"><SectionCTA /></div>
-      <Blog />
+      <React.Suspense fallback={<div className="min-h-40" aria-hidden="true" />}><Blog /></React.Suspense>
       <div className="py-8 bg-white"><SectionCTA /></div>
       <section id="contact">
         <div className="contact-inner">

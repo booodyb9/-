@@ -2,9 +2,7 @@ import React, { Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 
-import AdminRoute from './AdminRoute';
-
-const Dashboard = React.lazy(() => import('../pages/Dashboard'));
+const AdminArea = React.lazy(() => import('./AdminArea'));
 const Home = React.lazy(() => import('../pages/public/Home'));
 const About = React.lazy(() => import('../pages/public/About'));
 const ServicesPage = React.lazy(() => import('../pages/public/ServicesPage'));
@@ -69,7 +67,7 @@ export default function AnimatedRoutes() {
             <Route path="/sitemap" element={<PageWrapper><SitemapPage /></PageWrapper>} />
             <Route path="/privacy-policy" element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
             <Route path="/terms" element={<PageWrapper><Terms /></PageWrapper>} />
-            <Route path="/dashboard/*" element={<AdminRoute><Dashboard /></AdminRoute>} />
+            <Route path="/dashboard/*" element={<AdminArea />} />
             <Route path="/:slug" element={<PageWrapper><DynamicPage /></PageWrapper>} />
             <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
           </Routes>
