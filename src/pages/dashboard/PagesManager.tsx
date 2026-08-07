@@ -7,6 +7,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { v4 as uuidv4 } from 'uuid';
 import imageCompression from 'browser-image-compression';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import ImageUploadField from './ImageUploadField';
 
 interface Props {
   pages: any[];
@@ -300,17 +301,12 @@ export default function PagesManager({ pages, fetchContents }: Props) {
                 <option value="published">منشورة</option>
                 <option value="draft">مسودة</option>
               </select>
-
-              <label className="block text-sm font-bold mb-2">الصورة البارزة (رابط)</label>
-              <input 
-                type="text" 
+              <ImageUploadField
+                label="الصورة البارزة"
                 value={editingPage.parsed?.featuredImage || ''}
-                onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, featuredImage: e.target.value}})}
-                className="w-full border p-2 rounded text-left mb-2" dir="ltr"
+                folder="pages/featured"
+                onChange={(url) => setEditingPage({ ...editingPage, parsed: { ...editingPage.parsed, featuredImage: url } })}
               />
-              {editingPage.parsed?.featuredImage && (
-                <img loading="lazy" decoding="async" src={editingPage.parsed?.featuredImage} alt="Preview" className="w-full h-32 object-cover rounded" />
-              )}
             </div>
 
             <div className="bg-gray-50 p-4 rounded-lg border">

@@ -31,7 +31,7 @@ export const SECTIONS: Section[] = [
     type: 'array',
     schema: [
       { key: 'alt', label: 'وصف الصورة (Alt Text)', type: 'text' },
-      { key: 'url', label: 'رابط الصورة', type: 'image' },
+      { key: 'url', label: 'الصورة', type: 'image' },
     ]
   },
   { key: 'services_intro', title: 'مقدمة الخدمات', type: 'rich_text' },
@@ -75,7 +75,7 @@ export const SECTIONS: Section[] = [
     type: 'array',
     schema: [
       
-      { key: 'image', label: 'رابط الصورة', type: 'image' },
+      { key: 'image', label: 'الصورة', type: 'image' },
       { key: 'seoTitle', label: 'SEO عنوان', type: 'text' },
       { key: 'seoDescription', label: 'SEO وصف', type: 'textarea' },
       { key: 'seoKeywords', label: 'SEO كلمات مفتاحية', type: 'text' },
@@ -100,7 +100,7 @@ export const SECTIONS: Section[] = [
     type: 'array',
     schema: [
       { key: 'name', label: 'اسم الشريك', type: 'text' },
-      { key: 'logo', label: 'شعار الشريك (رابط الصورة)', type: 'image' },
+      { key: 'logo', label: 'شعار الشريك (الصورة)', type: 'image' },
     ]
   },
   { 
@@ -112,7 +112,7 @@ export const SECTIONS: Section[] = [
       { key: 'category', label: 'القسم (مثل: واجهات, قواطع)', type: 'text' },
       { key: 'description', label: 'وصف المشروع', type: 'textarea' },
       
-      { key: 'image', label: 'رابط الصورة', type: 'image' },
+      { key: 'image', label: 'الصورة', type: 'image' },
       { key: 'seoTitle', label: 'SEO عنوان', type: 'text' },
       { key: 'seoDescription', label: 'SEO وصف', type: 'textarea' },
       { key: 'seoKeywords', label: 'SEO كلمات مفتاحية', type: 'text' },
@@ -132,7 +132,7 @@ export const SECTIONS: Section[] = [
       { key: 'role', label: 'المنصب/الشركة', type: 'text' },
       { key: 'content', label: 'نص الرأي', type: 'textarea' },
       { key: 'rating', label: 'التقييم (1-5)', type: 'number' },
-      { key: 'image', label: 'رابط صورة العميل', type: 'image' },
+      { key: 'image', label: 'صورة العميل', type: 'image' },
     ]
   },
   { 
@@ -156,7 +156,7 @@ export const SECTIONS: Section[] = [
       { key: 'content', label: 'محتوى المقال', type: 'rich_text' },
       { key: 'date', label: 'التاريخ', type: 'text' },
       
-      { key: 'image', label: 'رابط الصورة', type: 'image' },
+      { key: 'image', label: 'الصورة', type: 'image' },
       { key: 'seoTitle', label: 'SEO عنوان', type: 'text' },
       { key: 'seoDescription', label: 'SEO وصف', type: 'textarea' },
       { key: 'seoKeywords', label: 'SEO كلمات مفتاحية', type: 'text' },
