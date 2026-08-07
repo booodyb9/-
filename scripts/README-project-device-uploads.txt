@@ -1,0 +1,1 @@
+Temporary branch note: project image fields are being migrated from manual URLs to Supabase device uploads. This file will be removed before final merge.
