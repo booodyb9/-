@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
-import { Content } from '../pages/dashboard/types';
+import type { Content } from '../pages/dashboard/types';
 import { supabase } from '../lib/supabase';
 
 interface ContentContextType {
@@ -62,7 +62,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   }, [fetchContents, fetchMedia]);
 
   useEffect(() => {
-    void forceRefresh();
+    void fetchContents();
 
     const contentsChannel = supabase
       .channel('contents_changes_ctx')
@@ -71,18 +71,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       })
       .subscribe();
 
-    const mediaChannel = supabase
-      .channel('media_changes_ctx')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'media' }, () => {
-        void fetchMedia();
-      })
-      .subscribe();
-
     return () => {
       void supabase.removeChannel(contentsChannel);
-      void supabase.removeChannel(mediaChannel);
     };
-  }, [fetchContents, fetchMedia, forceRefresh]);
+  }, [fetchContents]);
 
   const getContent = useCallback((key: string) => contents.find((content) => content.key === key), [contents]);
 

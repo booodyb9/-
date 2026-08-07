@@ -17,6 +17,7 @@ import PortfolioManager from './dashboard/PortfolioManager';
 import SiteSettings from './dashboard/SiteSettings';
 import type { Message } from './dashboard/types';
 import { supabase } from '../lib/supabase';
+import { installAdminApiAuth } from '../lib/installAdminApiAuth';
 
 type DashboardTab =
   | 'home'
@@ -56,6 +57,10 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<DashboardTab>('home');
   const [isBackingUp, setIsBackingUp] = useState(false);
 
+  useEffect(() => {
+    installAdminApiAuth();
+  }, []);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
@@ -86,6 +91,7 @@ export default function Dashboard() {
     if (!user || !isAdmin) return;
 
     void fetchMessages();
+    void fetchMedia();
     const messagesChannel = supabase
       .channel(`messages_changes_${user.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
@@ -96,7 +102,7 @@ export default function Dashboard() {
     return () => {
       void supabase.removeChannel(messagesChannel);
     };
-  }, [user, isAdmin, fetchMessages]);
+  }, [user, isAdmin, fetchMessages, fetchMedia]);
 
   const backupToDrive = useCallback(async () => {
     setIsBackingUp(true);
