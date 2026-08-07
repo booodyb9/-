@@ -1,7 +1,8 @@
 export interface Message {
   id: number;
   name: string;
-  email: string;
+  phone: string;
+  service?: string | null;
   message: string;
   created_at: string;
   is_read: boolean;
