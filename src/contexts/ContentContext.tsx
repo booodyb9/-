@@ -61,19 +61,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     await Promise.all([fetchContents(), fetchMedia()]);
   }, [fetchContents, fetchMedia]);
 
+  // Public visitors only need one content request. Dashboard saves explicitly refresh
+  // this state, so a permanent Realtime websocket is unnecessary on every page view.
   useEffect(() => {
     void fetchContents();
-
-    const contentsChannel = supabase
-      .channel('contents_changes_ctx')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'contents' }, () => {
-        void fetchContents();
-      })
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(contentsChannel);
-    };
   }, [fetchContents]);
 
   const getContent = useCallback((key: string) => contents.find((content) => content.key === key), [contents]);
