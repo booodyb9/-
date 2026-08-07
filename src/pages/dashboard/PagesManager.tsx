@@ -362,16 +362,12 @@ export default function PagesManager({ pages, fetchContents }: Props) {
                   <label className="block text-sm mb-1">Canonical URL</label>
                   <input type="text" value={editingPage.parsed?.seo?.canonical || ''} onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed?.seo, canonical: e.target.value}}})} className="w-full border p-2 rounded" />
                 </div>
-                <div>
-                  <label className="block text-sm mb-1">OG Image</label>
-                  <div className="flex gap-2">
-  <input type="text" value={editingPage.parsed?.seo?.ogImage || ''} onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed?.seo, ogImage: e.target.value}}})} className="flex-1 border p-2 rounded" />
-  <label className="bg-gray-100 px-4 py-2 rounded cursor-pointer hover:bg-gray-200 border border-gray-300 font-bold flex items-center justify-center">
-    رفع صورة
-    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'ogImage', true)} />
-  </label>
-</div>
-                </div>
+                <ImageUploadField
+                  label="OG Image"
+                  value={editingPage.parsed?.seo?.ogImage || ''}
+                  folder="pages/seo"
+                  onChange={(ogImage) => setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed?.seo, ogImage}}})}
+                />
                 <div>
                   <label className="flex items-center gap-2 cursor-pointer mt-4">
                     <input type="checkbox" checked={!!editingPage.parsed?.seo?.noindex} onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed?.seo, noindex: e.target.checked}}})} className="w-5 h-5 rounded border-gray-300" />

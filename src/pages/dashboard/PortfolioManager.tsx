@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Content } from './types';
-import { Plus, Edit2, Trash2, Eye, EyeOff, Star, Copy, Image as ImageIcon, Save, X, GripVertical } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, EyeOff, Star, Copy, Image as ImageIcon, Save, X, GripVertical, Sparkles, Loader2 } from 'lucide-react';
 import { PortfolioProject } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -417,10 +417,12 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
                 <label className="block text-sm font-medium mb-1">SEO Canonical URL</label>
                 <input type="text" value={currentProject.seoCanonical || ''} onChange={e => setCurrentProject({ ...currentProject, seoCanonical: e.target.value })} className="w-full border p-2 rounded" />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">SEO OG Image</label>
-                <input type="text" value={currentProject.seoImage || ''} onChange={e => setCurrentProject({ ...currentProject, seoImage: e.target.value })} className="w-full border p-2 rounded" />
-              </div>
+              <ImageUploadField
+                label="SEO OG Image"
+                value={currentProject.seoImage || ''}
+                folder="portfolio/seo"
+                onChange={(seoImage) => setCurrentProject({ ...currentProject, seoImage })}
+              />
               <div>
                 <label className="flex items-center gap-2 cursor-pointer mt-6">
                   <input type="checkbox" checked={!!currentProject.seoNoIndex} onChange={e => setCurrentProject({ ...currentProject, seoNoIndex: e.target.checked })} className="w-5 h-5 rounded border-gray-300 text-[#0284C7] focus:ring-[#0284C7]" />

@@ -1,13 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
-import { Loader2 as Loader2Icon, Sparkles as SparklesIcon } from 'lucide-react';
 import App from './App.tsx';
 import './index.css';
 
-// PortfolioManager is legacy-generated code that references these two icon bindings
-// without importing them. Expose stable bindings until that module is fully refactored.
-Object.assign(globalThis, { Loader2: Loader2Icon, Sparkles: SparklesIcon });
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
