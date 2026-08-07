@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { Upload, Trash2, Search, File, Image as ImageIcon, Video, Folder, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
 import { MediaFile } from './types';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,8 +20,8 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
   const [filter, setFilter] = useState<MediaFilter>('all');
   const [copiedId, setCopiedId] = useState<string | number | null>(null);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files ?? []);
+  const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles: File[] = e.target.files ? Array.from(e.target.files) : [];
     if (selectedFiles.length === 0) return;
 
     setUploading(true);
