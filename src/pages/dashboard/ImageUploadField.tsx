@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ImagePlus, Loader2, RefreshCw, Trash2 } from 'lucide-react';
-import { uploadDashboardImage } from '../../lib/mediaUpload';
+import { deleteDashboardImage, uploadDashboardImage } from '../../lib/mediaUpload';
 
 interface ImageUploadFieldProps {
   label: string;
@@ -12,18 +12,32 @@ interface ImageUploadFieldProps {
 
 export default function ImageUploadField({ label, value = '', onChange, folder = 'dashboard', helpText }: ImageUploadFieldProps) {
   const [uploading, setUploading] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   const handleUpload = async (file?: File) => {
     if (!file) return;
     setUploading(true);
     try {
+      const previousUrl = value;
       const uploaded = await uploadDashboardImage(file, folder);
       onChange(uploaded.url);
+      if (previousUrl && previousUrl !== uploaded.url) void deleteDashboardImage(previousUrl);
     } catch (error) {
       console.error('Image upload failed:', error);
       alert(error instanceof Error ? error.message : 'تعذر رفع الصورة. حاول مرة أخرى.');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!value || removing) return;
+    setRemoving(true);
+    try {
+      await deleteDashboardImage(value);
+      onChange('');
+    } finally {
+      setRemoving(false);
     }
   };
 
@@ -42,7 +56,7 @@ export default function ImageUploadField({ label, value = '', onChange, folder =
                 type="file"
                 accept="image/*"
                 className="hidden"
-                disabled={uploading}
+                disabled={uploading || removing}
                 onChange={(event) => {
                   void handleUpload(event.target.files?.[0]);
                   event.target.value = '';
@@ -51,12 +65,12 @@ export default function ImageUploadField({ label, value = '', onChange, folder =
             </label>
             <button
               type="button"
-              onClick={() => onChange('')}
-              disabled={uploading}
+              onClick={() => void handleRemove()}
+              disabled={uploading || removing}
               className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50"
             >
-              <Trash2 className="h-4 w-4" />
-              إزالة
+              {removing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              {removing ? 'جاري الحذف...' : 'إزالة'}
             </button>
           </div>
         </div>
