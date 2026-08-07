@@ -37,7 +37,7 @@ export default function Blog() {
     if (itemsContent?.body) {
       try {
         const parsed = JSON.parse(itemsContent.body);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return [...parsed, ...defaultBlogPosts.slice(parsed.length)].slice(0, Math.max(parsed.length, 3));
       } catch (e) {
         console.error("Failed to parse blog items", e);
       }
@@ -85,7 +85,7 @@ export default function Blog() {
                 {post.image && typeof post.image === 'string' && post.image.trim() !== '' && (
                   <img loading="lazy" decoding="async"
                     src={post.image}
-                    alt={post.title}
+                    alt={post.title || 'صورة'}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                 )}

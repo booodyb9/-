@@ -50,7 +50,7 @@ export default function CostCalculator() {
           <div className="w-14 h-14 bg-white/10 text-[#0ea5e9] flex items-center justify-center mb-6 rounded-2xl shadow-inner border border-white/5">
             <Calculator className="h-6 w-6" />
           </div>
-          <h4 className="text-2xl font-bold mb-4">حاسبة التكلفة التقديرية</h4>
+          <h3 className="text-2xl font-bold mb-4">حاسبة التكلفة التقديرية</h3>
           <p className="text-gray-400 mb-8 leading-relaxed text-sm">
             احصل على تقدير مبدئي لتكلفة مشروعك. أدخل الأبعاد ونوع الزجاج المطلوب للحصول على النتيجة فوراً. السعر النهائي يعتمد على المعاينة الميدانية والإكسسوارات المستخدمة.
           </p>

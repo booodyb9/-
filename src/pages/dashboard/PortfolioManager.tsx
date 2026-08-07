@@ -4,7 +4,8 @@ import { Plus, Edit2, Trash2, Eye, EyeOff, Star, Copy, Image as ImageIcon, Save,
 import { PortfolioProject } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { saveContent } from '../../lib/supabase';
+import { saveContent, supabase } from '../../lib/supabase';
+import imageCompression from 'browser-image-compression';
 import { useContent } from '../../contexts/ContentContext';
 
 interface Props {
@@ -31,6 +32,47 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
   const [isEditing, setIsEditing] = useState(false);
   const [currentProject, setCurrentProject] = useState<Partial<PortfolioProject>>({});
   const [saving, setSaving] = useState(false);
+
+  const [generatingSEO, setGeneratingSEO] = useState(false);
+
+  const generateProjectSEO = async () => {
+    const titleToAnalyze = currentProject.title || '';
+    const contentToAnalyze = currentProject.description || '';
+    
+    if (!contentToAnalyze && !titleToAnalyze) {
+      alert('لا يوجد محتوى كافي لتوليد بيانات السيو');
+      return;
+    }
+
+    setGeneratingSEO(true);
+    try {
+      const response = await fetch('/api/generate-seo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: titleToAnalyze,
+          content: contentToAnalyze,
+          type: 'مشروع'
+        })
+      });
+
+      if (!response.ok) throw new Error('فشل توليد البيانات');
+      const data = await response.json();
+      
+      setCurrentProject({
+        ...currentProject,
+        seoTitle: data.title || currentProject.seoTitle,
+        seoDescription: data.description || currentProject.seoDescription
+      });
+    } catch (error) {
+      console.error(error);
+      alert('حدث خطأ أثناء محاولة توليد السيو بواسطة الذكاء الاصطناعي');
+    } finally {
+      setGeneratingSEO(false);
+    }
+  };
+
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   useEffect(() => {
     const portfolioContent = contents.find(c => c.key === 'premium_portfolio_projects');
@@ -46,7 +88,33 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
     }
   }, [contents]);
 
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: keyof PortfolioProject) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const options = { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: false };
+      const compressedFile = await imageCompression(file, options);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage.from('media').upload(fileName, compressedFile);
+      if (uploadError) throw uploadError;
+      
+      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
+      
+      const newImage = { name: file.name, url: data.publicUrl, storage_path: `media/${fileName}` };
+      await supabase.from('media').insert([newImage]);
+      
+      setCurrentProject({ ...currentProject, [fieldName]: data.publicUrl });
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert('فشل رفع الصورة');
+    }
+  };
+
   const saveProjects = async (newProjects: PortfolioProject[]) => {
+
     setSaving(true);
     try {
       await saveContent('premium_portfolio_projects', 'Premium Portfolio Projects', 'json', JSON.stringify(newProjects));
@@ -55,6 +123,8 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
       // Dispatch storage event to trigger cross-tab sync and Context reload
       
       fetchContents();
+      setSuccessMessage('تم الحفظ بنجاح');
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (e) {
       console.error(e);
       alert('حدث خطأ أثناء الحفظ');
@@ -309,7 +379,30 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
           </div>
 
           <div className="border-t pt-4">
+            
             <h3 className="font-bold mb-2">تحسين محركات البحث (SEO)</h3>
+            {(!currentProject.seoTitle || !currentProject.seoDescription) && (
+              <div className="bg-yellow-50 text-yellow-800 p-3 rounded mb-4 text-sm font-bold flex gap-2 items-center">
+                ⚠️ تنبيه: يرجى إكمال إعدادات SEO (العنوان والوصف) لضمان أرشفة أفضل.
+              </div>
+            )}
+
+            <div className="mb-4 flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-100">
+              <div className="text-sm text-blue-800 font-bold flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-blue-600" />
+                مساعد الذكاء الاصطناعي
+              </div>
+              <button
+                onClick={generateProjectSEO}
+                disabled={generatingSEO}
+                className="flex items-center gap-2 bg-[#0284C7] text-white px-3 py-1.5 rounded text-sm hover:bg-[#0369A1] transition-colors disabled:opacity-50"
+              >
+                {generatingSEO ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                توليد العنوان والوصف
+              </button>
+            </div>
+
+
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">SEO Title</label>
@@ -328,6 +421,26 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
                   className="w-full border p-2 rounded h-20"
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">SEO Keywords</label>
+                <input type="text" value={currentProject.seoKeywords || ''} onChange={e => setCurrentProject({ ...currentProject, seoKeywords: e.target.value })} className="w-full border p-2 rounded" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">SEO Canonical URL</label>
+                <input type="text" value={currentProject.seoCanonical || ''} onChange={e => setCurrentProject({ ...currentProject, seoCanonical: e.target.value })} className="w-full border p-2 rounded" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">SEO OG Image</label>
+                <input type="text" value={currentProject.seoImage || ''} onChange={e => setCurrentProject({ ...currentProject, seoImage: e.target.value })} className="w-full border p-2 rounded" />
+              </div>
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer mt-6">
+                  <input type="checkbox" checked={!!currentProject.seoNoIndex} onChange={e => setCurrentProject({ ...currentProject, seoNoIndex: e.target.checked })} className="w-5 h-5 rounded border-gray-300 text-[#0284C7] focus:ring-[#0284C7]" />
+                  <span className="text-gray-700 font-bold">منع الأرشفة (NoIndex)</span>
+                </label>
+              </div>
+
             </div>
           </div>
 
@@ -366,7 +479,7 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
                         
                         <div className="w-16 h-16 rounded overflow-hidden bg-gray-100 flex-shrink-0">
                           {project.coverImage ? (
-                            <img loading="lazy" decoding="async" src={project.coverImage} alt={project.title} className="w-full h-full object-cover" />
+                            <img loading="lazy" decoding="async" src={project.coverImage} alt={project.title || 'صورة'} className="w-full h-full object-cover" />
                           ) : (
                             <ImageIcon className="w-8 h-8 text-gray-400 m-auto mt-4" />
                           )}

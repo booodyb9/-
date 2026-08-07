@@ -7,7 +7,7 @@ import Footer from '../../components/Footer';
 export default function NotFound() {
   return (
     <>
-      <SEO title="الصفحة غير موجودة | 404" />
+      <SEO title="الصفحة غير موجودة | 404" noindex={true} />
       <Navbar />
       <main className="min-h-screen pt-32 pb-12 px-4 flex flex-col items-center justify-center text-center">
         <div className="text-9xl font-bold text-[#0284C7] mb-4">404</div>

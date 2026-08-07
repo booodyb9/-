@@ -57,7 +57,7 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
   const handleDelete = async (id: string | number) => {
     if (!confirm('Are you sure you want to delete this file?')) return;
     try {
-      const fileToDelete = mediaFiles.find(m => m.id === id);
+      const fileToDelete = (mediaFiles || []).find(m => m.id === id);
       if (fileToDelete) {
         if (fileToDelete.storage_path) {
            const path = fileToDelete.storage_path.replace('media/', '');
@@ -91,7 +91,7 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const filteredMedia = mediaFiles.filter(m => {
+  const filteredMedia = (mediaFiles || []).filter(m => {
     const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase());
     const matchesFilter = filter === 'all' || (m.type === filter || (filter === 'image' && m.url && m.url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i)) || (filter === 'video' && m.url && m.url.match(/\.(mp4|webm|ogg)$/i)));
     return matchesSearch && matchesFilter;
@@ -133,18 +133,18 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
       </div>
 
       <div className={`p-6 ${isModal ? 'overflow-y-auto flex-1' : ''}`}>
-        {filteredMedia.length === 0 ? (
+        {(filteredMedia || []).length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
             <p>لا توجد ملفات. قم برفع بعض الملفات لتبدأ.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {filteredMedia.map(file => (
+            {(filteredMedia || []).map(file => (
               <div key={file.id} className="group relative border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-gray-50 cursor-pointer" onClick={() => onSelect && onSelect(file.url)}>
                 <div className="aspect-square bg-gray-100 flex items-center justify-center relative">
                   {file.url && file.url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) ? (
-                    <img loading="lazy" decoding="async" src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                    <img loading="lazy" decoding="async" src={file.url} alt={file.name || 'صورة'} className="w-full h-full object-cover" />
                   ) : file.url && file.url.match(/\.(mp4|webm|ogg)$/i) ? (
                     <Video className="w-12 h-12 text-gray-400" />
                   ) : (

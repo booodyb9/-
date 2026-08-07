@@ -2,6 +2,7 @@ import React from 'react';
 import SEO from '../../components/SEO';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import SectionCTA from '../../components/SectionCTA';
 import Services from '../../components/Services';
 import Process from '../../components/Process';
 import { useContent } from '../../contexts/ContentContext';
@@ -21,7 +22,7 @@ export default function ServicesPage() {
 
   const structuredData = {
     "@type": "ItemList",
-    "itemListElement": services.map((service, index) => ({
+    "itemListElement": services.filter(s => !s.isHidden).map((service, index) => ({
       "@type": "ListItem",
       "position": index + 1,
       "item": {
@@ -57,6 +58,7 @@ export default function ServicesPage() {
         <Services />
         <Process />
         <Maintenance />
+        <div className="py-12 bg-white border-t border-gray-100"><SectionCTA /></div>
       </main>
       <Footer />
     </>

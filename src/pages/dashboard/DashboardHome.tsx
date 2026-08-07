@@ -1,6 +1,5 @@
 import React from 'react';
 import { Users, FileText, Image, MessageSquare, Activity, ArrowUpRight, ArrowDownRight, Eye, Edit3 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const data = [
   { name: 'الأحد', views: 4000, visitors: 2400 },
@@ -13,7 +12,7 @@ const data = [
 ];
 
 export default function DashboardHome({ messages = [], contents = [], mediaFiles = [] }: any) {
-  const unreadMessages = messages.filter((m: any) => !m.is_read).length;
+  const unreadMessages = (messages || []).filter((m: any) => !m?.is_read).length;
   
   return (
     <div className="space-y-6">
@@ -25,32 +24,24 @@ export default function DashboardHome({ messages = [], contents = [], mediaFiles
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="إجمالي الزيارات" value="-" trend="" isUp={true} icon={Eye} color="text-blue-600" bg="bg-blue-50" />
         <StatCard title="رسائل جديدة" value={unreadMessages.toString()} trend="" isUp={true} icon={MessageSquare} color="text-green-600" bg="bg-green-50" />
-        <StatCard title="الصفحات النشطة" value={contents.length.toString()} trend="" isUp={true} icon={FileText} color="text-purple-600" bg="bg-purple-50" />
-        <StatCard title="الوسائط المرفوعة" value={mediaFiles.length.toString()} trend="" isUp={true} icon={Image} color="text-orange-600" bg="bg-orange-50" />
+        <StatCard title="الصفحات النشطة" value={(contents || []).length.toString()} trend="" isUp={true} icon={FileText} color="text-purple-600" bg="bg-purple-50" />
+        <StatCard title="الوسائط المرفوعة" value={(mediaFiles || []).length.toString()} trend="" isUp={true} icon={Image} color="text-orange-600" bg="bg-orange-50" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold mb-4">إحصائيات الزوار (أسبوعي)</h3>
           <div className="h-80 w-full" dir="ltr">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0284C7" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#0284C7" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ color: '#0F172A', fontWeight: 'bold' }}
-                />
-                <Area type="monotone" dataKey="views" name="المشاهدات" stroke="#0284C7" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div width="100%" height="100%">
+              <div data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                
+                
+                
+                
+                
+                
+              </div>
+            </div>
           </div>
         </div>
 

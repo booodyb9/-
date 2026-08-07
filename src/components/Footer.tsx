@@ -1,144 +1,63 @@
-import { Link } from "react-router-dom";
-import { Building2, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
-import { useContent } from '../contexts/ContentContext';
-import { useMemo } from 'react';
+
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function Footer() {
-  const { getContent } = useContent();
-  
-  const footerContent = getContent('footer_content');
-  const companyInfoContent = getContent('company_info');
-  const socialLinksContent = getContent('social_links');
-  const navContent = getContent('navigation_links');
-  const servicesContent = getContent('services_items');
-
-  const navLinks = useMemo(() => {
-    if (navContent && navContent.body) {
-      try {
-        const parsed = JSON.parse(navContent.body);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed.map((item: any) => ({ name: item.label, href: item.href }));
-        }
-      } catch (e) {}
-    }
-    return [
-      { name: 'الرئيسية', href: '/' },
-      { name: 'خدماتنا', href: '/services' },
-      { name: 'أعمالنا', href: '/portfolio' },
-      { name: 'اتصل بنا', href: '/contact' },
-    ];
-  }, [navContent]);
-
-  const servicesLinks = useMemo(() => {
-    if (servicesContent && servicesContent.body) {
-      try {
-        const parsed = JSON.parse(servicesContent.body);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed.slice(0, 4); // Only show top 4 services
-        }
-      } catch (e) {}
-    }
-    return [
-      { title: 'الواجهات الزجاجية' },
-      { title: 'القواطع المكتبية' },
-      { title: 'كبائن الشاور' },
-      { title: 'الأبواب والنوافذ' },
-    ];
-  }, [servicesContent]);
-
-  const companyInfo = useMemo(() => {
-    if (companyInfoContent?.body) {
-      try {
-        const parsed = JSON.parse(companyInfoContent.body);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch (e) {}
-    }
-    return [];
-  }, [companyInfoContent]);
-
-  const socialLinks = useMemo(() => {
-    if (socialLinksContent?.body) {
-      try {
-        const parsed = JSON.parse(socialLinksContent.body);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch (e) {}
-    }
-    return [];
-  }, [socialLinksContent]);
-  
-  const getIcon = (name: string) => {
-    switch(name?.toLowerCase()) {
-      case 'facebook': return <Facebook className="w-5 h-5" />;
-      case 'twitter': return <Twitter className="w-5 h-5" />;
-      case 'instagram': return <Instagram className="w-5 h-5" />;
-      case 'linkedin': return <Linkedin className="w-5 h-5" />;
-      case 'youtube': return <Youtube className="w-5 h-5" />;
-      default: return null;
-    }
-  };
-
   return (
-    <footer className="bg-[#0F172A] text-gray-400 py-16 border-t border-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-8">
-          <div className="col-span-1 md:col-span-12 lg:col-span-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-[#0284C7] to-[#0369A1] rounded-lg shadow-sm flex items-center justify-center text-white"><Building2 className="h-5 w-5" /></div>
-              <span className="font-bold text-xl text-white">شركة زجاج الرياض</span>
+    <footer id="footer">
+      <div className="footer-inner">
+        <div className="footer-brand">
+          <div className="footer-brand-name">
+            <div className="nav-logo-icon" style={{width:32,height:32,borderRadius:8,background:'linear-gradient(135deg,var(--glass-500),var(--glass-700))',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:16,height:16}}><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
             </div>
-            {footerContent?.body ? <div className="text-sm leading-relaxed max-w-sm mb-6 prose prose-invert prose-p:text-gray-400" dangerouslySetInnerHTML={{ __html: footerContent.body }} /> : <p className="text-sm leading-relaxed max-w-sm mb-6">شركتك الموثوقة لجميع أعمال وتوريدات الزجاج في مدينة الرياض. نقدم الجودة والإتقان بأسعار تنافسية تلبي احتياجات مشاريعكم السكنية والتجارية.</p>}
+            زجاج الرياض
           </div>
-          
-          <div className="col-span-1 md:col-span-4 lg:col-span-2">
-            <h4 className="text-white font-bold tracking-widest uppercase text-sm mb-6">روابط سريعة</h4>
-            <ul className="space-y-2 text-sm">
-              {navLinks.map((link, idx) => (
-                <li key={idx}><Link to={link.href} className="hover:text-[#0284C7] transition-colors">{link.name}</Link></li>
-              ))}
-            </ul>
-          </div>
-          
-          <div className="col-span-1 md:col-span-4 lg:col-span-3">
-            <h4 className="text-white font-bold tracking-widest uppercase text-sm mb-6">خدماتنا</h4>
-            <ul className="space-y-2 text-sm">
-              {servicesLinks.map((service: any, idx: number) => {
-                const slug = service.title.replace(/\s+/g, '-').toLowerCase();
-                return (
-                  <li key={idx}><Link to={`/services/${slug}`} className="hover:text-[#0284C7] transition-colors">{service.title}</Link></li>
-                );
-              })}
-            </ul>
-          </div>
-
-          <div className="col-span-1 md:col-span-4 lg:col-span-3">
-            <h4 className="text-white font-bold tracking-widest uppercase text-sm mb-6">نطاق التغطية</h4>
-            <div className="rounded-sm overflow-hidden border border-gray-800 relative h-32 group block bg-gray-900">
-              <a href="https://maps.google.com/maps?q=Riyadh&t=&z=10" target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                <iframe 
-                  src="https://maps.google.com/maps?q=Riyadh&t=&z=10&ie=UTF8&iwloc=&output=embed" 
-                  className="w-full h-full pointer-events-none opacity-80 group-hover:opacity-100 transition-opacity"
-                  style={{ border: 0 }} 
-                  loading="lazy"
-                  title="خريطة الرياض"
-                ></iframe>
-                <div className="absolute inset-0 bg-[#0284C7]/10 group-hover:bg-transparent transition-colors flex items-center justify-center">
-                  <div className="bg-[#0F172A]/90 text-white text-xs font-bold px-4 py-2 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity border border-[#0284C7]/30 shadow-lg">
-                    عرض على خرائط جوجل
-                  </div>
-                </div>
-              </a>
-            </div>
-            <p className="text-xs mt-3 text-gray-500">نغطي جميع أحياء مدينة الرياض وضواحيها</p>
-          </div>
+          <p className="footer-brand-desc">شركتك الموثوقة لجميع أعمال وتوريدات الزجاج في مدينة الرياض. جودة عالمية، أسعار تنافسية، وخدمة احترافية منذ 2009.</p>
         </div>
-        
-        <div className="pt-8 border-t border-gray-800 text-sm text-center md:text-right flex flex-col md:flex-row justify-between items-center gap-4">
-          <p>جميع الحقوق محفوظة &copy; {new Date().getFullYear()} شركة زجاج الرياض</p>
-          <div className="flex gap-4">
-            
-            <span>الرياض، المملكة العربية السعودية</span>
-          </div>
+        <div>
+          <div className="footer-col-title">خدماتنا</div>
+          <ul className="footer-links">
+            <li><Link to="/services/الواجهات-الزجاجية">الواجهات الزجاجية</Link></li>
+            <li><Link to="/services/القواطع-الزجاجية">القواطع المكتبية</Link></li>
+            <li><Link to="/services/كبائن-شاور">كبائن الشاور</Link></li>
+            <li><Link to="/services/أبواب-زجاجية">الأبواب الزجاجية</Link></li>
+            <li><Link to="/services/مرايا-ذكية">المرايا الديكورية</Link></li>
+            <li><Link to="/services/درابزين-زجاج">الدرابزين الزجاجي</Link></li>
+          </ul>
         </div>
+        <div>
+          <div className="footer-col-title">الشركة</div>
+          <ul className="footer-links">
+            <li><Link to="/about">من نحن</Link></li>
+            <li><Link to="/portfolio">معرض الأعمال</Link></li>
+            <li><Link to="/testimonials">آراء العملاء</Link></li>
+            <li><Link to="/blog">المدونة</Link></li>
+            <li><Link to="/faq">الأسئلة الشائعة</Link></li>
+            <li><Link to="/contact">تواصل معنا</Link></li>
+            <li><Link to="/dashboard" className="text-gray-500 hover:text-white">لوحة التحكم</Link></li>
+          </ul>
+        </div>
+        <div>
+          <div className="footer-col-title">تواصل</div>
+          <ul className="footer-links">
+            <li><a href="tel:+966510233706" dir="ltr">+966 51 023 3706</a></li>
+            <li><a href="mailto:info@riyadhglass.sa">info@riyadhglass.sa</a></li>
+            <li><a href="#">طريق الملك فهد، العليا</a></li>
+            <li><a href="#">الرياض، المملكة العربية السعودية</a></li>
+            <li style={{marginTop:16}}><Link to="/privacy-policy">سياسة الخصوصية</Link></li>
+            <li><Link to="/terms">الشروط والأحكام</Link></li>
+          </ul>
+        </div>
+      </div>
+      <div className="footer-bottom">
+        <span>© 2026 شركة زجاج الرياض. جميع الحقوق محفوظة.</span>
+        <span style={{display:'flex',alignItems:'center',gap:16}}>
+          <Link to="/privacy-policy">سياسة الخصوصية</Link>
+          <Link to="/terms">الشروط والأحكام</Link>
+          <span style={{color:'rgba(255,255,255,0.25)'}}>•</span>
+          <span style={{fontFamily:'var(--font-en)',letterSpacing:1,fontSize:12,color:'rgba(255,255,255,0.3)'}}>RIYADH · KSA</span>
+        </span>
       </div>
     </footer>
   );

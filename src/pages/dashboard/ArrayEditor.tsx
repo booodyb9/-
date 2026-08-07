@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, ChevronUp, ChevronDown, Upload } from 'lucide-react';
+import { Plus, Trash2, ChevronUp, ChevronDown, Upload, Sparkles, Loader2 } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 import { supabase } from '../../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +11,7 @@ interface ArrayEditorProps {
   schema: {
     key: string;
     label: string;
-    type: 'text' | 'textarea' | 'image' | 'number';
+    type: 'text' | 'textarea' | 'image' | 'number' | 'boolean';
   }[];
   token?: string | null;
 }
@@ -20,10 +20,57 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
   const [items, setItems] = useState<any[]>([]);
   const [uploadingIndex, setUploadingIndex] = useState<{index: number, key: string} | null>(null);
 
+  const [generatingSEO, setGeneratingSEO] = useState<number | null>(null);
+
+  const generateSEO = async (index: number) => {
+    const item = items[index];
+    const contentToAnalyze = item.description || item.content || item.answer || item.details || item.body || item.title || '';
+    const titleToAnalyze = item.title || item.name || item.question || '';
+    
+    if (!contentToAnalyze && !titleToAnalyze) {
+      alert('لا يوجد محتوى كافي لتوليد بيانات السيو');
+      return;
+    }
+
+    setGeneratingSEO(index);
+    try {
+      const response = await fetch('/api/generate-seo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: titleToAnalyze,
+          content: contentToAnalyze,
+          type: 'مقال أو خدمة'
+        })
+      });
+
+      if (!response.ok) throw new Error('فشل توليد البيانات');
+      const data = await response.json();
+      
+      const newItems = [...items];
+      if (data.title) newItems[index] = { ...newItems[index], seoTitle: data.title };
+      if (data.description) newItems[index] = { ...newItems[index], seoDescription: data.description };
+      
+      setItems(newItems);
+      onChange(JSON.stringify(newItems));
+    } catch (error) {
+      console.error(error);
+      alert('حدث خطأ أثناء محاولة توليد السيو بواسطة الذكاء الاصطناعي');
+    } finally {
+      setGeneratingSEO(null);
+    }
+  };
+
+
   useEffect(() => {
     try {
       if (value) {
-        setItems(JSON.parse(value));
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+          setItems(parsed);
+        } else {
+          setItems([]);
+        }
       } else {
         setItems([]);
       }
@@ -47,9 +94,11 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
   };
 
   const removeItem = (index: number) => {
-    const newItems = [...items];
-    newItems.splice(index, 1);
-    notifyChange(newItems);
+    if (confirm('هل أنت متأكد من حذف هذا العنصر؟')) {
+      const newItems = [...items];
+      newItems.splice(index, 1);
+      notifyChange(newItems);
+    }
   };
 
   const updateItem = (index: number, key: string, val: any) => {
@@ -127,6 +176,31 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
           </div>
           
           <h4 className="font-bold text-gray-700 mb-4">عنصر #{index + 1}</h4>
+
+          {schema.some(f => f.key === 'seoTitle') && (!item.seoTitle || !item.seoDescription) && (
+            <div className="bg-yellow-50 text-yellow-800 p-2 rounded mb-4 text-xs font-bold flex gap-2 items-center">
+              ⚠️ تنبيه: يرجى إكمال إعدادات SEO (العنوان والوصف) في هذا العنصر لضمان أرشفة أفضل.
+            </div>
+          )}
+
+          {schema.some(f => f.key === 'seoTitle') && (
+            <div className="mb-4 flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-100">
+              <div className="text-sm text-blue-800 font-bold flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-blue-600" />
+                مساعد الذكاء الاصطناعي للسيو (SEO)
+              </div>
+              <button
+                onClick={() => generateSEO(index)}
+                disabled={generatingSEO === index}
+                className="flex items-center gap-2 bg-[#0284C7] text-white px-3 py-1.5 rounded text-sm hover:bg-[#0369A1] transition-colors disabled:opacity-50"
+              >
+                {generatingSEO === index ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                توليد العنوان والوصف
+              </button>
+            </div>
+          )}
+
+
           
           <div className="grid grid-cols-1 gap-4">
             {schema.map(field => (
@@ -169,6 +243,17 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
                       </div>
                     )}
                   </div>
+                
+                ) : field.type === 'boolean' ? (
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox"
+                      checked={!!item[field.key]} 
+                      onChange={e => updateItem(index, field.key, e.target.checked)}
+                      className="w-5 h-5 rounded border-gray-300 text-[#0284C7] focus:ring-[#0284C7]"
+                    />
+                    <span className="text-gray-700 font-bold">{field.label}</span>
+                  </label>
                 ) : (
                   <input 
                     type={field.type === 'number' ? 'number' : 'text'}

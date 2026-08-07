@@ -105,7 +105,7 @@ export default function Services() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-24">
-          {services.map((service, index) => (
+          {services.filter(s => !s.isHidden).map((service, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 30 }}
@@ -118,7 +118,7 @@ export default function Services() {
                 {service.image && typeof service.image === 'string' && service.image.trim() !== '' && (
                   <img loading="lazy" decoding="async"
                     src={service.image}
-                    alt={service.title}
+                    alt={service.title || 'صورة'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
                 )}

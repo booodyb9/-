@@ -10,7 +10,10 @@ export default function SplashAnimation() {
     // We can use sessionStorage so it only shows once per session,
     // but for the sake of the 'wow' factor requested by the user, we'll show it 
     // when they first enter. To not annoy them, we'll keep it relatively short.
-    const hasSeenSplash = sessionStorage.getItem('hasSeenSplash');
+    let hasSeenSplash = false;
+    try {
+      hasSeenSplash = !!sessionStorage.getItem('hasSeenSplash');
+    } catch (e) {}
     
     if (hasSeenSplash) {
       setShow(false);
@@ -19,7 +22,9 @@ export default function SplashAnimation() {
 
     const timer = setTimeout(() => {
       setShow(false);
-      sessionStorage.setItem('hasSeenSplash', 'true');
+      try {
+        sessionStorage.setItem('hasSeenSplash', 'true');
+      } catch (e) {}
     }, 2800);
     return () => clearTimeout(timer);
   }, []);

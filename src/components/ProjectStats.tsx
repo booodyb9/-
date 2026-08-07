@@ -1,18 +1,7 @@
 import { motion } from 'motion/react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useContent } from '../contexts/ContentContext';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  AreaChart,
-  Area
-} from 'recharts';
+
 import { TrendingUp, Users, CheckCircle, Clock } from 'lucide-react';
 import { useMemo } from 'react';
 
@@ -132,32 +121,18 @@ export default function ProjectStats() {
               {language === 'ar' ? 'متوسط وقت تنفيذ المشاريع (بالأيام)' : 'Average Project Timeline (Days)'}
             </h4>
             <div className="h-80 w-full" dir="ltr">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
+              <div width="100%" height="100%">
+                <div
                   data={timelineData}
                   margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748B', fontSize: 12 }}
-                    dy={10}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748B', fontSize: 12 }}
-                  />
-                  <Tooltip 
-                    cursor={{ fill: 'transparent' }}
-                    contentStyle={{ backgroundColor: '#1E293B', border: 'none', borderRadius: '4px', color: '#fff' }}
-                    itemStyle={{ color: '#fff' }}
-                  />
-                  <Bar dataKey="days" fill="#0284C7" radius={[4, 4, 0, 0]} barSize={40} name={language === 'ar' ? 'أيام التنفيذ' : 'Execution Days'} />
-                </BarChart>
-              </ResponsiveContainer>
+                  
+                  
+                  
+                  
+                  
+                </div>
+              </div>
             </div>
           </motion.div>
 
@@ -173,58 +148,21 @@ export default function ProjectStats() {
               {language === 'ar' ? 'تطور كفاءة استخدام المواد والتوفير (%)' : 'Material Efficiency & Savings Progress (%)'}
             </h4>
             <div className="h-80 w-full" dir="ltr">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
+              <div width="100%" height="100%">
+                <div
                   data={efficiencyData}
                   margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
                 >
-                  <defs>
-                    <linearGradient id="colorEfficiency" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0284C7" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#0284C7" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorSavings" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis 
-                    dataKey="year" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748B', fontSize: 12 }}
-                    dy={10}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748B', fontSize: 12 }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#1E293B', border: 'none', borderRadius: '4px', color: '#fff' }}
-                  />
-                  <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                  <Area 
-                    type="monotone" 
-                    dataKey="efficiency" 
-                    stroke="#0284C7" 
-                    strokeWidth={3}
-                    fillOpacity={1} 
-                    fill="url(#colorEfficiency)" 
-                    name={language === 'ar' ? 'كفاءة المواد' : 'Material Efficiency'} 
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="savings" 
-                    stroke="#10B981" 
-                    strokeWidth={3}
-                    fillOpacity={1} 
-                    fill="url(#colorSavings)" 
-                    name={language === 'ar' ? 'توفير التكلفة' : 'Cost Savings'} 
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>

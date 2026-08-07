@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 import { Content } from '../pages/dashboard/types';
 import { supabase } from '../lib/supabase';
 
@@ -93,8 +93,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     setContents(prev => prev.map(c => c.key === key ? { ...c, body } : c));
   };
 
+    const value = useMemo(() => ({ contents, loading, getContent, refreshContent: fetchContents, updateContent, mediaFiles, fetchMedia, forceRefresh }), [contents, loading, mediaFiles]);
   return (
-    <ContentContext.Provider value={{ contents, loading, getContent, refreshContent: fetchContents, updateContent, mediaFiles, fetchMedia, forceRefresh }}>
+    <ContentContext.Provider value={value}>
       {children}
     </ContentContext.Provider>
   );

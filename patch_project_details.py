@@ -1,12 +1,20 @@
-import re
+content = open('src/pages/public/ProjectDetails.tsx').read()
 
-with open('src/pages/public/ProjectDetails.tsx', 'r') as f:
-    content = f.read()
+schema_code = """
+  const projectSchema = project ? {
+    "@type": "CreativeWork",
+    "name": project.title,
+    "description": project.description,
+    "image": project.coverImage,
+    "dateCreated": project.date,
+    "author": {
+      "@type": "HomeAndConstructionBusiness",
+      "name": "شركة زجاج الرياض"
+    }
+  } : undefined;
+"""
 
-content = content.replace(
-    "const found = projects.find(p => p.slug === slug);",
-    "const found = projects.find(p => p.slug === slug || p.id === slug);"
-)
+content = content.replace("  if (!project) {", schema_code + "\n  if (!project) {")
+content = content.replace("<SEO title={`${project.title} | مشاريعنا`}", "<SEO title={`${project.title} | مشاريعنا`} description={project.description} image={project.coverImage} structuredData={projectSchema}")
 
-with open('src/pages/public/ProjectDetails.tsx', 'w') as f:
-    f.write(content)
+open('src/pages/public/ProjectDetails.tsx', 'w').write(content)

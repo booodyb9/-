@@ -105,9 +105,15 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
       try {
         const { data: currentContentData } = await supabase.from('contents').select('*').eq('key', 'premium_portfolio_projects').single();
         
-        let projects = [];
+                let projects = [];
         if (currentContentData && currentContentData.body) {
-           projects = JSON.parse(currentContentData.body);
+           try {
+             projects = JSON.parse(currentContentData.body);
+             if (!Array.isArray(projects)) projects = [];
+           } catch (e) {
+             console.error("Failed to parse projects in bulk upload", e);
+             projects = [];
+           }
         }
         
         projects = [...projects, ...newGalleryItems];

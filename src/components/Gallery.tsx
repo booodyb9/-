@@ -273,7 +273,7 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
                     <div className="absolute inset-0 z-0">
                       <img loading="lazy" decoding="async" 
                         src={project.coverImage || project.image || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'}
-                        alt={project.title}
+                        alt={project.title || 'صورة'}
                         
                         className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
                       />
@@ -328,7 +328,7 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
                     <div className="absolute inset-0 z-0">
                       <img loading="lazy" decoding="async" 
                         src={project.coverImage || project.image || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'}
-                        alt={project.title}
+                        alt={project.title || 'صورة'}
                         
                         className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
                       />
@@ -425,7 +425,7 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
               >
                 <img loading="lazy" decoding="async" 
                   src={currentLightboxProject.coverImage || currentLightboxProject.image}
-                  alt={currentLightboxProject.title}
+                  alt={currentLightboxProject.title || 'صورة'}
                   className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
                 />
               </motion.div>

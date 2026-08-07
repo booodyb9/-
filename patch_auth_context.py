@@ -1,41 +1,31 @@
-import re
-
-with open('src/contexts/AuthContext.tsx', 'r') as f:
-    content = f.read()
-
-content = content.replace('signInWithGoogle: () => Promise<void>;', 'signInWithEmail: (e: string, p: string) => Promise<{error: any}>;\n  signUpWithEmail: (e: string, p: string) => Promise<{error: any}>;')
-
-auth_methods = """
-  const signInWithEmail = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      return { error };
-    } catch (error) {
-      console.error("Error signing in", error);
-      return { error };
-    }
-  };
-
-  const signUpWithEmail = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      return { error };
-    } catch (error) {
-      console.error("Error signing up", error);
-      return { error };
-    }
-  };
-"""
-
-content = re.sub(r'  const signInWithGoogle = async \(\) => \{.*?  \};', auth_methods.strip(), content, flags=re.DOTALL)
-
-content = content.replace('signInWithGoogle,', 'signInWithEmail,\n       signUpWithEmail,')
-
-with open('src/contexts/AuthContext.tsx', 'w') as f:
-    f.write(content)
+content = open('src/contexts/AuthContext.tsx').read()
+content = content.replace("import { createContext, useContext, useEffect, useState, ReactNode } from 'react';", "import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';")
+content = content.replace("""  return (
+    <AuthContext.Provider value={{ 
+      user, 
+      session,
+      loading, 
+      signInWithEmail, 
+      signUpWithEmail, 
+      logout, 
+      token: session?.access_token || null, 
+      isAdmin 
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );""", """  const value = useMemo(() => ({
+      user, 
+      session,
+      loading, 
+      signInWithEmail, 
+      signUpWithEmail, 
+      logout, 
+      token: session?.access_token || null, 
+      isAdmin 
+    }), [user, session, loading, isAdmin]);
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );""")
+open('src/contexts/AuthContext.tsx', 'w').write(content)

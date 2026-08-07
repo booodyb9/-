@@ -1,23 +1,24 @@
-import re
+content = open('src/pages/dashboard/ContentManager.tsx').read()
+services_schema = """
+      { key: 'icon', label: 'اسم الأيقونة (مثال: Home)', type: 'text' },
+      { key: 'seoTitle', label: 'SEO عنوان', type: 'text' },
+      { key: 'seoDescription', label: 'SEO وصف', type: 'textarea' },
+      { key: 'seoKeywords', label: 'SEO كلمات مفتاحية', type: 'text' },
+      { key: 'seoCanonical', label: 'SEO Canonical URL', type: 'text' },
+      { key: 'seoImage', label: 'SEO OG Image', type: 'image' },
+      { key: 'seoNoIndex', label: 'منع الأرشفة (NoIndex)', type: 'boolean' },
+"""
+content = content.replace("{ key: 'icon', label: 'اسم الأيقونة (مثال: Home)', type: 'text' },", services_schema)
 
-with open('src/contexts/ContentContext.tsx', 'r') as f:
-    content = f.read()
+blog_schema = """
+      { key: 'image', label: 'رابط الصورة', type: 'image' },
+      { key: 'seoTitle', label: 'SEO عنوان', type: 'text' },
+      { key: 'seoDescription', label: 'SEO وصف', type: 'textarea' },
+      { key: 'seoKeywords', label: 'SEO كلمات مفتاحية', type: 'text' },
+      { key: 'seoCanonical', label: 'SEO Canonical URL', type: 'text' },
+      { key: 'seoImage', label: 'SEO OG Image', type: 'image' },
+      { key: 'seoNoIndex', label: 'منع الأرشفة (NoIndex)', type: 'boolean' },
+"""
+content = content.replace("{ key: 'image', label: 'رابط الصورة', type: 'image' },", blog_schema)
 
-if 'updateContent' not in content:
-    content = content.replace(
-        "refreshContent: () => Promise<void>;",
-        "refreshContent: () => Promise<void>;\n  updateContent: (key: string, body: string) => void;"
-    )
-    
-    content = content.replace(
-        "const getContent = (key: string) => contents.find(c => c.key === key);",
-        "const getContent = (key: string) => contents.find(c => c.key === key);\n\n  const updateContent = (key: string, body: string) => {\n    setContents(prev => prev.map(c => c.key === key ? { ...c, body } : c));\n  };"
-    )
-    
-    content = content.replace(
-        "getContent, refreshContent: fetchContents",
-        "getContent, refreshContent: fetchContents, updateContent"
-    )
-
-with open('src/contexts/ContentContext.tsx', 'w') as f:
-    f.write(content)
+open('src/pages/dashboard/ContentManager.tsx', 'w').write(content)

@@ -39,6 +39,7 @@ export const dashboardMenu = [
     items: [
       { id: 'navigation', label: 'القوائم والروابط', icon: Navigation },
       { id: 'seo', label: 'إعدادات SEO', icon: Search },
+      { id: 'performance', label: 'فحص الأداء والسرعة', icon: Activity },
       { id: 'social', label: 'روابط التواصل', icon: Share2 },
       { id: 'settings', label: 'الإعدادات العامة', icon: Settings },
     ]

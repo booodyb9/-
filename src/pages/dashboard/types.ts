@@ -41,8 +41,14 @@ export interface PortfolioProject {
   isFeatured: boolean;
   isHidden: boolean;
   order: number;
-  seoTitle: string;
-  seoDescription: string;
+
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+  seoCanonical?: string;
+  seoImage?: string;
+  seoNoIndex?: boolean;
+
   beforeImage?: string;
   afterImage?: string;
 }

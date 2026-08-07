@@ -4,15 +4,17 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useContent } from '../contexts/ContentContext';
 
 interface SEOProps {
+  noindex?: boolean;
   title?: string;
   description?: string;
   keywords?: string;
+  canonical?: string;
   image?: string;
   path?: string;
   structuredData?: any;
 }
 
-export default function SEO({ title, description, keywords, image, structuredData }: SEOProps) {
+export default function SEO({ noindex, title, description, keywords, canonical, image, structuredData }: SEOProps) {
   const { language } = useLanguage();
   const { getContent } = useContent();
   const location = useLocation();
@@ -182,12 +184,13 @@ export default function SEO({ title, description, keywords, image, structuredDat
       <meta name="twitter:image" content={ogImage} />
       
       {/* Canonical Link */}
-      <link rel="canonical" href={url} />
+      <link rel="canonical" href={canonical || url} />
 
       {/* Language Alternates */}
       <link rel="alternate" href={url} hrefLang="ar" />
       <link rel="alternate" href={url} hrefLang="en" />
       <link rel="alternate" href={url} hrefLang="x-default" />
+      {noindex && <meta name="robots" content="noindex, follow" />}
 
       
       <script type="application/ld+json">

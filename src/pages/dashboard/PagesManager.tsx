@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Plus, Edit3, Trash2, GripVertical, Settings } from 'lucide-react';
+import { Plus, Edit3, Trash2, GripVertical, Settings, Sparkles, Loader2 } from 'lucide-react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { supabase, saveContent } from '../../lib/supabase';
 import { useContent } from '../../contexts/ContentContext';
 import { v4 as uuidv4 } from 'uuid';
+import imageCompression from 'browser-image-compression';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 interface Props {
@@ -21,11 +22,58 @@ const AVAILABLE_SECTIONS = [
 const DraggableAny = Draggable as any;
 
 export default function PagesManager({ pages, fetchContents }: Props) {
-  const parsedPages = pages.map(p => ({ ...p, parsed: p.parsed || (p.body ? JSON.parse(p.body) : {}) }));
+  const parsedPages = (pages || []).map(p => ({ ...p, parsed: p.parsed || (p.body ? JSON.parse(p.body) : {}) }));
   const { updateContent } = useContent();
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editingPage, setEditingPage] = useState<any>(null);
   const [saving, setSaving] = useState(false);
+
+  const [generatingSEO, setGeneratingSEO] = useState(false);
+
+  const generatePageSEO = async () => {
+    const titleToAnalyze = editingPage.parsed?.title || '';
+    const contentToAnalyze = editingPage.parsed?.content || '';
+    
+    if (!contentToAnalyze && !titleToAnalyze) {
+      alert('لا يوجد محتوى كافي لتوليد بيانات السيو');
+      return;
+    }
+
+    setGeneratingSEO(true);
+    try {
+      const response = await fetch('/api/generate-seo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: titleToAnalyze,
+          content: contentToAnalyze,
+          type: 'صفحة'
+        })
+      });
+
+      if (!response.ok) throw new Error('فشل توليد البيانات');
+      const data = await response.json();
+      
+      let updatedSeo = { ...editingPage.parsed?.seo };
+      if (data.title) updatedSeo.title = data.title;
+      if (data.description) updatedSeo.description = data.description;
+      
+      setEditingPage({
+        ...editingPage, 
+        parsed: {
+          ...editingPage.parsed, 
+          seo: updatedSeo
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      alert('حدث خطأ أثناء محاولة توليد السيو بواسطة الذكاء الاصطناعي');
+    } finally {
+      setGeneratingSEO(false);
+    }
+  };
+
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleAddNew = () => {
     const newPage = {
@@ -45,19 +93,50 @@ export default function PagesManager({ pages, fetchContents }: Props) {
     setEditingKey(newPage.key);
   };
 
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: string, isSeo = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const options = { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: false };
+      const compressedFile = await imageCompression(file, options);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage.from('media').upload(fileName, compressedFile);
+      if (uploadError) throw uploadError;
+      
+      const { data } = supabase.storage.from('media').getPublicUrl(fileName);
+      
+      const newImage = { name: file.name, url: data.publicUrl, storage_path: `media/${fileName}` };
+      await supabase.from('media').insert([newImage]);
+      
+      if (isSeo) {
+        setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed?.seo, [fieldName]: data.publicUrl}}});
+      } else {
+        setEditingPage({...editingPage, parsed: {...editingPage.parsed, [fieldName]: data.publicUrl}});
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert('فشل رفع الصورة');
+    }
+  };
+
   const handleSave = async () => {
-    if (!editingPage.parsed.title || !editingPage.parsed.slug) {
+
+    if (!editingPage.parsed?.title || !editingPage.parsed?.slug) {
       alert('يرجى إدخال عنوان ورابط الصفحة');
       return;
     }
 
     setSaving(true);
     try {
-      await saveContent(editingPage.key, editingPage.parsed.title, 'page', JSON.stringify(editingPage.parsed));
+      await saveContent(editingPage.key, editingPage.parsed?.title, 'page', JSON.stringify(editingPage.parsed));
       updateContent(editingPage.key, JSON.stringify(editingPage.parsed));
       
       
-      alert('تم الحفظ بنجاح');
+      setSuccessMessage('تم حفظ الصفحة بنجاح');
+      setTimeout(() => setSuccessMessage(null), 3000);
       fetchContents();
       setEditingKey(null);
       setEditingPage(null);
@@ -83,7 +162,7 @@ export default function PagesManager({ pages, fetchContents }: Props) {
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     
-    const items = Array.from(editingPage.parsed.sections || []);
+    const items = Array.from(editingPage.parsed?.sections || []);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     
@@ -96,12 +175,12 @@ export default function PagesManager({ pages, fetchContents }: Props) {
   const addSection = (sectionName: string) => {
     setEditingPage({
       ...editingPage,
-      parsed: { ...editingPage.parsed, sections: [...(editingPage.parsed.sections || []), sectionName] }
+      parsed: { ...editingPage.parsed, sections: [...(editingPage.parsed?.sections || []), sectionName] }
     });
   };
 
   const removeSection = (index: number) => {
-    const items = Array.from(editingPage.parsed.sections || []);
+    const items = Array.from(editingPage.parsed?.sections || []);
     items.splice(index, 1);
     setEditingPage({
       ...editingPage,
@@ -113,7 +192,7 @@ export default function PagesManager({ pages, fetchContents }: Props) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">تعديل الصفحة: {editingPage.parsed.title}</h2>
+          <h2 className="text-xl font-bold">تعديل الصفحة: {editingPage.parsed?.title}</h2>
           <div className="flex gap-2">
             <button onClick={() => setEditingKey(null)} className="px-4 py-2 border rounded">إلغاء</button>
             <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-[#0284C7] text-white rounded font-bold">
@@ -129,7 +208,7 @@ export default function PagesManager({ pages, fetchContents }: Props) {
                 <label className="block text-sm font-bold mb-2">عنوان الصفحة</label>
                 <input 
                   type="text" 
-                  value={editingPage.parsed.title}
+                  value={editingPage.parsed?.title || ''}
                   onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, title: e.target.value}})}
                   className="w-full border p-2 rounded"
                 />
@@ -138,7 +217,7 @@ export default function PagesManager({ pages, fetchContents }: Props) {
                 <label className="block text-sm font-bold mb-2">رابط الصفحة (Slug)</label>
                 <input 
                   type="text" 
-                  value={editingPage.parsed.slug}
+                  value={editingPage.parsed?.slug || ''}
                   onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, slug: e.target.value}})}
                   className="w-full border p-2 rounded text-left" dir="ltr"
                 />
@@ -150,7 +229,7 @@ export default function PagesManager({ pages, fetchContents }: Props) {
               <div className="ltr text-left bg-white" dir="ltr">
                 <ReactQuill 
                   theme="snow"
-                  value={editingPage.parsed.content || ''}
+                  value={editingPage.parsed?.content || ''}
                   onChange={val => setEditingPage({...editingPage, parsed: {...editingPage.parsed, content: val}})}
                   className="h-64 mb-12"
                 />
@@ -179,7 +258,7 @@ export default function PagesManager({ pages, fetchContents }: Props) {
                 <Droppable droppableId="sections">
                   {(provided) => (
                     <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
-                      {(editingPage.parsed.sections || []).map((sec: string, index: number) => (
+                      {(editingPage.parsed?.sections || []).map((sec: string, index: number) => (
                         
                         <DraggableAny key={`${sec}-${index}`} draggableId={`${sec}-${index}`} index={index}>
                           {(provided) => (
@@ -214,7 +293,7 @@ export default function PagesManager({ pages, fetchContents }: Props) {
             <div className="bg-gray-50 p-4 rounded-lg border">
               <h3 className="font-bold mb-4 border-b pb-2">حالة الصفحة</h3>
               <select 
-                value={editingPage.parsed.status || 'draft'} 
+                value={editingPage.parsed?.status || 'draft'} 
                 onChange={(e) => setEditingPage({...editingPage, parsed: {...editingPage.parsed, status: e.target.value}})}
                 className="w-full border p-2 rounded mb-4"
               >
@@ -225,35 +304,84 @@ export default function PagesManager({ pages, fetchContents }: Props) {
               <label className="block text-sm font-bold mb-2">الصورة البارزة (رابط)</label>
               <input 
                 type="text" 
-                value={editingPage.parsed.featuredImage || ''}
+                value={editingPage.parsed?.featuredImage || ''}
                 onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, featuredImage: e.target.value}})}
                 className="w-full border p-2 rounded text-left mb-2" dir="ltr"
               />
-              {editingPage.parsed.featuredImage && (
-                <img loading="lazy" decoding="async" src={editingPage.parsed.featuredImage} alt="Preview" className="w-full h-32 object-cover rounded" />
+              {editingPage.parsed?.featuredImage && (
+                <img loading="lazy" decoding="async" src={editingPage.parsed?.featuredImage} alt="Preview" className="w-full h-32 object-cover rounded" />
               )}
             </div>
 
             <div className="bg-gray-50 p-4 rounded-lg border">
+              
               <h3 className="font-bold mb-4 border-b pb-2">إعدادات SEO</h3>
+              {(!editingPage.parsed?.seo?.title || !editingPage.parsed?.seo?.description) && (
+                <div className="bg-yellow-50 text-yellow-800 p-3 rounded mb-4 text-sm font-bold flex gap-2 items-center">
+                  ⚠️ تنبيه: يرجى إكمال إعدادات SEO (العنوان والوصف) لضمان أرشفة أفضل.
+                </div>
+              )}
+
+              <div className="mb-4 flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <div className="text-sm text-blue-800 font-bold flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-blue-600" />
+                  مساعد الذكاء الاصطناعي
+                </div>
+                <button
+                  onClick={generatePageSEO}
+                  disabled={generatingSEO}
+                  className="flex items-center gap-2 bg-[#0284C7] text-white px-3 py-1.5 rounded text-sm hover:bg-[#0369A1] transition-colors disabled:opacity-50"
+                >
+                  {generatingSEO ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  توليد العنوان والوصف
+                </button>
+              </div>
+
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm mb-1">Meta Title</label>
                   <input 
                     type="text" 
-                    value={editingPage.parsed.seo?.title || ''}
-                    onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed.seo, title: e.target.value}}})}
+                    value={editingPage.parsed?.seo?.title || ''}
+                    onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed?.seo, title: e.target.value}}})}
                     className="w-full border p-2 rounded"
                   />
                 </div>
                 <div>
                   <label className="block text-sm mb-1">Meta Description</label>
                   <textarea 
-                    value={editingPage.parsed.seo?.description || ''}
-                    onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed.seo, description: e.target.value}}})}
+                    value={editingPage.parsed?.seo?.description || ''}
+                    onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed?.seo, description: e.target.value}}})}
                     className="w-full border p-2 rounded h-24"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm mb-1">Keywords</label>
+                  <input type="text" value={editingPage.parsed?.seo?.keywords || ''} onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed?.seo, keywords: e.target.value}}})} className="w-full border p-2 rounded" />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">Canonical URL</label>
+                  <input type="text" value={editingPage.parsed?.seo?.canonical || ''} onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed?.seo, canonical: e.target.value}}})} className="w-full border p-2 rounded" />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">OG Image</label>
+                  <div className="flex gap-2">
+  <input type="text" value={editingPage.parsed?.seo?.ogImage || ''} onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed?.seo, ogImage: e.target.value}}})} className="flex-1 border p-2 rounded" />
+  <label className="bg-gray-100 px-4 py-2 rounded cursor-pointer hover:bg-gray-200 border border-gray-300 font-bold flex items-center justify-center">
+    رفع صورة
+    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'ogImage', true)} />
+  </label>
+</div>
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 cursor-pointer mt-4">
+                    <input type="checkbox" checked={!!editingPage.parsed?.seo?.noindex} onChange={e => setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed?.seo, noindex: e.target.checked}}})} className="w-5 h-5 rounded border-gray-300" />
+                    <span className="text-sm">منع الأرشفة (NoIndex)</span>
+                  </label>
+                </div>
+
               </div>
             </div>
           </div>
@@ -270,6 +398,11 @@ export default function PagesManager({ pages, fetchContents }: Props) {
           <Plus className="w-5 h-5" /> إنشـاء صفحة جديدة
         </button>
       </div>
+      {successMessage && (
+        <div className="bg-green-50 text-green-700 p-4 rounded-md mb-6 font-bold border border-green-200">
+          {successMessage}
+        </div>
+      )}
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
@@ -282,11 +415,11 @@ export default function PagesManager({ pages, fetchContents }: Props) {
             </tr>
           </thead>
           <tbody>
-            {parsedPages.length === 0 ? (
+            {(parsedPages || []).length === 0 ? (
                 <tr>
                     <td colSpan={4} className="p-8 text-center text-gray-500">لا توجد صفحات إضافية، يمكنك إنشاء صفحة جديدة.</td>
                 </tr>
-            ) : parsedPages.map((page: any) => (
+            ) : (parsedPages || []).map((page: any) => (
               <tr key={page.key} className="border-b hover:bg-gray-50">
                 <td className="p-4 font-bold text-gray-900">{page.parsed.title}</td>
                 <td className="p-4 text-left" dir="ltr"><a href={`/${page.parsed.slug}`} target="_blank" className="text-blue-600 hover:underline">/{page.parsed.slug}</a></td>

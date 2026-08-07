@@ -42,8 +42,16 @@ export const SECTIONS: Section[] = [
     schema: [
       { key: 'title', label: 'عنوان الخدمة', type: 'text' },
       { key: 'description', label: 'وصف الخدمة', type: 'textarea' },
-      { key: 'image', label: 'رابط الصورة', type: 'image' },
+      { key: 'image', label: 'الصورة الرئيسية', type: 'image' },
+      { key: 'bgImage', label: 'صورة الخلفية', type: 'image' },
       { key: 'icon', label: 'اسم الأيقونة (مثال: Home)', type: 'text' },
+      { key: 'isHidden', label: 'إخفاء الخدمة', type: 'boolean' },
+      { key: 'seoTitle', label: 'SEO عنوان', type: 'text' },
+      { key: 'seoDescription', label: 'SEO وصف', type: 'textarea' },
+      { key: 'seoKeywords', label: 'SEO كلمات مفتاحية', type: 'text' },
+      { key: 'seoCanonical', label: 'SEO Canonical URL', type: 'text' },
+      { key: 'seoImage', label: 'SEO OG Image', type: 'image' },
+      { key: 'seoNoIndex', label: 'منع الأرشفة (NoIndex)', type: 'boolean' },
     ]
   },
   { 
@@ -66,7 +74,15 @@ export const SECTIONS: Section[] = [
     title: 'صورة لماذا تختارنا',
     type: 'array',
     schema: [
+      
       { key: 'image', label: 'رابط الصورة', type: 'image' },
+      { key: 'seoTitle', label: 'SEO عنوان', type: 'text' },
+      { key: 'seoDescription', label: 'SEO وصف', type: 'textarea' },
+      { key: 'seoKeywords', label: 'SEO كلمات مفتاحية', type: 'text' },
+      { key: 'seoCanonical', label: 'SEO Canonical URL', type: 'text' },
+      { key: 'seoImage', label: 'SEO OG Image', type: 'image' },
+      { key: 'seoNoIndex', label: 'منع الأرشفة (NoIndex)', type: 'boolean' },
+
     ]
   },
   { 
@@ -95,7 +111,15 @@ export const SECTIONS: Section[] = [
       { key: 'title', label: 'عنوان المشروع', type: 'text' },
       { key: 'category', label: 'القسم (مثل: واجهات, قواطع)', type: 'text' },
       { key: 'description', label: 'وصف المشروع', type: 'textarea' },
+      
       { key: 'image', label: 'رابط الصورة', type: 'image' },
+      { key: 'seoTitle', label: 'SEO عنوان', type: 'text' },
+      { key: 'seoDescription', label: 'SEO وصف', type: 'textarea' },
+      { key: 'seoKeywords', label: 'SEO كلمات مفتاحية', type: 'text' },
+      { key: 'seoCanonical', label: 'SEO Canonical URL', type: 'text' },
+      { key: 'seoImage', label: 'SEO OG Image', type: 'image' },
+      { key: 'seoNoIndex', label: 'منع الأرشفة (NoIndex)', type: 'boolean' },
+
       { key: 'className', label: 'كلاس CSS (اختياري - للتحكم بالحجم)', type: 'text' },
     ]
   },
@@ -129,8 +153,17 @@ export const SECTIONS: Section[] = [
       { key: 'title', label: 'عنوان المقال', type: 'text' },
       { key: 'category', label: 'القسم', type: 'text' },
       { key: 'excerpt', label: 'مقتطف (وصف قصير)', type: 'textarea' },
+      { key: 'content', label: 'محتوى المقال', type: 'rich_text' },
       { key: 'date', label: 'التاريخ', type: 'text' },
+      
       { key: 'image', label: 'رابط الصورة', type: 'image' },
+      { key: 'seoTitle', label: 'SEO عنوان', type: 'text' },
+      { key: 'seoDescription', label: 'SEO وصف', type: 'textarea' },
+      { key: 'seoKeywords', label: 'SEO كلمات مفتاحية', type: 'text' },
+      { key: 'seoCanonical', label: 'SEO Canonical URL', type: 'text' },
+      { key: 'seoImage', label: 'SEO OG Image', type: 'image' },
+      { key: 'seoNoIndex', label: 'منع الأرشفة (NoIndex)', type: 'boolean' },
+
     ]
   },
   { 
@@ -214,6 +247,7 @@ export default function ContentManager({ contents, fetchContents, token, filterK
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
   const [savingContent, setSavingContent] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSaveContent = useCallback(async () => {
     if (!editingContent) return;
@@ -229,6 +263,8 @@ export default function ContentManager({ contents, fetchContents, token, filterK
       fetchContents();
       setEditingKey(null);
       setEditingContent(null);
+      setSuccessMessage('تم الحفظ بنجاح!');
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error("Failed to save content", error);
       alert('حدث خطأ أثناء الحفظ');
@@ -306,6 +342,11 @@ export default function ContentManager({ contents, fetchContents, token, filterK
         <Edit3 className="w-5 h-5 text-[#0284C7]" />
         إدارة محتوى الموقع
       </h2>
+      {successMessage && (
+        <div className="bg-green-50 text-green-700 p-4 rounded-md mb-6 font-bold border border-green-200">
+          {successMessage}
+        </div>
+      )}
 
       <div className="space-y-4">
         {sectionsToRender.map(section => (

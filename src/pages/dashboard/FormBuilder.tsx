@@ -15,7 +15,12 @@ export default function FormBuilder() {
   useEffect(() => {
     if (formsContent && formsContent.body) {
       try {
-        setForms(JSON.parse(formsContent.body));
+        const parsed = JSON.parse(formsContent.body);
+        if (Array.isArray(parsed)) {
+          setForms(parsed);
+        } else {
+          setForms([]);
+        }
       } catch (e) {
         console.error('Failed to parse forms content', e);
       }
@@ -52,7 +57,7 @@ export default function FormBuilder() {
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination || !editingForm) return;
-    const items = Array.from(editingForm.fields);
+    const items = Array.from((editingForm.fields || []));
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     setEditingForm({ ...editingForm, fields: items });
@@ -84,7 +89,7 @@ export default function FormBuilder() {
           <label className="block text-sm font-bold mb-2">اسم النموذج</label>
           <input 
             type="text" 
-            value={editingForm.title}
+            value={editingForm.title || ''}
             onChange={e => setEditingForm({...editingForm, title: e.target.value})}
             className="w-full border p-2 rounded"
           />
@@ -96,7 +101,7 @@ export default function FormBuilder() {
             <button 
               onClick={() => setEditingForm({
                 ...editingForm,
-                fields: [...editingForm.fields, { id: `f${Date.now()}`, label: 'حقل جديد', type: 'text', required: false }]
+                fields: [...(editingForm.fields || []), { id: `f${Date.now()}`, label: 'حقل جديد', type: 'text', required: false }]
               })}
               className="text-sm bg-gray-100 px-3 py-1.5 rounded hover:bg-gray-200"
             >
@@ -108,7 +113,7 @@ export default function FormBuilder() {
             <Droppable droppableId="fields">
               {(provided) => (
                 <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
-                  {editingForm.fields.map((field: any, index: number) => (
+                  {(editingForm.fields || []).map((field: any, index: number) => (
                     
                     <DraggableAny key={field.id} draggableId={field.id} index={index}>
                       {(provided) => (
@@ -125,9 +130,9 @@ export default function FormBuilder() {
                               <label className="block text-xs mb-1">اسم الحقل</label>
                               <input 
                                 type="text" 
-                                value={field.label}
+                                value={field.label || ''}
                                 onChange={e => {
-                                  const newFields = [...editingForm.fields];
+                                  const newFields = [...(editingForm.fields || [])];
                                   newFields[index].label = e.target.value;
                                   setEditingForm({...editingForm, fields: newFields});
                                 }}
@@ -137,9 +142,9 @@ export default function FormBuilder() {
                             <div>
                               <label className="block text-xs mb-1">نوع الحقل</label>
                               <select 
-                                value={field.type}
+                                value={field.type || 'text'}
                                 onChange={e => {
-                                  const newFields = [...editingForm.fields];
+                                  const newFields = [...(editingForm.fields || [])];
                                   newFields[index].type = e.target.value;
                                   setEditingForm({...editingForm, fields: newFields});
                                 }}
@@ -159,7 +164,7 @@ export default function FormBuilder() {
                                   type="checkbox" 
                                   checked={field.required}
                                   onChange={e => {
-                                    const newFields = [...editingForm.fields];
+                                    const newFields = [...(editingForm.fields || [])];
                                     newFields[index].required = e.target.checked;
                                     setEditingForm({...editingForm, fields: newFields});
                                   }}
@@ -170,7 +175,7 @@ export default function FormBuilder() {
                           </div>
                           <button 
                             onClick={() => {
-                              const newFields = [...editingForm.fields];
+                              const newFields = [...(editingForm.fields || [])];
                               newFields.splice(index, 1);
                               setEditingForm({...editingForm, fields: newFields});
                             }}
@@ -212,7 +217,7 @@ export default function FormBuilder() {
           <div key={form.id} className="border border-gray-100 rounded-lg p-4 flex justify-between items-center bg-gray-50 hover:border-[#0284C7]/30 transition-colors">
             <div>
               <h3 className="font-bold text-gray-900">{form.title}</h3>
-              <p className="text-sm text-gray-500">{form.fields.length} حقول</p>
+              <p className="text-sm text-gray-500">{(form.fields || []).length} حقول</p>
             </div>
             <div className="flex gap-2">
               <button onClick={() => setEditingForm(form)} className="p-2 text-[#0284C7] hover:bg-[#0284C7]/10 rounded">

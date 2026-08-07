@@ -1,39 +1,29 @@
-import re
-
-with open('vite.config.ts', 'r') as f:
-    content = f.read()
-
-build_opts = """
-    build: {
-      target: 'esnext',
-      minify: 'esbuild',
-      cssMinify: true,
-      rollupOptions: {
+content = open('vite.config.ts').read()
+content = content.replace("      rollupOptions: {\n      },", """      rollupOptions: {
         output: {
-          manualChunks(id) {
+          manualChunks: (id) => {
             if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
                 return 'vendor-react';
+              }
+              if (id.includes('@supabase')) {
+                return 'vendor-supabase';
               }
               if (id.includes('framer-motion') || id.includes('motion')) {
                 return 'vendor-motion';
               }
-              if (id.includes('swiper')) {
-                return 'vendor-swiper';
-              }
               if (id.includes('lucide-react')) {
                 return 'vendor-icons';
               }
+              if (id.includes('react-quill') || id.includes('quill')) {
+                return 'vendor-quill';
+              }
+              if (id.includes('dnd')) {
+                return 'vendor-dnd';
+              }
               return 'vendor';
             }
-          },
-        },
-      },
-    },
-"""
-
-if 'build:' not in content:
-    content = content.replace('server:', build_opts + '    server:')
-
-with open('vite.config.ts', 'w') as f:
-    f.write(content)
+          }
+        }
+      },""")
+open('vite.config.ts', 'w').write(content)

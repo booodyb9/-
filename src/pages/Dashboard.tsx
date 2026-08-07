@@ -7,6 +7,7 @@ import { LogOut, Edit3, Cloud, Image, Mail, Upload } from 'lucide-react';
 import Messages from './dashboard/Messages';
 import MediaLibrary from './dashboard/MediaLibrary';
 import DriveBackup from './dashboard/DriveBackup';
+import PerformanceTool from './dashboard/PerformanceTool';
 import ContentManager from './dashboard/ContentManager';
 import PagesManager from './dashboard/PagesManager';
 import DashboardHome from './dashboard/DashboardHome';
@@ -214,6 +215,7 @@ export default function Dashboard() {
       {activeTab === 'seo' && <ErrorBoundary><ContentManager contents={contents} fetchContents={fetchContents} token={token as any} filterKeys={['seo_settings']} /></ErrorBoundary>}
       {activeTab === 'social' && <ErrorBoundary><ContentManager contents={contents} fetchContents={fetchContents} token={token as any} filterKeys={['social_links']} /></ErrorBoundary>}
       {activeTab === 'settings' && <ErrorBoundary><SiteSettings contents={contents} fetchContents={fetchContents} /></ErrorBoundary>}
+      {activeTab === 'performance' && <ErrorBoundary><PerformanceTool /></ErrorBoundary>}
       
       {/* Fallback */}
       {activeTab === 'content' && <ErrorBoundary><ContentManager contents={contents} fetchContents={fetchContents} token={token as any} /></ErrorBoundary>}

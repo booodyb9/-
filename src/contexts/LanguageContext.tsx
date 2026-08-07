@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 type Language = 'ar' | 'en';
 
@@ -24,8 +24,9 @@ export const LanguageProvider: React.FC<{children: React.ReactNode}> = ({ childr
     setLanguage(prev => prev === 'ar' ? 'en' : 'ar');
   };
 
+  const value = useMemo(() => ({ language, toggleLanguage }), [language]);
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );

@@ -2,6 +2,7 @@ import React from 'react';
 import SEO from '../../components/SEO';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import SectionCTA from '../../components/SectionCTA';
 import Features from '../../components/Features';
 import ProjectStats from '../../components/ProjectStats';
 import TrustedPartners from '../../components/TrustedPartners';
@@ -35,6 +36,7 @@ export default function About() {
         <Features />
         <ProjectStats />
         <TrustedPartners />
+        <div className="py-12 bg-white border-t border-gray-100"><SectionCTA /></div>
       </main>
       <Footer />
     </>

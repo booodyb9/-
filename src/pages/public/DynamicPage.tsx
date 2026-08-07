@@ -97,17 +97,22 @@ export default function DynamicPage() {
 
   return (
     <>
+      
       <SEO 
         title={`${pageData.seo?.title || pageData.title} | شركة زجاج الرياض`} 
         description={pageData.seo?.description}
         keywords={pageData.seo?.keywords}
+        canonical={pageData.seo?.canonical}
+        image={pageData.seo?.ogImage}
+        noindex={pageData.seo?.noindex}
       />
+
       <Navbar />
       <main className="min-h-screen pt-20">
         
         {pageData.featuredImage && (
             <div className="w-full h-[40vh] md:h-[50vh] relative">
-                <img loading="lazy" decoding="async" src={pageData.featuredImage} alt={pageData.title} className="w-full h-full object-cover" />
+                <img loading="lazy" decoding="async" src={pageData.featuredImage} alt={pageData.title || 'صورة'} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                     <h1 className="text-4xl md:text-5xl font-bold text-white px-4 text-center">{pageData.title}</h1>
                 </div>

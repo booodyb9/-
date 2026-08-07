@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../../contexts/AuthContext';
 import { LogOut, ChevronDown, Menu, X } from 'lucide-react';
 import { dashboardMenu } from './config';
@@ -14,6 +15,8 @@ export default function DashboardLayout({ activeTab, setActiveTab, children }: D
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
+    <>
+    <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans" dir="rtl">
       {/* Mobile Header */}
       <div className="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-20">
@@ -79,5 +82,6 @@ export default function DashboardLayout({ activeTab, setActiveTab, children }: D
         </div>
       </main>
     </div>
+    </>
   );
 }

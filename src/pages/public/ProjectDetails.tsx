@@ -68,6 +68,19 @@ export default function ProjectDetails() {
     };
   }, []);
 
+
+  const projectSchema = project ? {
+    "@type": "CreativeWork",
+    "name": project.title,
+    "description": project.description,
+    "image": project.coverImage,
+    "dateCreated": project.date,
+    "author": {
+      "@type": "HomeAndConstructionBusiness",
+      "name": "شركة زجاج الرياض"
+    }
+  } : undefined;
+
   if (!project) {
     return (
       <>
@@ -101,16 +114,22 @@ export default function ProjectDetails() {
 
   return (
     <>
+      
       <SEO 
         title={`${project.seoTitle || project.title} | زجاج الرياض`} 
-        description={project.seoDescription || project.description} 
+        description={project.seoDescription || project.description}
+        keywords={project.seoKeywords}
+        canonical={project.seoCanonical}
+        image={project.seoImage || project.coverImage}
+        noindex={project.seoNoIndex}
       />
+
       <Navbar />
 
       {/* Hero Banner with Cover Image */}
       <section className="relative pt-20 lg:pt-24 min-h-[60vh] flex flex-col justify-end">
         <div className="absolute inset-0 z-0">
-          <img loading="lazy" decoding="async" src={project.coverImage} alt={project.title} className="w-full h-full object-cover" />
+          <img loading="lazy" decoding="async" src={project.coverImage} alt={project.title || 'صورة'} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-black/30" />
         </div>
         
@@ -334,7 +353,7 @@ export default function ProjectDetails() {
               {relatedProjects.map((relProject) => (
                 <Link to={`/portfolio/${relProject.slug}`} key={relProject.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 block">
                   <div className="h-60 relative overflow-hidden">
-                    <img loading="lazy" decoding="async" src={relProject.coverImage} alt={relProject.title} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out" />
+                    <img loading="lazy" decoding="async" src={relProject.coverImage} alt={relProject.title || 'صورة'} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out" />
                     <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300"></div>
                   </div>
                   <div className="p-6">

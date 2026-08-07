@@ -2,6 +2,7 @@ import React from 'react';
 import SEO from '../../components/SEO';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import SectionCTA from '../../components/SectionCTA';
 import Gallery from '../../components/Gallery';
 
 export default function Portfolio() {
@@ -19,6 +20,7 @@ export default function Portfolio() {
       </div>
 
         <Gallery />
+        <div className="py-12 bg-white border-t border-gray-100"><SectionCTA /></div>
       </main>
       <Footer />
     </>

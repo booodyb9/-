@@ -20,17 +20,17 @@ const Messages = memo(({ messages, loading }: MessagesProps) => {
           الرسائل الواردة
         </h2>
         <span className="bg-blue-50 text-[#0284C7] px-3 py-1 rounded-full text-sm font-bold">
-          {messages.length} رسالة
+          {(messages || []).length} رسالة
         </span>
       </div>
       
       <div className="divide-y divide-gray-200">
-        {messages.length === 0 ? (
+        {(messages || []).length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             لا توجد رسائل جديدة
           </div>
         ) : (
-          messages.map((msg) => (
+          (messages || []).map((msg) => (
             <div key={msg.id} className="p-6 hover:bg-gray-50 transition-colors">
               <div className="flex justify-between items-start mb-2">
                 <div>
