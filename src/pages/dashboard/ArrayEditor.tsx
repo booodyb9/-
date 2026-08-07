@@ -1,81 +1,42 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, ChevronUp, ChevronDown, Upload, Sparkles, Loader2 } from 'lucide-react';
-import imageCompression from 'browser-image-compression';
-import { supabase } from '../../lib/supabase';
-import { v4 as uuidv4 } from 'uuid';
+import { useEffect, useState } from 'react';
+import { ChevronDown, ChevronUp, Loader2, Plus, Sparkles, Trash2, Upload } from 'lucide-react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import { uploadDashboardImage } from '../../lib/mediaUpload';
 
+type FieldType = 'text' | 'textarea' | 'rich_text' | 'image' | 'number' | 'boolean';
 
 interface ArrayEditorProps {
-  value: string; // JSON string
+  value: string;
   onChange: (val: string) => void;
   schema: {
     key: string;
     label: string;
-    type: 'text' | 'textarea' | 'image' | 'number' | 'boolean';
+    type: FieldType;
   }[];
   token?: string | null;
 }
 
-export default function ArrayEditor({ value, onChange, schema, token }: ArrayEditorProps) {
+const richTextModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline'],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    ['link', 'clean'],
+  ],
+};
+
+export default function ArrayEditor({ value, onChange, schema }: ArrayEditorProps) {
   const [items, setItems] = useState<any[]>([]);
-  const [uploadingIndex, setUploadingIndex] = useState<{index: number, key: string} | null>(null);
-
+  const [uploadingIndex, setUploadingIndex] = useState<{ index: number; key: string } | null>(null);
   const [generatingSEO, setGeneratingSEO] = useState<number | null>(null);
-
-  const generateSEO = async (index: number) => {
-    const item = items[index];
-    const contentToAnalyze = item.description || item.content || item.answer || item.details || item.body || item.title || '';
-    const titleToAnalyze = item.title || item.name || item.question || '';
-    
-    if (!contentToAnalyze && !titleToAnalyze) {
-      alert('لا يوجد محتوى كافي لتوليد بيانات السيو');
-      return;
-    }
-
-    setGeneratingSEO(index);
-    try {
-      const response = await fetch('/api/generate-seo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: titleToAnalyze,
-          content: contentToAnalyze,
-          type: 'مقال أو خدمة'
-        })
-      });
-
-      if (!response.ok) throw new Error('فشل توليد البيانات');
-      const data = await response.json();
-      
-      const newItems = [...items];
-      if (data.title) newItems[index] = { ...newItems[index], seoTitle: data.title };
-      if (data.description) newItems[index] = { ...newItems[index], seoDescription: data.description };
-      
-      setItems(newItems);
-      onChange(JSON.stringify(newItems));
-    } catch (error) {
-      console.error(error);
-      alert('حدث خطأ أثناء محاولة توليد السيو بواسطة الذكاء الاصطناعي');
-    } finally {
-      setGeneratingSEO(null);
-    }
-  };
-
 
   useEffect(() => {
     try {
-      if (value) {
-        const parsed = JSON.parse(value);
-        if (Array.isArray(parsed)) {
-          setItems(parsed);
-        } else {
-          setItems([]);
-        }
-      } else {
-        setItems([]);
-      }
-    } catch (e) {
-      console.error("Failed to parse array JSON", e);
+      const parsed = value ? JSON.parse(value) : [];
+      setItems(Array.isArray(parsed) ? parsed : []);
+    } catch (error) {
+      console.error('Failed to parse array JSON', error);
       setItems([]);
     }
   }, [value]);
@@ -86,195 +47,164 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
   };
 
   const addItem = () => {
-    const newItem: any = {};
-    schema.forEach(field => {
-      newItem[field.key] = field.type === 'number' ? 0 : '';
+    const newItem: Record<string, unknown> = {};
+    schema.forEach((field) => {
+      newItem[field.key] = field.type === 'number' ? 0 : field.type === 'boolean' ? false : '';
     });
     notifyChange([...items, newItem]);
   };
 
   const removeItem = (index: number) => {
-    if (confirm('هل أنت متأكد من حذف هذا العنصر؟')) {
-      const newItems = [...items];
-      newItems.splice(index, 1);
-      notifyChange(newItems);
-    }
+    if (!confirm('هل أنت متأكد من حذف هذا العنصر؟')) return;
+    notifyChange(items.filter((_, itemIndex) => itemIndex !== index));
   };
 
-  const updateItem = (index: number, key: string, val: any) => {
-    const newItems = [...items];
-    newItems[index][key] = val;
+  const updateItem = (index: number, key: string, val: unknown) => {
+    const newItems = items.map((item, itemIndex) =>
+      itemIndex === index ? { ...item, [key]: val } : item,
+    );
     notifyChange(newItems);
   };
 
   const moveItem = (index: number, direction: 1 | -1) => {
-    if (index + direction < 0 || index + direction >= items.length) return;
-    const newItems = [...items];
-    const temp = newItems[index];
-    newItems[index] = newItems[index + direction];
-    newItems[index + direction] = temp;
-    notifyChange(newItems);
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= items.length) return;
+    const next = [...items];
+    [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+    notifyChange(next);
   };
 
-  const handleImageUpload = async (e: import("react").ChangeEvent<HTMLInputElement>, index: number, key: string) => {
-    const file = e.target.files?.[0];
+  const handleImageUpload = async (file: File | undefined, index: number, key: string) => {
     if (!file) return;
     setUploadingIndex({ index, key });
     try {
-      const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1920,
-        useWebWorker: false
-      };
-      
-      const compressedFile = await imageCompression(file, options);
-      
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = `${fileName}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('media')
-        .upload(filePath, compressedFile);
-        
-      if (uploadError) throw uploadError;
-      
-      const { data } = supabase.storage.from('media').getPublicUrl(filePath);
-      
-      const newImage = { 
-         name: file.name,
-         url: data.publicUrl,
-         storage_path: `media/${filePath}`
-       };
-      
-      const { error: insertError } = await supabase.from('media').insert([newImage]);
-      if (insertError) console.error("Media insert error:", insertError);
-      updateItem(index, key, newImage.url);
+      const uploaded = await uploadDashboardImage(file, `content/${key}`);
+      updateItem(index, key, uploaded.url);
     } catch (error) {
-      console.error("Upload error:", error);
-      alert('فشل رفع الصورة');
+      console.error('Upload error:', error);
+      alert(error instanceof Error ? error.message : 'فشل رفع الصورة');
     } finally {
       setUploadingIndex(null);
-      e.target.value = '';
+    }
+  };
+
+  const generateSEO = async (index: number) => {
+    const item = items[index];
+    const contentToAnalyze = item.description || item.content || item.answer || item.details || item.body || item.title || '';
+    const titleToAnalyze = item.title || item.name || item.question || '';
+
+    if (!contentToAnalyze && !titleToAnalyze) {
+      alert('لا يوجد محتوى كافي لتوليد بيانات السيو');
+      return;
+    }
+
+    setGeneratingSEO(index);
+    try {
+      const response = await fetch('/api/generate-seo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: titleToAnalyze, content: contentToAnalyze, type: 'مقال أو خدمة' }),
+      });
+      if (!response.ok) throw new Error('فشل توليد البيانات');
+      const data = await response.json();
+      const newItems = [...items];
+      newItems[index] = {
+        ...newItems[index],
+        ...(data.title ? { seoTitle: data.title } : {}),
+        ...(data.description ? { seoDescription: data.description } : {}),
+      };
+      notifyChange(newItems);
+    } catch (error) {
+      console.error(error);
+      alert('حدث خطأ أثناء محاولة توليد السيو بواسطة الذكاء الاصطناعي');
+    } finally {
+      setGeneratingSEO(null);
     }
   };
 
   return (
     <div className="space-y-4">
       {items.map((item, index) => (
-        <div key={index} className="border border-gray-200 p-4 rounded-lg bg-gray-50 relative">
-          <div className="absolute top-4 left-4 flex gap-2">
-            <button onClick={() => moveItem(index, -1)} disabled={index === 0} className="p-1 text-gray-500 hover:text-gray-900 disabled:opacity-30">
-              <ChevronUp className="w-5 h-5" />
+        <div key={index} className="relative rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <div className="absolute left-4 top-4 flex gap-2">
+            <button type="button" onClick={() => moveItem(index, -1)} disabled={index === 0} className="p-1 text-gray-500 hover:text-gray-900 disabled:opacity-30" title="تحريك لأعلى">
+              <ChevronUp className="h-5 w-5" />
             </button>
-            <button onClick={() => moveItem(index, 1)} disabled={index === items.length - 1} className="p-1 text-gray-500 hover:text-gray-900 disabled:opacity-30">
-              <ChevronDown className="w-5 h-5" />
+            <button type="button" onClick={() => moveItem(index, 1)} disabled={index === items.length - 1} className="p-1 text-gray-500 hover:text-gray-900 disabled:opacity-30" title="تحريك لأسفل">
+              <ChevronDown className="h-5 w-5" />
             </button>
-            <button onClick={() => removeItem(index)} className="p-1 text-red-500 hover:text-red-700">
-              <Trash2 className="w-5 h-5" />
+            <button type="button" onClick={() => removeItem(index)} className="p-1 text-red-500 hover:text-red-700" title="حذف العنصر">
+              <Trash2 className="h-5 w-5" />
             </button>
           </div>
-          
-          <h4 className="font-bold text-gray-700 mb-4">عنصر #{index + 1}</h4>
 
-          {schema.some(f => f.key === 'seoTitle') && (!item.seoTitle || !item.seoDescription) && (
-            <div className="bg-yellow-50 text-yellow-800 p-2 rounded mb-4 text-xs font-bold flex gap-2 items-center">
-              ⚠️ تنبيه: يرجى إكمال إعدادات SEO (العنوان والوصف) في هذا العنصر لضمان أرشفة أفضل.
+          <h4 className="mb-4 font-bold text-gray-700">عنصر #{index + 1}</h4>
+
+          {schema.some((field) => field.key === 'seoTitle') && (!item.seoTitle || !item.seoDescription) && (
+            <div className="mb-4 rounded bg-yellow-50 p-2 text-xs font-bold text-yellow-800">
+              ⚠️ يرجى إكمال عنوان ووصف SEO لهذا العنصر.
             </div>
           )}
 
-          {schema.some(f => f.key === 'seoTitle') && (
-            <div className="mb-4 flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-100">
-              <div className="text-sm text-blue-800 font-bold flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-blue-600" />
-                مساعد الذكاء الاصطناعي للسيو (SEO)
+          {schema.some((field) => field.key === 'seoTitle') && (
+            <div className="mb-4 flex items-center justify-between rounded-lg border border-blue-100 bg-blue-50 p-3">
+              <div className="flex items-center gap-2 text-sm font-bold text-blue-800">
+                <Sparkles className="h-5 w-5 text-blue-600" /> مساعد SEO
               </div>
-              <button
-                onClick={() => generateSEO(index)}
-                disabled={generatingSEO === index}
-                className="flex items-center gap-2 bg-[#0284C7] text-white px-3 py-1.5 rounded text-sm hover:bg-[#0369A1] transition-colors disabled:opacity-50"
-              >
-                {generatingSEO === index ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              <button type="button" onClick={() => void generateSEO(index)} disabled={generatingSEO === index} className="flex items-center gap-2 rounded bg-[#0284C7] px-3 py-1.5 text-sm text-white disabled:opacity-50">
+                {generatingSEO === index ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 توليد العنوان والوصف
               </button>
             </div>
           )}
 
-
-          
           <div className="grid grid-cols-1 gap-4">
-            {schema.map(field => (
-              <div key={field.key}>
-                <label className="block text-sm font-bold text-gray-700 mb-1">{field.label}</label>
-                {field.type === 'textarea' ? (
-                  <textarea 
-                    value={item[field.key] || ''} 
-                    onChange={e => updateItem(index, field.key, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-blue-500 h-24"
-                  />
-                ) : field.type === 'image' ? (
-                  <div className="space-y-3">
-                    <label className={`
-                      flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors
-                      ${uploadingIndex?.index === index && uploadingIndex?.key === field.key 
-                        ? 'bg-gray-100 border-gray-300' 
-                        : 'bg-white border-[#0284C7] hover:bg-blue-50'}
-                    `}>
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className={`w-8 h-8 mb-2 ${uploadingIndex?.index === index && uploadingIndex?.key === field.key ? 'text-gray-400' : 'text-[#0284C7]'}`} />
-                        <p className="text-sm font-bold text-gray-700">
-                          {uploadingIndex?.index === index && uploadingIndex?.key === field.key ? 'جاري الرفع...' : 'انقر لرفع صورة من الجهاز'}
-                        </p>
-                      </div>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
-                        onChange={(e) => handleImageUpload(e, index, field.key)}
-                        disabled={uploadingIndex?.index === index && uploadingIndex?.key === field.key}
-                      />
+            {schema.map((field) => {
+              const isUploading = uploadingIndex?.index === index && uploadingIndex?.key === field.key;
+              return (
+                <div key={field.key}>
+                  <label className="mb-1 block text-sm font-bold text-gray-700">{field.label}</label>
+
+                  {field.type === 'textarea' ? (
+                    <textarea value={item[field.key] || ''} onChange={(event) => updateItem(index, field.key, event.target.value)} className="h-24 w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-blue-500" />
+                  ) : field.type === 'rich_text' ? (
+                    <div className="bg-white pb-10" dir="rtl">
+                      <ReactQuill theme="snow" modules={richTextModules} value={item[field.key] || ''} onChange={(content) => updateItem(index, field.key, content)} className="min-h-48" />
+                    </div>
+                  ) : field.type === 'image' ? (
+                    <div className="space-y-3">
+                      <label className={`flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 ${isUploading ? 'border-gray-300 bg-gray-100' : 'border-[#0284C7] bg-white hover:bg-blue-50'}`}>
+                        {isUploading ? <Loader2 className="mb-2 h-7 w-7 animate-spin text-gray-400" /> : <Upload className="mb-2 h-7 w-7 text-[#0284C7]" />}
+                        <span className="text-sm font-bold text-gray-700">{isUploading ? 'جاري ضغط ورفع الصورة...' : item[field.key] ? 'استبدال الصورة من الجهاز' : 'رفع صورة من الجهاز'}</span>
+                        <input type="file" accept="image/*" className="hidden" disabled={isUploading} onChange={(event) => { void handleImageUpload(event.target.files?.[0], index, field.key); event.target.value = ''; }} />
+                      </label>
+
+                      {typeof item[field.key] === 'string' && item[field.key].trim() !== '' && (
+                        <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white">
+                          <img loading="lazy" decoding="async" src={item[field.key]} alt={field.label} className="h-40 w-full object-cover" />
+                          <button type="button" onClick={() => updateItem(index, field.key, '')} className="absolute bottom-2 left-2 flex items-center gap-1 rounded bg-red-600 px-3 py-2 text-xs font-bold text-white hover:bg-red-700">
+                            <Trash2 className="h-4 w-4" /> إزالة الصورة
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : field.type === 'boolean' ? (
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input type="checkbox" checked={Boolean(item[field.key])} onChange={(event) => updateItem(index, field.key, event.target.checked)} className="h-5 w-5 rounded border-gray-300 text-[#0284C7] focus:ring-[#0284C7]" />
+                      <span className="text-gray-700">تفعيل</span>
                     </label>
-                    {item[field.key] && typeof item[field.key] === 'string' && item[field.key].trim() !== '' && (
-                      <div className="relative w-full h-40 rounded-lg border border-gray-200 overflow-hidden group">
-                         <img loading="lazy" decoding="async" src={item[field.key]} alt="Preview" className="w-full h-full object-cover" />
-                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                           <p className="text-white text-sm font-bold">تم رفع الصورة بنجاح</p>
-                         </div>
-                      </div>
-                    )}
-                  </div>
-                
-                ) : field.type === 'boolean' ? (
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="checkbox"
-                      checked={!!item[field.key]} 
-                      onChange={e => updateItem(index, field.key, e.target.checked)}
-                      className="w-5 h-5 rounded border-gray-300 text-[#0284C7] focus:ring-[#0284C7]"
-                    />
-                    <span className="text-gray-700 font-bold">{field.label}</span>
-                  </label>
-                ) : (
-                  <input 
-                    type={field.type === 'number' ? 'number' : 'text'}
-                    value={item[field.key] || ''} 
-                    onChange={e => updateItem(index, field.key, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-blue-500"
-                    dir="auto"
-                  />
-                )}
-              </div>
-            ))}
+                  ) : (
+                    <input type={field.type === 'number' ? 'number' : 'text'} value={item[field.key] ?? ''} onChange={(event) => updateItem(index, field.key, field.type === 'number' ? Number(event.target.value) : event.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-blue-500" dir="auto" />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}
-      
-      <button 
-        onClick={addItem}
-        className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors font-bold w-full justify-center"
-      >
-        <Plus className="w-4 h-4" />
-        إضافة عنصر جديد
+
+      <button type="button" onClick={addItem} className="flex w-full items-center justify-center gap-2 rounded-md bg-gray-100 px-4 py-2 font-bold text-gray-700 transition-colors hover:bg-gray-200">
+        <Plus className="h-4 w-4" /> إضافة عنصر جديد
       </button>
     </div>
   );
