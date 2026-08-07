@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { GripVertical, ImagePlus, Loader2, Trash2 } from 'lucide-react';
-import { uploadDashboardImage } from '../../lib/mediaUpload';
+import { deleteDashboardImage, uploadDashboardImage } from '../../lib/mediaUpload';
 
 interface MultiImageUploadFieldProps {
   label: string;
@@ -11,6 +11,7 @@ interface MultiImageUploadFieldProps {
 
 export default function MultiImageUploadField({ label, values, onChange, folder = 'dashboard/gallery' }: MultiImageUploadFieldProps) {
   const [uploading, setUploading] = useState(false);
+  const [removingUrl, setRemovingUrl] = useState<string | null>(null);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -36,6 +37,16 @@ export default function MultiImageUploadField({ label, values, onChange, folder 
     const next = [...values];
     [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
     onChange(next);
+  };
+
+  const remove = async (url: string, index: number) => {
+    setRemovingUrl(url);
+    try {
+      await deleteDashboardImage(url);
+      onChange(values.filter((_, itemIndex) => itemIndex !== index));
+    } finally {
+      setRemovingUrl(null);
+    }
   };
 
   return (
@@ -67,8 +78,8 @@ export default function MultiImageUploadField({ label, values, onChange, folder 
                 <div className="flex gap-1">
                   <button type="button" onClick={() => move(index, -1)} disabled={index === 0} className="rounded bg-gray-100 px-2 py-1 text-xs disabled:opacity-30">↑</button>
                   <button type="button" onClick={() => move(index, 1)} disabled={index === values.length - 1} className="rounded bg-gray-100 px-2 py-1 text-xs disabled:opacity-30">↓</button>
-                  <button type="button" onClick={() => onChange(values.filter((_, itemIndex) => itemIndex !== index))} className="rounded bg-red-50 p-1 text-red-600 hover:bg-red-100" title="إزالة الصورة">
-                    <Trash2 className="h-4 w-4" />
+                  <button type="button" onClick={() => void remove(url, index)} disabled={removingUrl === url} className="rounded bg-red-50 p-1 text-red-600 hover:bg-red-100 disabled:opacity-50" title="حذف الصورة">
+                    {removingUrl === url ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
