@@ -3,6 +3,7 @@ import { Save } from 'lucide-react';
 import type { Content } from './types';
 import { saveContent, supabase } from '../../lib/supabase';
 import { useContent } from '../../contexts/ContentContext';
+import ImageUploadField from './ImageUploadField';
 
 interface Props {
   contents: Content[];
@@ -206,8 +207,8 @@ export default function SiteSettings({ contents, fetchContents }: Props) {
         <div className="space-y-5">
           <h3 className="text-lg font-bold text-gray-800 border-b pb-2">SEO والهوية</h3>
           <Field label="الدومين الأساسي" value={settings.siteDomain} onChange={(value) => handleChange('siteDomain', value)} placeholder="https://example.com" dir="ltr" />
-          <Field label="الشعار الرئيسي" value={settings.logoUrl} onChange={(value) => handleChange('logoUrl', value)} dir="ltr" />
-          <Field label="Favicon" value={settings.faviconUrl} onChange={(value) => handleChange('faviconUrl', value)} dir="ltr" />
+          <ImageUploadField label="الشعار الرئيسي" value={settings.logoUrl} folder="site/branding" onChange={(value) => handleChange('logoUrl', value)} />
+          <ImageUploadField label="Favicon" value={settings.faviconUrl} folder="site/branding" onChange={(value) => handleChange('faviconUrl', value)} helpText="يفضل صورة مربعة PNG أو WEBP." />
           <Field label="Meta Title الافتراضي" value={settings.defaultMetaTitle} onChange={(value) => handleChange('defaultMetaTitle', value)} />
           <TextArea label="Meta Description الافتراضي" value={settings.defaultMetaDescription} onChange={(value) => handleChange('defaultMetaDescription', value)} />
           <TextArea label="الكلمات المفتاحية الافتراضية" value={settings.defaultMetaKeywords} onChange={(value) => handleChange('defaultMetaKeywords', value)} />
