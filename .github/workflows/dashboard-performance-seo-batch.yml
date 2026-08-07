@@ -1,0 +1,52 @@
+name: Dashboard performance SEO batch
+
+on:
+  push:
+    branches:
+      - agent/project-device-uploads
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/project-device-uploads
+
+      - name: Apply batch migration
+        run: python scripts/dashboard-performance-seo-batch.py
+
+      - name: Remove temporary migration files
+        run: |
+          rm -f scripts/dashboard-performance-seo-batch.py
+          rm -f .github/workflows/dashboard-performance-seo-batch.yml
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: TypeScript
+        run: npm run lint
+
+      - name: Production build validation
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_ANON_KEY: ci-placeholder-key
+        run: npm run build
+
+      - name: Commit validated batch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: complete device uploads and improve performance SEO"
+          git push origin HEAD:agent/project-device-uploads
