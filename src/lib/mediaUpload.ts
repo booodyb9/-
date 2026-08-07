@@ -9,6 +9,33 @@ export interface UploadedMedia {
 
 const sanitizeFolder = (folder: string) => folder.replace(/[^a-zA-Z0-9/_-]/g, '').replace(/^\/+|\/+$/g, '') || 'dashboard';
 
+function storagePathFromPublicUrl(url: string): string | null {
+  if (!url) return null;
+  const marker = '/storage/v1/object/public/media/';
+  const index = url.indexOf(marker);
+  if (index === -1) return null;
+
+  try {
+    return decodeURIComponent(url.slice(index + marker.length).split('?')[0]);
+  } catch {
+    return url.slice(index + marker.length).split('?')[0] || null;
+  }
+}
+
+export async function deleteDashboardImage(url: string): Promise<void> {
+  const storagePath = storagePathFromPublicUrl(url);
+  if (!storagePath) return;
+
+  const { error: storageError } = await supabase.storage.from('media').remove([storagePath]);
+  if (storageError) {
+    console.warn('Unable to remove image from Storage:', storageError);
+    return;
+  }
+
+  const { error: rowError } = await supabase.from('media').delete().eq('url', url);
+  if (rowError) console.warn('Unable to remove image row from media table:', rowError);
+}
+
 export async function uploadDashboardImage(file: File, folder = 'dashboard'): Promise<UploadedMedia> {
   if (!file.type.startsWith('image/')) {
     throw new Error('يرجى اختيار ملف صورة صالح.');
