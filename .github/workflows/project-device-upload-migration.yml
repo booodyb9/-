@@ -1,0 +1,53 @@
+name: Project device upload migration
+
+on:
+  push:
+    branches:
+      - agent/project-device-uploads
+
+permissions:
+  contents: write
+
+jobs:
+  migrate-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/project-device-uploads
+
+      - name: Apply scoped Portfolio migration
+        run: python scripts/project-device-upload-migration.py
+
+      - name: Remove temporary migration files
+        run: |
+          rm -f scripts/project-device-upload-migration.py
+          rm -f scripts/README-project-device-uploads.txt
+          rm -f .github/workflows/project-device-upload-migration.yml
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: TypeScript
+        run: npm run lint
+
+      - name: Production build validation
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_ANON_KEY: ci-placeholder-key
+        run: npm run build
+
+      - name: Commit validated project upload changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: upload project images from device"
+          git push origin HEAD:agent/project-device-uploads
