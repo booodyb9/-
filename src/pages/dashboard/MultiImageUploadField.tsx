@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { GripVertical, ImagePlus, Loader2, Trash2 } from 'lucide-react';
-import { deleteDashboardImage, uploadDashboardImage } from '../../lib/mediaUpload';
+import { uploadDashboardImage } from '../../lib/mediaUpload';
 
 interface MultiImageUploadFieldProps {
   label: string;
@@ -11,7 +11,6 @@ interface MultiImageUploadFieldProps {
 
 export default function MultiImageUploadField({ label, values, onChange, folder = 'dashboard/gallery' }: MultiImageUploadFieldProps) {
   const [uploading, setUploading] = useState(false);
-  const [removingUrl, setRemovingUrl] = useState<string | null>(null);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -39,35 +38,14 @@ export default function MultiImageUploadField({ label, values, onChange, folder 
     onChange(next);
   };
 
-  const remove = async (url: string, index: number) => {
-    setRemovingUrl(url);
-    try {
-      await deleteDashboardImage(url);
-      onChange(values.filter((_, itemIndex) => itemIndex !== index));
-    } finally {
-      setRemovingUrl(null);
-    }
-  };
-
   return (
     <div className="space-y-3">
       <label className="block text-sm font-bold text-gray-700">{label}</label>
       <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#0284C7] bg-blue-50/40 px-4 py-5 font-bold text-[#0369A1] hover:bg-blue-50">
         {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
         {uploading ? 'جاري رفع وضغط الصور...' : 'إضافة صور من الجهاز'}
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          disabled={uploading}
-          onChange={(event) => {
-            void handleFiles(event.target.files);
-            event.target.value = '';
-          }}
-        />
+        <input type="file" accept="image/*" multiple className="hidden" disabled={uploading} onChange={(event) => { void handleFiles(event.target.files); event.target.value = ''; }} />
       </label>
-
       {values.length > 0 && (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
           {values.map((url, index) => (
@@ -78,9 +56,7 @@ export default function MultiImageUploadField({ label, values, onChange, folder 
                 <div className="flex gap-1">
                   <button type="button" onClick={() => move(index, -1)} disabled={index === 0} className="rounded bg-gray-100 px-2 py-1 text-xs disabled:opacity-30">↑</button>
                   <button type="button" onClick={() => move(index, 1)} disabled={index === values.length - 1} className="rounded bg-gray-100 px-2 py-1 text-xs disabled:opacity-30">↓</button>
-                  <button type="button" onClick={() => void remove(url, index)} disabled={removingUrl === url} className="rounded bg-red-50 p-1 text-red-600 hover:bg-red-100 disabled:opacity-50" title="حذف الصورة">
-                    {removingUrl === url ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                  </button>
+                  <button type="button" onClick={() => onChange(values.filter((_, itemIndex) => itemIndex !== index))} className="rounded bg-red-50 p-1 text-red-600 hover:bg-red-100" title="إزالة الصورة"><Trash2 className="h-4 w-4" /></button>
                 </div>
               </div>
             </div>
