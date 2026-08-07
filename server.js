@@ -3,145 +3,217 @@ import express from 'express';
 import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
-// Serve static files from the React app
-
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-dotenv.config({ path: '.env.example' });
-
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://ugvdoabczcnxluzxehga.supabase.co';
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in the server environment.');
+}
 
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+
+const DEFAULT_SITE_URL = (process.env.SITE_URL || 'https://riyadh-glass.ai.studio').replace(/\/$/, '');
+
+app.disable('x-powered-by');
 app.use(compression());
-app.use(express.json());
+app.use(express.json({ limit: '256kb' }));
 
-app.post('/api/generate-seo', async (req, res) => {
+function escapeXml(value = '') {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
+}
+
+async function getSiteUrl() {
   try {
-    const { title, content, type } = req.body;
+    const { data } = await supabase
+      .from('site_settings')
+      .select('site_domain')
+      .eq('id', 1)
+      .maybeSingle();
+    const configured = data?.site_domain?.trim();
+    if (configured && /^https?:\/\//i.test(configured)) {
+      return configured.replace(/\/$/, '');
+    }
+  } catch (error) {
+    console.error('Unable to load site domain:', error);
+  }
+  return DEFAULT_SITE_URL;
+}
+
+async function requireAdmin(req, res, next) {
+  const authHeader = req.get('authorization') || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  try {
+    const userClient = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: userData, error: userError } = await userClient.auth.getUser(token);
+    if (userError || !userData.user) {
+      return res.status(401).json({ error: 'Invalid session' });
+    }
+
+    const { data: admin, error: adminError } = await userClient
+      .from('admins')
+      .select('user_id')
+      .eq('user_id', userData.user.id)
+      .maybeSingle();
+
+    if (adminError || !admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    req.adminUser = userData.user;
+    next();
+  } catch (error) {
+    console.error('Admin authorization failed:', error);
+    return res.status(500).json({ error: 'Authorization failed' });
+  }
+}
+
+app.post('/api/generate-seo', requireAdmin, async (req, res) => {
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ error: 'SEO generator is not configured' });
+    }
+
+    const title = typeof req.body?.title === 'string' ? req.body.title.trim().slice(0, 300) : '';
+    const content = typeof req.body?.content === 'string' ? req.body.content.trim().slice(0, 12000) : '';
+    const type = typeof req.body?.type === 'string' ? req.body.type.trim().slice(0, 60) : 'page';
+
     if (!title && !content) {
       return res.status(400).json({ error: 'Title or content is required' });
     }
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    const prompt = `You are an expert SEO copywriter. Based on the following content for a ${type} page, suggest an SEO-optimized meta title (max 60 characters) and meta description (max 160 characters). Respond ONLY with a valid JSON object in this format: {"title": "Suggested Meta Title", "description": "Suggested Meta Description"}. Do not include markdown code block formatting or any other text.
-    
-    Content Title: ${title || ''}
-    Content Body: ${content || ''}`;
+    const prompt = `You are an expert SEO copywriter. Based on the following content for a ${type} page, suggest an SEO-optimized meta title (max 60 characters) and meta description (max 160 characters). Respond ONLY with a valid JSON object in this format: {"title":"Suggested Meta Title","description":"Suggested Meta Description"}.\n\nContent Title: ${title}\nContent Body: ${content}`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-      }
+      config: { responseMimeType: 'application/json' },
     });
 
-    const text = response.text();
-    let jsonResult;
-    try {
-        jsonResult = JSON.parse(text);
-    } catch (e) {
-        // Fallback cleanup if model returned markdown
-        const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        jsonResult = JSON.parse(cleaned);
+    const text = response.text?.() || '{}';
+    const cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+
+    if (typeof parsed?.title !== 'string' || typeof parsed?.description !== 'string') {
+      throw new Error('Unexpected SEO response shape');
     }
 
-    res.json(jsonResult);
+    res.json({
+      title: parsed.title.slice(0, 70),
+      description: parsed.description.slice(0, 180),
+    });
   } catch (error) {
     console.error('Error generating SEO:', error);
     res.status(500).json({ error: 'Failed to generate SEO suggestions' });
   }
 });
 
-app.get('/robots.txt', (req, res) => {
-  res.type('text/plain');
-  res.send(`User-agent: *\nAllow: /\n\nSitemap: https://riyadh-glass.ai.studio/sitemap.xml`);
+app.get('/robots.txt', async (_req, res) => {
+  const siteUrl = await getSiteUrl();
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /dashboard\n\nSitemap: ${siteUrl}/sitemap.xml`);
 });
 
-app.get('/sitemap.xml', async (req, res) => {
+app.get('/sitemap.xml', async (_req, res) => {
   try {
-    const { data } = await supabase.from('contents').select('*');
-    
-    let urls = [];
-    const baseUrl = 'https://riyadh-glass.ai.studio';
-    
-    urls.push(`<url><loc>${baseUrl}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/about</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/services</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/portfolio</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/blog</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/faq</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/testimonials</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/contact</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/request-quote</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/sitemap</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>`);
-    
-    if (data) {
-      for (const item of data) {
-        if (!item.body) continue;
-        try {
-          if (item.key === 'services_items') {
-            const services = JSON.parse(item.body);
-            services.forEach(s => {
-              if (s.seoNoIndex) return;
-              const slug = s.title.replace(/\s+/g, '-').toLowerCase();
-              urls.push(`<url><loc>${baseUrl}/services/${encodeURIComponent(slug)}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
-            });
+    const siteUrl = await getSiteUrl();
+    const { data, error } = await supabase.from('contents').select('key,type,body');
+    if (error) throw error;
+
+    const urls = new Set([
+      '/',
+      '/about',
+      '/services',
+      '/portfolio',
+      '/blog',
+      '/faq',
+      '/testimonials',
+      '/contact',
+      '/request-quote',
+      '/sitemap',
+    ]);
+
+    for (const item of data ?? []) {
+      if (!item.body) continue;
+      try {
+        if (item.key === 'services_items') {
+          for (const service of JSON.parse(item.body)) {
+            if (service?.seoNoIndex || service?.isHidden || !service?.title) continue;
+            const slug = service.slug || service.title.replace(/\s+/g, '-').toLowerCase();
+            urls.add(`/services/${encodeURIComponent(slug)}`);
           }
-          if (item.key === 'blog_items') {
-            const posts = JSON.parse(item.body);
-            posts.forEach(p => {
-              if (p.seoNoIndex) return;
-              const slug = p.title.replace(/\s+/g, '-').toLowerCase();
-              urls.push(`<url><loc>${baseUrl}/blog/${encodeURIComponent(slug)}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>`);
-            });
+        } else if (item.key === 'blog_items') {
+          for (const post of JSON.parse(item.body)) {
+            if (post?.seoNoIndex || post?.isHidden || !post?.title) continue;
+            const slug = post.slug || post.title.replace(/\s+/g, '-').toLowerCase();
+            urls.add(`/blog/${encodeURIComponent(slug)}`);
           }
-          if (item.key === 'premium_portfolio_projects') {
-            const projects = JSON.parse(item.body);
-            projects.forEach(p => {
-              if (p.seoNoIndex) return;
-              const slug = p.title.replace(/\s+/g, '-').toLowerCase();
-              urls.push(`<url><loc>${baseUrl}/portfolio/${encodeURIComponent(slug)}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
-            });
+        } else if (item.key === 'premium_portfolio_projects') {
+          for (const project of JSON.parse(item.body)) {
+            if (project?.seoNoIndex || project?.isHidden || !project?.title) continue;
+            const slug = project.slug || project.title.replace(/\s+/g, '-').toLowerCase();
+            urls.add(`/portfolio/${encodeURIComponent(slug)}`);
           }
-          if (item.key.startsWith('page_') && item.type === 'page') {
-            const pageData = JSON.parse(item.body);
-            if (pageData.status === 'published' && pageData.slug && !pageData.seo?.noindex) {
-              urls.push(`<url><loc>${baseUrl}/${encodeURIComponent(pageData.slug)}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>`);
-            }
+        } else if (item.key.startsWith('page_') && item.type === 'page') {
+          const pageData = JSON.parse(item.body);
+          if (pageData?.status === 'published' && pageData?.slug && !pageData?.seo?.noindex) {
+            urls.add(`/${encodeURIComponent(pageData.slug)}`);
           }
-        } catch (e) {
-          // ignore parse errors
         }
+      } catch (error) {
+        console.warn(`Skipping invalid sitemap content for ${item.key}:`, error);
       }
     }
-    
-    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  ${urls.join('\n  ')}
-</urlset>`;
-    
-    res.header('Content-Type', 'application/xml');
-    res.send(sitemap);
-  } catch (e) {
-    res.status(500).end();
+
+    const sitemapEntries = [...urls]
+      .map((pathname) => `<url><loc>${escapeXml(`${siteUrl}${pathname}`)}</loc></url>`)
+      .join('\n  ');
+
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  ${sitemapEntries}\n</urlset>`;
+    res.type('application/xml').send(sitemap);
+  } catch (error) {
+    console.error('Sitemap generation failed:', error);
+    res.status(500).type('text/plain').send('Unable to generate sitemap');
   }
 });
 
-app.use(express.static(path.join(__dirname, 'dist'), { maxAge: '1y' }));
+app.use(
+  express.static(path.join(__dirname, 'dist'), {
+    maxAge: '1y',
+    immutable: true,
+    setHeaders(res, filePath) {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    },
+  }),
+);
 
-// The "catchall" handler: for any request that doesn't
-// match one above, send back React's index.html file.
-app.use((req, res) => {
+app.use((_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache');
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 

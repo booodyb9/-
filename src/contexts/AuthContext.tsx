@@ -1,13 +1,12 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import type { User, Session } from '@supabase/supabase-js';
+import type { AuthError, Session, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signInWithEmail: (e: string, p: string) => Promise<{error: any}>;
-  signUpWithEmail: (e: string, p: string) => Promise<{error: any}>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   logout: () => Promise<void>;
   token: string | null;
   isAdmin: boolean;
@@ -21,10 +20,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-useEffect(() => {
+  useEffect(() => {
     let mounted = true;
 
-    const checkAdmin = async (userId: string | undefined) => {
+    const checkAdmin = async (userId?: string) => {
       if (!userId) {
         if (mounted) {
           setIsAdmin(false);
@@ -33,62 +32,44 @@ useEffect(() => {
         return;
       }
 
-      try {
-        const { data, error } = await supabase
-          .from('admins')
-          .select('user_id')
-          .eq('user_id', userId)
-          .single();
+      const { data, error } = await supabase
+        .from('admins')
+        .select('user_id')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-        if (mounted) {
-          setIsAdmin(!!data);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-        if (mounted) {
-          setIsAdmin(false);
-          setLoading(false);
-        }
+      if (!mounted) return;
+
+      if (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      } else {
+        setIsAdmin(Boolean(data));
       }
+      setLoading(false);
     };
 
-    const initializeAuth = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (mounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await checkAdmin(session.user.id);
-        } else {
-          setIsAdmin(false);
-          setLoading(false);
-        }
-      }
+    const applySession = async (nextSession: Session | null) => {
+      if (!mounted) return;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      setLoading(true);
+      await checkAdmin(nextSession?.user.id);
     };
 
-    initializeAuth();
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.error('Error restoring auth session:', error);
+        if (mounted) setLoading(false);
+        return;
+      }
+      void applySession(data.session);
+    });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (mounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // If login happens or state changes, we might briefly be loading again
-          // but let's just do a check without showing a loading spinner to avoid flashing
-          // Actually, we probably should show a loader or just check silently
-          setLoading(true);
-          await checkAdmin(session.user.id);
-        } else {
-          setIsAdmin(false);
-          setLoading(false);
-        }
-      }
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      void applySession(nextSession);
     });
 
     return () => {
@@ -97,52 +78,28 @@ useEffect(() => {
     };
   }, []);
 
-const signInWithEmail = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      return { error };
-    } catch (error) {
-      console.error("Error signing in", error);
-      return { error };
-    }
-  };
-
-  const signUpWithEmail = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      return { error };
-    } catch (error) {
-      console.error("Error signing up", error);
-      return { error };
-    }
+  const signInWithEmail = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error };
   };
 
   const logout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-    } catch (error) {
-      console.error("Error signing out", error);
-    }
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      session,
-      loading, 
-      signInWithEmail,
-       signUpWithEmail, 
-      logout, 
-      token: session?.access_token || null, 
-      isAdmin 
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        signInWithEmail,
+        logout,
+        token: session?.access_token ?? null,
+        isAdmin,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -150,9 +107,8 @@ const signInWithEmail = async (email: string, password: string) => {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }
-

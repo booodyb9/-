@@ -1,6 +1,6 @@
-import { memo, useState } from 'react';
-import { Mail } from 'lucide-react';
-import { Message } from './types'; // We'll create this
+import { memo } from 'react';
+import { Mail, Phone } from 'lucide-react';
+import { Message } from './types';
 
 interface MessagesProps {
   messages: Message[];
@@ -20,26 +20,26 @@ const Messages = memo(({ messages, loading }: MessagesProps) => {
           الرسائل الواردة
         </h2>
         <span className="bg-blue-50 text-[#0284C7] px-3 py-1 rounded-full text-sm font-bold">
-          {(messages || []).length} رسالة
+          {messages.length} رسالة
         </span>
       </div>
-      
+
       <div className="divide-y divide-gray-200">
-        {(messages || []).length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            لا توجد رسائل جديدة
-          </div>
+        {messages.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">لا توجد رسائل جديدة</div>
         ) : (
-          (messages || []).map((msg) => (
+          messages.map((msg) => (
             <div key={msg.id} className="p-6 hover:bg-gray-50 transition-colors">
-              <div className="flex justify-between items-start mb-2">
+              <div className="flex justify-between items-start gap-4 mb-2">
                 <div>
                   <h3 className="font-bold text-gray-900">{msg.name}</h3>
-                  <a href={`mailto:${msg.email}`} className="text-sm text-[#0284C7] hover:underline">
-                    {msg.email}
+                  <a href={`tel:${msg.phone}`} className="text-sm text-[#0284C7] hover:underline inline-flex items-center gap-1" dir="ltr">
+                    <Phone className="w-4 h-4" />
+                    {msg.phone}
                   </a>
+                  {msg.service && <p className="text-xs text-gray-500 mt-1">الخدمة: {msg.service}</p>}
                 </div>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 whitespace-nowrap">
                   {new Date(msg.created_at).toLocaleDateString('ar-SA')}
                 </span>
               </div>
