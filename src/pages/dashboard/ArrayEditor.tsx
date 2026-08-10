@@ -3,6 +3,9 @@ import { Plus, Trash2, ChevronUp, ChevronDown, Upload, Sparkles, Loader2 } from 
 import imageCompression from 'browser-image-compression';
 import { supabase } from '../../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
+import { inferMediaType, parseJsonArrayStrict } from './dashboard-utils.mjs';
 
 
 interface ArrayEditorProps {
@@ -11,13 +14,14 @@ interface ArrayEditorProps {
   schema: {
     key: string;
     label: string;
-    type: 'text' | 'textarea' | 'image' | 'number' | 'boolean';
+    type: 'text' | 'textarea' | 'rich_text' | 'image' | 'number' | 'boolean';
   }[];
   token?: string | null;
 }
 
 export default function ArrayEditor({ value, onChange, schema, token }: ArrayEditorProps) {
   const [items, setItems] = useState<any[]>([]);
+  const [parseError, setParseError] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<{index: number, key: string} | null>(null);
 
   const [generatingSEO, setGeneratingSEO] = useState<number | null>(null);
@@ -64,19 +68,12 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
 
   useEffect(() => {
     try {
-      if (value) {
-        const parsed = JSON.parse(value);
-        if (Array.isArray(parsed)) {
-          setItems(parsed);
-        } else {
-          setItems([]);
-        }
-      } else {
-        setItems([]);
-      }
+      setItems(parseJsonArrayStrict(value));
+      setParseError(false);
     } catch (e) {
       console.error("Failed to parse array JSON", e);
       setItems([]);
+      setParseError(true);
     }
   }, [value]);
 
@@ -88,7 +85,7 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
   const addItem = () => {
     const newItem: any = {};
     schema.forEach(field => {
-      newItem[field.key] = field.type === 'number' ? 0 : '';
+      newItem[field.key] = field.type === 'number' ? 0 : field.type === 'boolean' ? false : '';
     });
     notifyChange([...items, newItem]);
   };
@@ -102,8 +99,7 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
   };
 
   const updateItem = (index: number, key: string, val: any) => {
-    const newItems = [...items];
-    newItems[index][key] = val;
+    const newItems = items.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: val } : item);
     notifyChange(newItems);
   };
 
@@ -144,11 +140,16 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
       const newImage = { 
          name: file.name,
          url: data.publicUrl,
-         storage_path: `media/${filePath}`
+         storage_path: `media/${filePath}`,
+         type: inferMediaType(file),
+         size: compressedFile.size,
        };
       
       const { error: insertError } = await supabase.from('media').insert([newImage]);
-      if (insertError) console.error("Media insert error:", insertError);
+      if (insertError) {
+        await supabase.storage.from('media').remove([filePath]);
+        throw insertError;
+      }
       updateItem(index, key, newImage.url);
     } catch (error) {
       console.error("Upload error:", error);
@@ -158,6 +159,14 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
       e.target.value = '';
     }
   };
+
+  if (parseError) {
+    return (
+      <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg p-4">
+        تعذر فتح هذا المحتوى لأن JSON غير صالح. تم إيقاف التعديل لحماية البيانات من الاستبدال بقائمة فارغة.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -212,6 +221,15 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
                     onChange={e => updateItem(index, field.key, e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-blue-500 h-24"
                   />
+                ) : field.type === 'rich_text' ? (
+                  <div className="bg-white mb-12" dir="rtl">
+                    <ReactQuill
+                      theme="snow"
+                      value={item[field.key] ?? ''}
+                      onChange={value => updateItem(index, field.key, value)}
+                      className="h-56"
+                    />
+                  </div>
                 ) : field.type === 'image' ? (
                   <div className="space-y-3">
                     <label className={`
@@ -257,8 +275,8 @@ export default function ArrayEditor({ value, onChange, schema, token }: ArrayEdi
                 ) : (
                   <input 
                     type={field.type === 'number' ? 'number' : 'text'}
-                    value={item[field.key] || ''} 
-                    onChange={e => updateItem(index, field.key, e.target.value)}
+                    value={item[field.key] ?? ''}
+                    onChange={e => updateItem(index, field.key, field.type === 'number' && e.target.value !== '' ? Number(e.target.value) : e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-blue-500"
                     dir="auto"
                   />

@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import { useContent } from '../contexts/ContentContext';
 import { supabase } from '../lib/supabase';
+import { buildMessagePayload } from '../pages/dashboard/dashboard-utils.mjs';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -32,12 +33,9 @@ export default function Contact() {
     setStatus('submitting');
     
     try {
-      const { error } = await supabase.from('messages').insert([{
-        name: formData.name,
-        email: formData.phone, // storing phone in email field as in original
-        message: `[الخدمة: ${formData.service}] - ${formData.message}`,
-        is_read: false
-      }]);
+      const { error } = await supabase.from('messages').insert([
+        buildMessagePayload({ ...formData, source: 'نموذج التواصل' }),
+      ]);
       if (error) throw error;
       
       setStatus('success');

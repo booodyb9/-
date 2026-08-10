@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import ErrorBoundary from '../components/ErrorBoundary';
+import { Helmet } from 'react-helmet-async';
 import DashboardLayout from './dashboard/DashboardLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { useContent } from '../contexts/ContentContext';
-import { LogOut, Edit3, Cloud, Image, Mail, Upload } from 'lucide-react';
 import Messages from './dashboard/Messages';
 import MediaLibrary from './dashboard/MediaLibrary';
 import DriveBackup from './dashboard/DriveBackup';
@@ -21,18 +21,15 @@ import { Message, Content, MediaFile } from './dashboard/types';
 import { supabase } from '../lib/supabase';
 
 export default function Dashboard() {
-  const { user, loading, signInWithEmail, signUpWithEmail, logout, token, isAdmin } = useAuth();
+  const { user, loading, signInWithEmail, logout, token, isAdmin } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
 
   const handleAuth = async (e: import("react").FormEvent) => {
     e.preventDefault();
     setAuthError('');
-    const result = isSignUp 
-      ? await signUpWithEmail(email, password)
-      : await signInWithEmail(email, password);
+    const result = await signInWithEmail(email, password);
     
     if (result.error) {
       setAuthError(result.error.message || 'حدث خطأ في المصادقة');
@@ -43,7 +40,7 @@ export default function Dashboard() {
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
-  const [activeTab, setActiveTab] = useState<'home' | 'messages' | 'content' | 'pages' | 'drive' | 'media' | 'bulk_upload' | 'forms' | 'settings' | 'services' | 'portfolio' | 'blog' | 'testimonials' | 'faq' | 'partners' | 'homepage_builder' | 'navigation' | 'seo' | 'social' | 'users' | 'roles' | 'activity' | 'backup'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'messages' | 'content' | 'pages' | 'media' | 'bulk_upload' | 'forms' | 'settings' | 'services' | 'portfolio' | 'blog' | 'testimonials' | 'faq' | 'partners' | 'homepage_builder' | 'navigation' | 'seo' | 'social' | 'backup' | 'performance'>('home');
   const [isBackingUp, setIsBackingUp] = useState(false);
   
 
@@ -52,12 +49,33 @@ export default function Dashboard() {
     try {
       const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      setMessages(data as any);
+      setMessages((data || []) as Message[]);
     } catch (error) {
       console.error("Failed to fetch messages:", error);
     } finally {
       setLoadingMessages(false);
     }
+  }, []);
+
+  const markMessageRead = useCallback(async (id: string | number) => {
+    const { error } = await supabase.from('messages').update({ is_read: true }).eq('id', id);
+    if (error) {
+      console.error('Failed to mark message as read:', error);
+      alert('تعذر تحديث الرسالة');
+      return;
+    }
+    setMessages(current => current.map(message => message.id === id ? { ...message, is_read: true } : message));
+  }, []);
+
+  const deleteMessage = useCallback(async (id: string | number) => {
+    if (!confirm('هل أنت متأكد من حذف الرسالة؟')) return;
+    const { error } = await supabase.from('messages').delete().eq('id', id);
+    if (error) {
+      console.error('Failed to delete message:', error);
+      alert('تعذر حذف الرسالة');
+      return;
+    }
+    setMessages(current => current.filter(message => message.id !== id));
   }, []);
 
   
@@ -120,6 +138,11 @@ export default function Dashboard() {
 
   if (!user || !isAdmin) {
     return (
+      <>
+      <Helmet>
+        <title>تسجيل دخول الإدارة</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">لوحة التحكم</h2>
@@ -151,18 +174,8 @@ export default function Dashboard() {
                 type="submit"
                 className="w-full bg-[#0284C7] text-white py-3 px-4 rounded-md hover:bg-[#0369A1] transition-colors font-bold mt-4"
               >
-                {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
+                تسجيل الدخول
               </button>
-              <div className="mt-4 text-sm text-gray-600">
-                {isSignUp ? 'لديك حساب بالفعل؟ ' : 'ليس لديك حساب؟ '}
-                <button 
-                  type="button" 
-                  onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-[#0284C7] font-bold hover:underline"
-                >
-                  {isSignUp ? 'تسجيل الدخول' : 'إنشاء حساب'}
-                </button>
-              </div>
             </form>
           ) : (
             <>
@@ -177,6 +190,7 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+      </>
     );
   }
 
@@ -194,7 +208,7 @@ export default function Dashboard() {
   return (
     <DashboardLayout activeTab={activeTab} setActiveTab={setActiveTab as any}>
       {activeTab === 'home' && <ErrorBoundary><DashboardHome messages={messages} contents={contents} mediaFiles={mediaFiles} /></ErrorBoundary>}
-      {activeTab === 'messages' && <ErrorBoundary><Messages messages={messages} loading={loadingMessages} /></ErrorBoundary>}
+      {activeTab === 'messages' && <ErrorBoundary><Messages messages={messages} loading={loadingMessages} onMarkRead={markMessageRead} onDelete={deleteMessage} /></ErrorBoundary>}
       {activeTab === 'media' && <ErrorBoundary><MediaLibrary mediaFiles={mediaFiles} fetchMedia={fetchMedia} /></ErrorBoundary>}
       {activeTab === 'bulk_upload' && <ErrorBoundary><BulkGalleryUpload token={token as any} contents={contents} fetchContents={fetchContents} fetchMedia={fetchMedia as any} /></ErrorBoundary>}
       {activeTab === 'backup' && <ErrorBoundary><DriveBackup isBackingUp={isBackingUp} accessToken={token as any} backupToDrive={backupToDrive} /></ErrorBoundary>}

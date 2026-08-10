@@ -34,7 +34,6 @@ export default function Footer() {
             <li><Link to="/blog">المدونة</Link></li>
             <li><Link to="/faq">الأسئلة الشائعة</Link></li>
             <li><Link to="/contact">تواصل معنا</Link></li>
-            <li><Link to="/dashboard" className="text-gray-500 hover:text-white">لوحة التحكم</Link></li>
           </ul>
         </div>
         <div>

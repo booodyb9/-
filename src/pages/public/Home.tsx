@@ -9,6 +9,7 @@ import GallerySlider from '../../components/GallerySlider';
 import Blog from '../../components/Blog';
 import SectionCTA from '../../components/SectionCTA';
 import Footer from '../../components/Footer';
+import { buildMessagePayload } from '../dashboard/dashboard-utils.mjs';
 
 export default function Home() {
   const { getContent } = useContent();
@@ -242,16 +243,18 @@ export default function Home() {
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase.from('leads').insert([{
-        name,
-        phone,
-        service: service || null,
-        message: message || null,
-        calc_area: calcArea || null,
-        calc_type: calcType || null,
-        calc_price: calcResult.total || null,
-        source: 'website'
-      }]);
+      const calculatorDetails = calcResult.total
+        ? `المساحة: ${calcArea || '-'} م²، النوع: ${calcType || '-'}، التقدير: ${calcResult.total} ر.س.`
+        : '';
+      const { error } = await supabase.from('messages').insert([
+        buildMessagePayload({
+          name,
+          phone,
+          service,
+          message: [message, calculatorDetails].filter(Boolean).join(' | '),
+          source: 'النموذج الرئيسي',
+        }),
+      ]);
       
       if (error) throw error;
       

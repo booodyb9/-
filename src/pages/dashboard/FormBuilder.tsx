@@ -3,6 +3,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { saveContent } from '../../lib/supabase';
 import { Plus, Trash2, Edit2, FileText, Settings, GripVertical } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { removeById, upsertById } from './dashboard-utils.mjs';
 
 const DraggableAny = Draggable as any;
 
@@ -47,9 +48,11 @@ export default function FormBuilder() {
     try {
       await saveContent('custom_forms', 'Custom Forms', 'json', bodyStr);
       refreshContent();
+      return true;
     } catch (e) {
       console.error('Failed to save forms', e);
       alert('حدث خطأ أثناء الحفظ');
+      return false;
     }
   };
 
@@ -74,9 +77,9 @@ export default function FormBuilder() {
           <div className="flex gap-2">
             <button onClick={() => setEditingForm(null)} className="px-4 py-2 border rounded">إلغاء</button>
             <button 
-              onClick={() => {
-                saveFormsToDb(forms.map(f => f.id === editingForm.id ? editingForm : f));
-                setEditingForm(null);
+              onClick={async () => {
+                const saved = await saveFormsToDb(upsertById(forms, editingForm));
+                if (saved) setEditingForm(null);
               }} 
               className="px-4 py-2 bg-[#0284C7] text-white rounded font-bold"
             >
@@ -172,6 +175,24 @@ export default function FormBuilder() {
                                 حقل إلزامي
                               </label>
                             </div>
+                            {field.type === 'select' && (
+                              <div className="md:col-span-3">
+                                <label className="block text-xs mb-1">خيارات القائمة (خيار في كل سطر)</label>
+                                <textarea
+                                  value={(field.options || []).join('\n')}
+                                  onChange={e => {
+                                    const newFields = [...(editingForm.fields || [])];
+                                    newFields[index] = {
+                                      ...newFields[index],
+                                      options: e.target.value.split('\n').map(option => option.trim()).filter(Boolean),
+                                    };
+                                    setEditingForm({...editingForm, fields: newFields});
+                                  }}
+                                  className="w-full border p-1.5 rounded text-sm"
+                                  rows={3}
+                                />
+                              </div>
+                            )}
                           </div>
                           <button 
                             onClick={() => {
@@ -225,7 +246,9 @@ export default function FormBuilder() {
               </button>
               <button 
                 onClick={() => {
-                  if(confirm('Are you sure?')) setForms(forms.filter(f => f.id !== form.id))
+                  if (confirm('هل أنت متأكد من حذف النموذج؟')) {
+                    saveFormsToDb(removeById(forms, form.id));
+                  }
                 }} 
                 className="p-2 text-red-600 hover:bg-red-50 rounded"
               >

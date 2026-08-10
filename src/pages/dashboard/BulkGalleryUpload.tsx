@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Content } from './types';
 import { useContent } from '../../contexts/ContentContext';
+import { inferMediaType, parseJsonArrayStrict } from './dashboard-utils.mjs';
 
 interface BulkGalleryUploadProps {
   token: string | null;
@@ -45,6 +46,7 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
     setProgress({ total: files.length, current: 0, failed: 0 });
     
     const newGalleryItems = [];
+    const uploadedAssets: { filePath: string; storagePath: string }[] = [];
     let current = 0;
     let failed = 0;
     
@@ -67,11 +69,17 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
         const newImage = { 
           name: file.name,
           url: pubData.publicUrl,
-          storage_path: `media/${filePath}`
+          storage_path: `media/${filePath}`,
+          type: inferMediaType(file),
+          size: compressedFile.size,
         };
         
         const { error: insertError } = await supabase.from('media').insert([newImage]);
-        if (insertError) console.error("Media insert error:", insertError);
+        if (insertError) {
+          await supabase.storage.from('media').remove([filePath]);
+          throw insertError;
+        }
+        uploadedAssets.push({ filePath, storagePath: newImage.storage_path });
         
         const newId = uuidv4();
         newGalleryItems.push({
@@ -103,18 +111,14 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
     
     if (newGalleryItems.length > 0) {
       try {
-        const { data: currentContentData } = await supabase.from('contents').select('*').eq('key', 'premium_portfolio_projects').single();
+        const { data: currentContentData, error: contentError } = await supabase
+          .from('contents')
+          .select('*')
+          .eq('key', 'premium_portfolio_projects')
+          .maybeSingle();
+        if (contentError) throw contentError;
         
-                let projects = [];
-        if (currentContentData && currentContentData.body) {
-           try {
-             projects = JSON.parse(currentContentData.body);
-             if (!Array.isArray(projects)) projects = [];
-           } catch (e) {
-             console.error("Failed to parse projects in bulk upload", e);
-             projects = [];
-           }
-        }
+        let projects = parseJsonArrayStrict(currentContentData?.body || '[]');
         
         projects = [...projects, ...newGalleryItems];
         
@@ -124,13 +128,21 @@ const BulkGalleryUpload = memo(({ token, contents, fetchContents, fetchMedia }: 
         refreshContent();
       } catch (error) {
         console.error("Error saving to supabase:", error);
+        if (uploadedAssets.length > 0) {
+          await supabase.storage.from('media').remove(uploadedAssets.map(asset => asset.filePath));
+          await supabase.from('media').delete().in('storage_path', uploadedAssets.map(asset => asset.storagePath));
+        }
+        failed += newGalleryItems.length;
+        current = Math.max(0, current - newGalleryItems.length);
+        setProgress({ total: files.length, current, failed });
+        alert('تعذر حفظ معرض الأعمال. تم التراجع عن الصور المرفوعة لحماية البيانات الحالية.');
       }
     }
     
     setUploading(false);
     setTimeout(() => setProgress(null), 3000);
     e.target.value = '';
-  }, [selectedCategory, fetchMedia]);
+  }, [selectedCategory, fetchMedia, refreshContent, updateContent]);
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
