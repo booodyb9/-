@@ -7,6 +7,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { saveContent, supabase } from '../../lib/supabase';
 import imageCompression from 'browser-image-compression';
 import { useContent } from '../../contexts/ContentContext';
+import { createUniqueCopySlug, hasDuplicateSlug, inferMediaType } from './dashboard-utils.mjs';
 
 interface Props {
   contents: Content[];
@@ -103,8 +104,18 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
       
       const { data } = supabase.storage.from('media').getPublicUrl(fileName);
       
-      const newImage = { name: file.name, url: data.publicUrl, storage_path: `media/${fileName}` };
-      await supabase.from('media').insert([newImage]);
+      const newImage = {
+        name: file.name,
+        url: data.publicUrl,
+        storage_path: `media/${fileName}`,
+        type: inferMediaType(file),
+        size: compressedFile.size,
+      };
+      const { error: mediaError } = await supabase.from('media').insert([newImage]);
+      if (mediaError) {
+        await supabase.storage.from('media').remove([fileName]);
+        throw mediaError;
+      }
       
       setCurrentProject({ ...currentProject, [fieldName]: data.publicUrl });
     } catch (error) {
@@ -114,7 +125,6 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
   };
 
   const saveProjects = async (newProjects: PortfolioProject[]) => {
-
     setSaving(true);
     try {
       await saveContent('premium_portfolio_projects', 'Premium Portfolio Projects', 'json', JSON.stringify(newProjects));
@@ -125,11 +135,14 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
       fetchContents();
       setSuccessMessage('تم الحفظ بنجاح');
       setTimeout(() => setSuccessMessage(null), 3000);
+      return true;
     } catch (e) {
       console.error(e);
       alert('حدث خطأ أثناء الحفظ');
+      return false;
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const handleDragEnd = (result: any) => {
@@ -171,8 +184,7 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
   };
 
   const handleEdit = (project: PortfolioProject) => {
-    if (!project.slug) project.slug = project.id;
-    setCurrentProject({ ...project });
+    setCurrentProject({ ...project, slug: project.slug || project.id });
     setIsEditing(true);
   };
 
@@ -189,7 +201,7 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
       ...project,
       id: uuidv4(),
       title: project.title + ' (نسخة)',
-      slug: project.slug + '-copy',
+      slug: createUniqueCopySlug(project.slug || project.id, projects.map(item => item.slug)),
       order: projects.length
     };
     const updated = [...projects, duplicated];
@@ -213,9 +225,14 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
     saveProjects(updated);
   };
 
-  const saveCurrentProject = () => {
+  const saveCurrentProject = async () => {
     if (!currentProject.title || !currentProject.slug) {
       alert('الرجاء إدخال عنوان المشروع ورابطه (Slug)');
+      return;
+    }
+
+    if (hasDuplicateSlug(currentProject.slug, projects, currentProject.id)) {
+      alert('رابط المشروع مستخدم بالفعل. اختر رابطاً مختلفاً.');
       return;
     }
     
@@ -229,8 +246,8 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
     }
     
     setProjects(updated);
-    saveProjects(updated);
-    setIsEditing(false);
+    const saved = await saveProjects(updated);
+    if (saved) setIsEditing(false);
   };
 
   return (
@@ -326,14 +343,20 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">صورة الغلاف (Cover Image URL)</label>
-            <input
-              type="text"
-              value={currentProject.coverImage || ''}
-              onChange={e => setCurrentProject({ ...currentProject, coverImage: e.target.value })}
-              className="w-full border p-2 rounded"
-              dir="ltr"
-            />
+            <label className="block text-sm font-medium mb-1">صورة الغلاف</label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                value={currentProject.coverImage || ''}
+                onChange={e => setCurrentProject({ ...currentProject, coverImage: e.target.value })}
+                className="flex-1 border p-2 rounded"
+                dir="ltr"
+              />
+              <label className="bg-gray-100 px-4 py-2 rounded cursor-pointer hover:bg-gray-200 border font-bold text-center">
+                رفع صورة
+                <input type="file" className="hidden" accept="image/*" onChange={e => handleImageUpload(e, 'coverImage')} />
+              </label>
+            </div>
           </div>
 
           <div>
@@ -349,23 +372,19 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <div>
               <label className="block text-sm font-medium mb-1">صورة قبل (Before Image URL)</label>
-              <input
-                type="text"
-                value={currentProject.beforeImage || ''}
-                onChange={e => setCurrentProject({ ...currentProject, beforeImage: e.target.value })}
-                className="w-full border p-2 rounded"
-                dir="ltr"
-              />
+              <input type="text" value={currentProject.beforeImage || ''} onChange={e => setCurrentProject({ ...currentProject, beforeImage: e.target.value })} className="w-full border p-2 rounded mb-2" dir="ltr" />
+              <label className="block bg-gray-100 px-4 py-2 rounded cursor-pointer hover:bg-gray-200 border font-bold text-center">
+                رفع صورة قبل
+                <input type="file" className="hidden" accept="image/*" onChange={e => handleImageUpload(e, 'beforeImage')} />
+              </label>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">صورة بعد (After Image URL)</label>
-              <input
-                type="text"
-                value={currentProject.afterImage || ''}
-                onChange={e => setCurrentProject({ ...currentProject, afterImage: e.target.value })}
-                className="w-full border p-2 rounded"
-                dir="ltr"
-              />
+              <input type="text" value={currentProject.afterImage || ''} onChange={e => setCurrentProject({ ...currentProject, afterImage: e.target.value })} className="w-full border p-2 rounded mb-2" dir="ltr" />
+              <label className="block bg-gray-100 px-4 py-2 rounded cursor-pointer hover:bg-gray-200 border font-bold text-center">
+                رفع صورة بعد
+                <input type="file" className="hidden" accept="image/*" onChange={e => handleImageUpload(e, 'afterImage')} />
+              </label>
             </div>
           </div>
 
@@ -466,11 +485,11 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
             {(provided) => (
               <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
                 {projects.map((project, index) => (
-                  <Draggable draggableId={project.id} index={index}>
+                  <Draggable key={project.id} draggableId={project.id} index={index}>
                   {(provided) => (
                       <div
                         ref={provided.innerRef}
-                        {...provided.draggableProps} key={project.id}
+                        {...provided.draggableProps}
                         className={`flex items-center gap-4 p-4 border rounded-lg bg-white ${project.isHidden ? 'opacity-60' : ''}`}
                       >
                         <div {...provided.dragHandleProps} className="text-gray-400 hover:text-gray-600 cursor-grab">

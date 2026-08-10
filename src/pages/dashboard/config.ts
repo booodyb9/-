@@ -1,8 +1,8 @@
 import { 
-  Home, LayoutDashboard, FileText, Image, Briefcase, 
-  Settings, Users, Shield, Activity, HardDrive, 
+  LayoutDashboard, FileText, Image, Briefcase,
+  Settings, Users, Activity, HardDrive,
   MessageSquare, Star, HelpCircle, Navigation, LayoutTemplate,
-  Search, Link, Map, Share2, FolderOpen
+  Search, Share2, FolderOpen
 } from 'lucide-react';
 
 export const dashboardMenu = [
@@ -45,11 +45,8 @@ export const dashboardMenu = [
     ]
   },
   {
-    group: 'النظام (قريباً)',
+    group: 'النظام',
     items: [
-      { id: 'users', label: 'المستخدمين', icon: Users },
-      { id: 'roles', label: 'الصلاحيات', icon: Shield },
-      { id: 'activity', label: 'سجل النشاطات', icon: Activity },
       { id: 'backup', label: 'النسخ الاحتياطي', icon: HardDrive },
     ]
   }

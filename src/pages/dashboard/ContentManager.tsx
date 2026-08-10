@@ -1,7 +1,7 @@
-import { memo, useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { Edit3, Save } from 'lucide-react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { Content } from './types';
 import ArrayEditor from './ArrayEditor';
 import { useContent } from '../../contexts/ContentContext';
@@ -287,7 +287,7 @@ export default function ContentManager({ contents, fetchContents, token, filterK
     });
   }, [contents]);
 
-  const EditorComponent = memo(({ section }: { section: Section }) => {
+  const renderEditor = (section: Section) => {
     if (editingKey !== section.key || !editingContent) return null;
 
     return (
@@ -295,7 +295,7 @@ export default function ContentManager({ contents, fetchContents, token, filterK
         <h4 className="font-bold text-gray-800 mb-4 flex justify-between items-center">
           تحرير: {section.title}
           <button 
-            onClick={() => setEditingKey(null)}
+            onClick={() => { setEditingKey(null); setEditingContent(null); }}
             className="text-gray-500 hover:text-gray-700 text-sm"
           >
             إلغاء
@@ -332,7 +332,7 @@ export default function ContentManager({ contents, fetchContents, token, filterK
         </div>
       </div>
     );
-  });
+  };
 
   const sectionsToRender = filterKeys ? SECTIONS.filter(s => filterKeys.includes(s.key)) : SECTIONS;
 
@@ -370,7 +370,7 @@ export default function ContentManager({ contents, fetchContents, token, filterK
               )}
             </div>
             
-            <EditorComponent section={section} />
+            {renderEditor(section)}
           </div>
         ))}
       </div>
