@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useContent } from '../contexts/ContentContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectCoverflow, Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -7,33 +8,53 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 export default function GallerySlider() {
-  const slides = [
-    {
-      img: 'https://wfmmedia.com/wp-content/uploads/2024/11/Modern-Glass-Facade-Architecture.webp',
-      title: 'واجهات أبراج الرياض',
-      subtitle: 'FACADES'
-    },
-    {
-      img: 'https://knrslidingdoors.com/wp-content/uploads/2024/05/IMG_3277-scaled.jpg',
-      title: 'قواطع مكتبية عازلة',
-      subtitle: 'PARTITIONS'
-    },
-    {
-      img: 'https://www.glassartdesign.com/wp-content/uploads/2025/05/Glass-Shower-Enclosures.jpg',
-      title: 'شاور بوكس فاخر',
-      subtitle: 'SHOWER'
-    },
-    {
-      img: 'https://glassenterprises.com/wp-content/uploads/2022/11/modern-buildings-with-glass-facade-1024x1024.jpg',
-      title: 'واجهات بانورامية',
-      subtitle: 'FACADES'
-    },
-    {
-      img: 'https://www.viewrail.com/wp-content/uploads/2018/11/172A9943-scaled.jpg',
-      title: 'درابزين زجاجي للسلم',
-      subtitle: 'RAILINGS'
+  const { getContent } = useContent();
+  const portfolioContent = getContent('premium_portfolio_projects');
+  
+  const slides = useMemo(() => {
+    let parsed = [];
+    if (portfolioContent?.body) {
+      try {
+        parsed = JSON.parse(portfolioContent.body);
+      } catch (e) {}
     }
-  ];
+    
+    if (!parsed || parsed.length === 0) {
+      return [
+        {
+          img: 'https://wfmmedia.com/wp-content/uploads/2024/11/Modern-Glass-Facade-Architecture.webp',
+          title: 'واجهات أبراج الرياض',
+          subtitle: 'FACADES'
+        },
+        {
+          img: 'https://knrslidingdoors.com/wp-content/uploads/2024/05/IMG_3277-scaled.jpg',
+          title: 'قواطع مكتبية عازلة',
+          subtitle: 'PARTITIONS'
+        },
+        {
+          img: 'https://www.glassartdesign.com/wp-content/uploads/2025/05/Glass-Shower-Enclosures.jpg',
+          title: 'شاور بوكس فاخر',
+          subtitle: 'SHOWER'
+        },
+        {
+          img: 'https://glassenterprises.com/wp-content/uploads/2022/11/modern-buildings-with-glass-facade-1024x1024.jpg',
+          title: 'واجهات بانورامية',
+          subtitle: 'FACADES'
+        },
+        {
+          img: 'https://www.viewrail.com/wp-content/uploads/2018/11/172A9943-scaled.jpg',
+          title: 'درابزين زجاجي للسلم',
+          subtitle: 'RAILINGS'
+        }
+      ];
+    }
+    
+    return parsed.filter(p => !p.isHidden).slice(0, 8).map(p => ({
+      img: p.coverImage || p.image || 'https://wfmmedia.com/wp-content/uploads/2024/11/Modern-Glass-Facade-Architecture.webp',
+      title: p.title,
+      subtitle: p.category || 'PROJECT'
+    }));
+  }, [portfolioContent]);
 
   return (
     <section className="bg-gray-50 py-20 overflow-hidden" id="gallery-slider">

@@ -7,8 +7,6 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { saveContent, supabase } from '../../lib/supabase';
 import imageCompression from 'browser-image-compression';
 import { useContent } from '../../contexts/ContentContext';
-import ImageUploadField from './ImageUploadField';
-import MultiImageUploadField from './MultiImageUploadField';
 
 interface Props {
   contents: Content[];
@@ -327,33 +325,48 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
             </div>
           </div>
 
-          <ImageUploadField
-            label="صورة الغلاف"
-            value={currentProject.coverImage || ''}
-            folder="portfolio/covers"
-            onChange={(url) => setCurrentProject({ ...currentProject, coverImage: url })}
-          />
+          <div>
+            <label className="block text-sm font-medium mb-1">صورة الغلاف (Cover Image URL)</label>
+            <input
+              type="text"
+              value={currentProject.coverImage || ''}
+              onChange={e => setCurrentProject({ ...currentProject, coverImage: e.target.value })}
+              className="w-full border p-2 rounded"
+              dir="ltr"
+            />
+          </div>
 
-          <MultiImageUploadField
-            label="معرض صور المشروع"
-            values={currentProject.galleryImages || []}
-            folder="portfolio/gallery"
-            onChange={(galleryImages) => setCurrentProject({ ...currentProject, galleryImages })}
-          />
+          <div>
+            <label className="block text-sm font-medium mb-1">معرض الصور (رابط لكل سطر)</label>
+            <textarea
+              value={currentProject.galleryImages?.join('\n') || ''}
+              onChange={e => setCurrentProject({ ...currentProject, galleryImages: e.target.value.split('\n').filter(Boolean) })}
+              className="w-full border p-2 rounded h-32"
+              dir="ltr"
+            />
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ImageUploadField
-              label="صورة قبل التنفيذ"
-              value={currentProject.beforeImage || ''}
-              folder="portfolio/before"
-              onChange={(url) => setCurrentProject({ ...currentProject, beforeImage: url })}
-            />
-            <ImageUploadField
-              label="صورة بعد التنفيذ"
-              value={currentProject.afterImage || ''}
-              folder="portfolio/after"
-              onChange={(url) => setCurrentProject({ ...currentProject, afterImage: url })}
-            />
+             <div>
+              <label className="block text-sm font-medium mb-1">صورة قبل (Before Image URL)</label>
+              <input
+                type="text"
+                value={currentProject.beforeImage || ''}
+                onChange={e => setCurrentProject({ ...currentProject, beforeImage: e.target.value })}
+                className="w-full border p-2 rounded"
+                dir="ltr"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">صورة بعد (After Image URL)</label>
+              <input
+                type="text"
+                value={currentProject.afterImage || ''}
+                onChange={e => setCurrentProject({ ...currentProject, afterImage: e.target.value })}
+                className="w-full border p-2 rounded"
+                dir="ltr"
+              />
+            </div>
           </div>
 
           <div>
@@ -417,12 +430,10 @@ export default function PortfolioManager({ contents, fetchContents, token }: Pro
                 <label className="block text-sm font-medium mb-1">SEO Canonical URL</label>
                 <input type="text" value={currentProject.seoCanonical || ''} onChange={e => setCurrentProject({ ...currentProject, seoCanonical: e.target.value })} className="w-full border p-2 rounded" />
               </div>
-              <ImageUploadField
-                label="SEO OG Image"
-                value={currentProject.seoImage || ''}
-                folder="portfolio/seo"
-                onChange={(seoImage) => setCurrentProject({ ...currentProject, seoImage })}
-              />
+              <div>
+                <label className="block text-sm font-medium mb-1">SEO OG Image</label>
+                <input type="text" value={currentProject.seoImage || ''} onChange={e => setCurrentProject({ ...currentProject, seoImage: e.target.value })} className="w-full border p-2 rounded" />
+              </div>
               <div>
                 <label className="flex items-center gap-2 cursor-pointer mt-6">
                   <input type="checkbox" checked={!!currentProject.seoNoIndex} onChange={e => setCurrentProject({ ...currentProject, seoNoIndex: e.target.checked })} className="w-5 h-5 rounded border-gray-300 text-[#0284C7] focus:ring-[#0284C7]" />

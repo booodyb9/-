@@ -523,7 +523,7 @@ body {
 
 /* Calculator CTA strip */
 .calc-strip {
-  max-width: 1280px; margin: var(--space-16) auto 0;
+  max-width: 1280px; margin: var(--space-16) auto var(--space-16);
   background: var(--neutral-900);
   border-radius: var(--r-xl);
   padding: var(--space-10) var(--space-12);

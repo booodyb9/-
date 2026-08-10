@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-Disallow: /dashboard/
-Sitemap: https://glass-securite-alriyad.netlify.app/sitemap.xml
+Sitemap: https://riyadh-glass.ai.studio/sitemap.xml

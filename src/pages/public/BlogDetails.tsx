@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import WhatsAppInlineCTA from '../../components/WhatsAppInlineCTA';
 import { useContent } from '../../contexts/ContentContext';
 import { Calendar, User, Clock, RefreshCw } from 'lucide-react';
 
@@ -189,7 +190,9 @@ export default function BlogDetails() {
             
             <div className="prose prose-lg max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: addInternalLinks(post.content || post.excerpt || "") }} />
             
-            <div className="mt-12 pt-8 border-t border-gray-100 flex justify-between items-center">
+                                    <WhatsAppInlineCTA message={`مرحباً، أود الاستفسار بخصوص المقال: ${post.title}`} />
+
+                        <div className="mt-12 pt-8 border-t border-gray-100 flex justify-between items-center">
               <div className="flex gap-4">
                 <a href={`https://twitter.com/intent/tweet?text=${post.title}&url=${window.location.href}`} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#0284C7]">
                   مشاركة على X

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import WhatsAppInlineCTA from '../../components/WhatsAppInlineCTA';
 import SectionCTA from '../../components/SectionCTA';
 import { useContent } from '../../contexts/ContentContext';
 
@@ -97,7 +98,9 @@ export default function ServiceDetails() {
             <h1 className="text-4xl font-bold text-gray-900 mb-6">{service.title}</h1>
             <div className="prose prose-lg max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: service.description }} />
             
-            <div className="mt-12">
+                                    <WhatsAppInlineCTA message={`مرحباً، أود الاستفسار عن خدمة: ${service.title}`} />
+
+                        <div className="mt-12">
               <SectionCTA />
               <div className="mt-8 text-center">
                 <Link to="/services" className="bg-gray-100 text-gray-800 px-8 py-3 rounded-md hover:bg-gray-200 transition-colors font-bold inline-block">

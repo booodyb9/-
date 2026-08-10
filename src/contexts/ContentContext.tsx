@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
-import type { Content } from '../pages/dashboard/types';
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
+import { Content } from '../pages/dashboard/types';
 import { supabase } from '../lib/supabase';
 
 interface ContentContextType {
@@ -15,85 +15,97 @@ interface ContentContextType {
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
 
-export interface MediaFile {
-  id: string | number;
-  url: string;
-  name: string;
-  created_at?: string;
-  storage_path?: string;
-}
+export interface MediaFile { id: string; url: string; name: string; created_at: string; storage_path: string; }
 
 export function ContentProvider({ children }: { children: ReactNode }) {
   const [contents, setContents] = useState<Content[]>([]);
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchMedia = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('media')
-      .select('id,name,url,storage_path,created_at')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching media from Supabase:', error);
-      return;
+    const fetchMedia = async () => {
+    try {
+      const { data, error } = await supabase.from('media').select('*').order('created_at', { ascending: false });
+      if (!error && data) {
+        setMediaFiles(data as MediaFile[]);
+      }
+    } catch (e) {
+      console.error(e);
     }
+  };
 
-    setMediaFiles((data ?? []) as MediaFile[]);
-  }, []);
+  const forceRefresh = async () => {
+    await fetchContents();
+    await fetchMedia();
+  };
 
-  const fetchContents = useCallback(async () => {
+  const fetchContents = async () => {
     try {
       const { data, error } = await supabase.from('contents').select('*');
+      // Adding a dummy query to bypass potential aggressive caching in proxies
+      // is not natively supported by supabase js without rpc, 
+      // but realtime + updateContent handles immediate updates now.
       if (error) {
-        console.error('Error fetching contents from Supabase:', error);
-        return;
+        console.error("Error fetching contents from Supabase:", error);
+      } else if (data) {
+        setContents(data as Content[]);
       }
-      setContents((data ?? []) as Content[]);
-    } catch (error) {
-      console.error('Error fetching contents:', error);
+    } catch (err) {
+      console.error("Error fetching contents:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  const forceRefresh = useCallback(async () => {
-    await Promise.all([fetchContents(), fetchMedia()]);
-  }, [fetchContents, fetchMedia]);
-
-  // Public visitors only need one content request. Dashboard saves explicitly refresh
-  // this state, so a permanent Realtime websocket is unnecessary on every page view.
   useEffect(() => {
-    void fetchContents();
-  }, [fetchContents]);
+    fetchContents();
+    fetchMedia();
+    const channel = supabase
+      .channel('contents_changes_ctx')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contents' },
+        (payload) => {
+          fetchContents();
+        }
+      )
+      .subscribe();
 
-  const getContent = useCallback((key: string) => contents.find((content) => content.key === key), [contents]);
+    const mediaChannel = supabase
+      .channel('media_changes_ctx')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'media' },
+        (payload) => {
+          fetchMedia();
+        }
+      )
+      .subscribe();
 
-  const updateContent = useCallback((key: string, body: string) => {
-    setContents((previous) => previous.map((content) => (content.key === key ? { ...content, body } : content)));
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(mediaChannel);
+    };
   }, []);
 
-  const value = useMemo(
-    () => ({
-      contents,
-      loading,
-      getContent,
-      refreshContent: fetchContents,
-      updateContent,
-      mediaFiles,
-      fetchMedia,
-      forceRefresh,
-    }),
-    [contents, loading, getContent, fetchContents, updateContent, mediaFiles, fetchMedia, forceRefresh]
-  );
+  const getContent = (key: string) => contents.find(c => c.key === key);
 
-  return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>;
+  const updateContent = (key: string, body: string) => {
+    setContents(prev => prev.map(c => c.key === key ? { ...c, body } : c));
+  };
+
+    const value = useMemo(() => ({ contents, loading, getContent, refreshContent: fetchContents, updateContent, mediaFiles, fetchMedia, forceRefresh }), [contents, loading, mediaFiles]);
+  return (
+    <ContentContext.Provider value={value}>
+      {children}
+    </ContentContext.Provider>
+  );
 }
 
 export function useContent() {
   const context = useContext(ContentContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useContent must be used within a ContentProvider');
   }
   return context;
 }
+

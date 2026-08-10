@@ -1,16 +1,120 @@
-
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { useContent } from '../../contexts/ContentContext';
 import { supabase } from '../../lib/supabase';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import Navbar from '../../components/Navbar';
 import Hero from '../../components/Hero';
-const GallerySlider = React.lazy(() => import('../../components/GallerySlider'));
-const Blog = React.lazy(() => import('../../components/Blog'));
+import GallerySlider from '../../components/GallerySlider';
+import Blog from '../../components/Blog';
 import SectionCTA from '../../components/SectionCTA';
 import Footer from '../../components/Footer';
 
 export default function Home() {
+  const { getContent } = useContent();
+  const portfolioContent = getContent('premium_portfolio_projects');
+  const servicesContent = getContent('services_items');
+  const testimonialsContent = getContent('testimonials_items');
+  const faqContent = getContent('faq_items');
+
+  
+  const projects = useMemo(() => {
+    let parsed = [];
+    if (portfolioContent?.body) {
+      try { parsed = JSON.parse(portfolioContent.body); } catch (e) {}
+    }
+    if (!parsed || parsed.length === 0) {
+      return [
+        { cat: 'facades', span: 'span-2', img: 'https://wfmmedia.com/wp-content/uploads/2024/11/Modern-Glass-Facade-Architecture.webp', title: 'واجهة برج الأعمال المركزي — العليا', subtitle: 'FACADES · الرياض 2024' },
+        { cat: 'partitions', span: 'span-row', img: 'https://knrslidingdoors.com/wp-content/uploads/2024/05/IMG_3277-scaled.jpg', title: 'قواطع مكتب شركة التقنية', subtitle: 'PARTITIONS · الدمام' },
+        { cat: 'shower', span: '', img: 'https://www.glassartdesign.com/wp-content/uploads/2025/05/Glass-Shower-Enclosures.jpg', title: 'كبائن فيلا المحمدية الفاخرة', subtitle: 'SHOWER · جدة' },
+        { cat: 'facades', span: '', img: 'https://glassenterprises.com/wp-content/uploads/2022/11/modern-buildings-with-glass-facade-1024x1024.jpg', title: 'واجهة المجمع التجاري الذهبي', subtitle: 'FACADES · مكة المكرمة' },
+        { cat: 'mirrors', span: '', img: 'https://www.ibmirror.com/docs/240125_142731_ibmirror_mirror_led_light_min.webp', title: 'مرايا ليد — صالون راقٍ', subtitle: 'MIRRORS · الرياض' },
+        { cat: 'partitions', span: '', img: 'https://www.viewrail.com/wp-content/uploads/2018/11/172A9943-scaled.jpg', title: 'درابزين زجاجي — فيلا النخيل', subtitle: 'RAILINGS · الرياض' }
+      ];
+    }
+    return parsed.filter(p => !p.isHidden).map((p, i) => {
+      let cat = 'facades';
+      if (p.category && p.category.includes('قواطع')) cat = 'partitions';
+      if (p.category && p.category.includes('شاور')) cat = 'shower';
+      if (p.category && p.category.includes('مرايا')) cat = 'mirrors';
+      let span = '';
+      if (i === 0) span = 'span-2';
+      if (i === 1) span = 'span-row';
+      return { cat, span, img: p.coverImage || p.image || 'https://wfmmedia.com/wp-content/uploads/2024/11/Modern-Glass-Facade-Architecture.webp', title: p.title, subtitle: p.category };
+    });
+  }, [portfolioContent]);
+
+  const services = useMemo(() => {
+    let parsed = [];
+    if (servicesContent?.body) {
+      try { parsed = JSON.parse(servicesContent.body); } catch(e) {}
+    }
+    if (!parsed || parsed.length === 0) {
+      return [
+        { img: 'https://ugvdoabczcnxluzxehga.supabase.co/storage/v1/object/public/media/516d5831-d7a5-4cf4-aee2-83774df3f590.jpg', tag: 'FACADES', title: 'الواجهات الزجاجية', desc: 'واجهات كرتن وول واستركشر للمباني التجارية والفنادق. مقاومة الرياح والحرارة بأعلى معايير السلامة.', link: '/services/الواجهات-الزجاجية', delay: 'reveal-delay-1' },
+        { img: 'https://ugvdoabczcnxluzxehga.supabase.co/storage/v1/object/public/media/47c05967-1abd-4b26-900a-f0c97e88ce2b.jpg', tag: 'PARTITIONS', title: 'القواطع المكتبية', desc: 'قواطع زجاجية سيكوريت عازلة للصوت لتقسيم مساحات العمل. فعّالة ومضيئة وبتصاميم حديثة.', link: '/services/القواطع-الزجاجية', delay: 'reveal-delay-2' },
+        { img: 'https://ugvdoabczcnxluzxehga.supabase.co/storage/v1/object/public/media/portfolio/covers/4f1aa8fe-6836-431f-92a6-00c06985a988.webp', tag: 'SHOWER', title: 'كبائن الشاور', desc: 'كبائن استحمام بزجاج سيكوريت 8-12 ملم مع إكسسوارات مقاومة الصدأ. مقاسات ستاندرد أو مخصصة.', link: '/services/كبائن-شاور', delay: 'reveal-delay-3' },
+        { img: 'https://ugvdoabczcnxluzxehga.supabase.co/storage/v1/object/public/media/e9fd27f9-f786-474c-af76-2021bc8db88d.png', tag: 'DOORS', title: 'الأبواب الزجاجية', desc: 'أبواب سيكوريت مفصلية وسحابة أوتوماتيكية للمداخل والمحلات التجارية والفلل.', link: '/services/أبواب-زجاجية', delay: 'reveal-delay-1' },
+        { img: 'https://www.ibmirror.com/docs/240125_142731_ibmirror_mirror_led_light_min.webp', tag: 'MIRRORS', title: 'المرايا الديكورية', desc: 'مرايا ليد وديكورية بأبعاد مخصصة للصالونات والحمامات والصالات. تفصيل دقيق وجودة فائقة.', link: '/services/مرايا-ذكية', delay: 'reveal-delay-2' },
+        { img: 'https://www.viewrail.com/wp-content/uploads/2018/11/172A9943-scaled.jpg', tag: 'RAILINGS', title: 'الدرابزين الزجاجي', desc: 'درابزين زجاجي شفاف للسلالم والبلكونات. أنيق وآمن وبمقاسات تناسب كل تصميم معماري.', link: '/services/درابزين-زجاج', delay: 'reveal-delay-3' }
+      ];
+    }
+    return parsed.filter(s => !s.isHidden).map((s, i) => {
+      let delay = 'reveal-delay-1';
+      if (i % 3 === 1) delay = 'reveal-delay-2';
+      if (i % 3 === 2) delay = 'reveal-delay-3';
+      return {
+        img: s.image || 'https://wfmmedia.com/wp-content/uploads/2024/11/Modern-Glass-Facade-Architecture.webp',
+        tag: s.title ? s.title.split(' ')[0].toUpperCase() : 'SERVICE',
+        title: s.title,
+        desc: s.description,
+        link: `/services/${s.title.replace(/\s+/g, '-').toLowerCase()}`,
+        delay
+      };
+    });
+  }, [servicesContent]);
+
+  const testimonials = useMemo(() => {
+    let parsed = [];
+    if (testimonialsContent?.body) {
+      try { parsed = JSON.parse(testimonialsContent.body); } catch(e) {}
+    }
+    if (!parsed || parsed.length === 0) {
+      return [
+        { text: 'شغل احترافي جداً في تركيب الواجهة الزجاجية للفيلا. التزموا بالوقت المحدد وكانت النتيجة أفضل مما توقعت. المواد المستخدمة فعلاً بجودة عالية.', name: 'م. خالد الدوسري', role: 'صاحب فيلا — الملقا، الرياض', initial: 'خ' },
+        { text: 'تعاملنا معهم في تركيب قواطع زجاجية لمقر الشركة الجديد. الفريق متعاون والمقاسات كانت دقيقة بالملي. أنصح بشدة بالتعامل معهم.', name: 'سارة العتيبي', role: 'مديرة مشاريع — شركة تمكين', initial: 'س' },
+        { text: 'ركبوا لنا كبائن شاور للحمامات واجهة زجاجية للمسبح. شغل نظيف ومرتب وأسعارهم تنافسية مقارنة بالسوق. شكراً لكم.', name: 'أبو فيصل', role: 'عميل — الياسمين، الرياض', initial: 'ف' }
+      ];
+    }
+    return parsed.filter(t => !t.isHidden).map(t => ({
+      text: t.content,
+      name: t.name,
+      role: t.role,
+      initial: t.name ? t.name.charAt(0) : 'ع'
+    }));
+  }, [testimonialsContent]);
+
+  const faqs = useMemo(() => {
+    let parsed = [];
+    if (faqContent?.body) {
+      try { parsed = JSON.parse(faqContent.body); } catch(e) {}
+    }
+    if (!parsed || parsed.length === 0) {
+      return [
+        { q: 'ما هو أفضل نوع زجاج للواجهات التجارية؟', a: 'للواجهات التجارية نوصي بالزجاج المزدوج (Double Glass) لعزله الحراري والصوتي الممتاز، مع زجاج سيكوريت بسماكة 10-12 ملم للأبواب.' },
+        { q: 'كم يستغرق تنفيذ مشروع كبائن شاور؟', a: 'كبائن الشاور الستاندرد تستغرق 1-2 يوم من أخذ المقاسات حتى التركيب النهائي.' },
+        { q: 'هل تقدمون خدمة المعاينة المجانية؟', a: 'نعم، نقدم معاينة ميدانية مجانية لجميع المشاريع داخل الرياض.' },
+        { q: 'ما هي مدة وشروط الضمان؟', a: 'نقدم ضماناً شاملاً يصل إلى 10 سنوات على جودة الزجاج المستخدم، وضماناً على التركيب والإكسسوارات.' }
+      ];
+    }
+    return parsed.filter(f => !f.isHidden).map(f => ({
+      q: f.question,
+      a: f.answer
+    }));
+  }, [faqContent]);
+
+
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCalcOpen, setIsCalcOpen] = useState(false);
@@ -206,38 +310,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="services">
-        <div className="section-header reveal">
-          <div className="section-tag">SERVICES · خدماتنا</div>
-          <h2 className="section-h2">حلول زجاجية لكل احتياج</h2>
-          <p className="section-desc">من الواجهات الشاهقة إلى تفاصيل الحمام — نغطي كل ما يتعلق بالزجاج في مشروعك</p>
-        </div>
-
-        <div className="services-grid">
-          {[
-            { img: 'https://wfmmedia.com/wp-content/uploads/2024/11/Modern-Glass-Facade-Architecture.webp', tag: 'FACADES', title: 'الواجهات الزجاجية', desc: 'واجهات كرتن وول واستركشر للمباني التجارية والفنادق. مقاومة الرياح والحرارة بأعلى معايير السلامة.', link: '/services/الواجهات-الزجاجية', delay: 'reveal-delay-1' },
-            { img: 'https://knrslidingdoors.com/wp-content/uploads/2024/05/IMG_3277-scaled.jpg', tag: 'PARTITIONS', title: 'القواطع المكتبية', desc: 'قواطع زجاجية سيكوريت عازلة للصوت لتقسيم مساحات العمل. فعّالة ومضيئة وبتصاميم حديثة.', link: '/services/القواطع-الزجاجية', delay: 'reveal-delay-2' },
-            { img: 'https://www.glassartdesign.com/wp-content/uploads/2025/05/Glass-Shower-Enclosures.jpg', tag: 'SHOWER', title: 'كبائن الشاور', desc: 'كبائن استحمام بزجاج سيكوريت 8-12 ملم مع إكسسوارات مقاومة الصدأ. مقاسات ستاندرد أو مخصصة.', link: '/services/كبائن-شاور', delay: 'reveal-delay-3' },
-            { img: 'https://modernsteeldoors.com/wp-content/uploads/GLASS-ENTRANCE-DOOR-WITH-WOOD-HARDWARE-AND-SIDELIGHTS.jpg', tag: 'DOORS', title: 'الأبواب الزجاجية', desc: 'أبواب سيكوريت مفصلية وسحابة أوتوماتيكية للمداخل والمحلات التجارية والفلل.', link: '/services/أبواب-زجاجية', delay: 'reveal-delay-1' },
-            { img: 'https://www.ibmirror.com/docs/240125_142731_ibmirror_mirror_led_light_min.webp', tag: 'MIRRORS', title: 'المرايا الديكورية', desc: 'مرايا ليد وديكورية بأبعاد مخصصة للصالونات والحمامات والصاليَنات. تفصيل دقيق وجودة فائقة.', link: '/services/مرايا-ذكية', delay: 'reveal-delay-2' },
-            { img: 'https://www.viewrail.com/wp-content/uploads/2018/11/172A9943-scaled.jpg', tag: 'RAILINGS', title: 'الدرابزين الزجاجي', desc: 'درابزين زجاجي شفاف للسلالم والبلكونات. أنيق وآمن وبمقاسات تناسب كل تصميم معماري.', link: '/services/درابزين-زجاج', delay: 'reveal-delay-3' }
-          ].map((srv, idx) => (
-            <Link to={srv.link} key={idx} className={`service-card reveal ${srv.delay}`}>
-              <div className="service-img" style={{backgroundImage:`url('${srv.img}')`}}>
-                <span className="service-img-tag">{srv.tag}</span>
-              </div>
-              <div className="service-body">
-                <div className="service-name">{srv.title}</div>
-                <p className="service-desc">{srv.desc}</p>
-                <div className="service-link">
-                  عرض التفاصيل
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-
         <div className="calc-strip reveal">
           <div className="calc-strip-text">
             <div className="calc-strip-title">احسب تكلفة مشروعك الآن 🧮</div>
@@ -248,6 +320,46 @@ export default function Home() {
             جرّب الحاسبة المجانية
           </button>
         </div>
+
+      <section id="services">
+        <div className="section-header reveal">
+          <div className="section-tag">SERVICES · خدماتنا</div>
+          <h2 className="section-h2">حلول زجاجية لكل احتياج</h2>
+          <p className="section-desc">من الواجهات الشاهقة إلى تفاصيل الحمام — نغطي كل ما يتعلق بالزجاج في مشروعك</p>
+        </div>
+
+        <div className="services-grid">
+          {services.map((srv, idx) => (
+            <div key={idx} className={`service-card reveal ${srv.delay} group`}>
+              <Link to={srv.link} className="block w-full">
+                <div className="service-img" style={{backgroundImage:`url('${srv.img}')`}}>
+                  <span className="service-img-tag">{srv.tag}</span>
+                </div>
+              </Link>
+              <div className="service-body relative pb-16">
+                <Link to={srv.link} className="block w-full">
+                  <div className="service-name hover:text-[#0284C7] transition-colors">{srv.title}</div>
+                  <p className="service-desc">{srv.desc}</p>
+                  <div className="service-link mt-4">
+                    عرض التفاصيل
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  </div>
+                </Link>
+                <a 
+                  href={`https://wa.me/966510233706?text=${encodeURIComponent(`مرحباً، أود الاستفسار عن خدمة ${srv.title}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute bottom-6 left-6 right-6 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1DA851] text-white px-6 py-3 rounded-full font-bold text-sm transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 z-10"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437-9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  اطلب الخدمة عبر واتساب
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+
+
       </section>
       <div className="py-8 bg-gray-50"><SectionCTA /></div>
 
@@ -311,14 +423,7 @@ export default function Home() {
           </div>
 
           <div className="gallery-grid reveal">
-            {[
-              { cat: 'facades', span: 'span-2', img: 'https://wfmmedia.com/wp-content/uploads/2024/11/Modern-Glass-Facade-Architecture.webp', title: 'واجهة برج الأعمال المركزي — العليا', subtitle: 'FACADES · الرياض 2024' },
-              { cat: 'partitions', span: 'span-row', img: 'https://knrslidingdoors.com/wp-content/uploads/2024/05/IMG_3277-scaled.jpg', title: 'قواطع مكتب شركة التقنية', subtitle: 'PARTITIONS · الدمام' },
-              { cat: 'shower', span: '', img: 'https://www.glassartdesign.com/wp-content/uploads/2025/05/Glass-Shower-Enclosures.jpg', title: 'كبائن فيلا المحمدية الفاخرة', subtitle: 'SHOWER · جدة' },
-              { cat: 'facades', span: '', img: 'https://glassenterprises.com/wp-content/uploads/2022/11/modern-buildings-with-glass-facade-1024x1024.jpg', title: 'واجهة المجمع التجاري الذهبي', subtitle: 'FACADES · مكة المكرمة' },
-              { cat: 'mirrors', span: '', img: 'https://www.ibmirror.com/docs/240125_142731_ibmirror_mirror_led_light_min.webp', title: 'مرايا ليد — صالون راقٍ', subtitle: 'MIRRORS · الرياض' },
-              { cat: 'partitions', span: '', img: 'https://www.viewrail.com/wp-content/uploads/2018/11/172A9943-scaled.jpg', title: 'درابزين زجاجي — فيلا النخيل', subtitle: 'RAILINGS · الرياض' }
-            ].map((g, i) => (
+            {projects.map((g, i) => (
               <div key={i} className={`gallery-item ${g.span}`} style={{ display: (activeFilter === 'all' || activeFilter === g.cat) ? 'block' : 'none' }}>
                 <img loading="lazy" decoding="async" className="gallery-img" src={g.img} alt={g.title} />
                 <div className="gallery-overlay">
@@ -331,7 +436,7 @@ export default function Home() {
         </div>
       </section>
       <div className="py-8 bg-[#0a0a0a]"><SectionCTA /></div>
-      <React.Suspense fallback={<div className="min-h-40" aria-hidden="true" />}><GallerySlider /></React.Suspense>
+      <GallerySlider />
       <section id="partners">
         <div className="partners-inner">
           <div className="partners-title">CLIENTS & PARTNERS · عملاؤنا وشركاؤنا</div>
@@ -451,13 +556,7 @@ export default function Home() {
           </div>
 
           <div className="faq-list reveal">
-            {[
-              { q: 'ما هو أفضل نوع زجاج للواجهات التجارية؟', a: 'للواجهات التجارية نوصي بالزجاج المزدوج (Double Glass) لعزله الحراري والصوتي الممتاز، مع زجاج سيكوريت بسماكة 10-12 ملم للأبواب. نقدم استشارة مجانية لتحديد الأنسب لمشروعك.' },
-              { q: 'كم يستغرق تنفيذ مشروع كبائن شاور؟', a: 'كبائن الشاور الستاندرد تستغرق 1-2 يوم من أخذ المقاسات حتى التركيب النهائي. الكبائن المخصصة ذات الأبعاد الكبيرة قد تحتاج 3-5 أيام. نحدد الجدول الزمني الدقيق بعد المعاينة.' },
-              { q: 'هل تقدمون خدمة المعاينة المجانية؟', a: 'نعم، نقدم معاينة ميدانية مجانية لجميع المشاريع داخل الرياض. فريقنا يزورك لأخذ المقاسات الدقيقة، تقديم الاستشارة، وتقديم عرض السعر التفصيلي — كل ذلك بدون أي رسوم.' },
-              { q: 'ما هي مدة وشروط الضمان؟', a: 'نقدم ضماناً شاملاً يصل إلى 10 سنوات على جودة الزجاج المستخدم، وضماناً على التركيب والإكسسوارات. الضمان يشمل أي عيوب في المواد أو التركيب ولا يشمل الأضرار الناتجة عن سوء الاستخدام.' },
-              { q: 'كيف أحافظ على نظافة ولمعان الزجاج؟', a: 'استخدم منظفات الزجاج المخصصة وقطعة قماش مايكروفايبر. تجنب المواد الكاشطة والشفرات الحادة. لكبائن الشاور، امسح الزجاج بعد كل استخدام لمنع التكلسات. نقدم لكل عميل دليل عناية مجاني عند التسليم.' }
-            ].map((f, i) => (
+            {faqs.map((f, i) => (
               <div key={i} className={`faq-item ${i===0 ? 'open' : ''}`}>
                 <button className="faq-trigger" onClick={toggleFaq}>
                   {f.q}
@@ -470,7 +569,7 @@ export default function Home() {
         </div>
       </section>
       <div className="py-8 bg-gray-50"><SectionCTA /></div>
-      <React.Suspense fallback={<div className="min-h-40" aria-hidden="true" />}><Blog /></React.Suspense>
+      <Blog />
       <div className="py-8 bg-white"><SectionCTA /></div>
       <section id="contact">
         <div className="contact-inner">
@@ -508,7 +607,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="contact-map-wrap reveal reveal-delay-3">
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3625.7!2d46.6753!3d24.7136!1m3!1d3625.7!2d46.6753!3d24.7136!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjTCsDQyJzQ5LjAiTiA0NsKwNDAnMzEuMSJF!5e0!3m2!1sar!2ssa!4v1700000000000" loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="موقع زجاج الرياض"></iframe>
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d463877.31244093843!2d46.93246736569614!3d24.725455364177265!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e2f03890d489399%3A0xba974d1c98e79fd5!2sRiyadh%20Saudi%20Arabia!5e0!3m2!1sen!2s!4v1714152542566!5m2!1sen!2s" loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="موقع زجاج الرياض"></iframe>
               </div>
               <div className="contact-info-card reveal reveal-delay-4">
                 <div className="cic-icon">
@@ -568,36 +667,12 @@ export default function Home() {
         </div>
       </section>
 
-      <Footer />
-
-      <div className="fab-wrap">
-        <a href="https://wa.me/966510233706" target="_blank" rel="noopener noreferrer" className="fab fab-wa" title="واتساب">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" fill="white"/></svg>
-        </a>
-        <button className="fab fab-chat" title="محادثة سريعة" onClick={() => scrollTo('contact')}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        </button>
-      </div>
-
-      <div className={`toast ${showToast ? 'show' : ''}`} style={toastMsg.isError ? {background:'#ef4444'} : {}}>
-        <div className="toast-icon">
-          <svg viewBox="0 0 24 24" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <span>{toastMsg.text}</span>
-      </div>
-
-      <button className={`back-top ${showBackTop ? 'show' : ''}`} aria-label="العودة للأعلى" onClick={() => window.scrollTo({top:0, behavior:'smooth'})}>
-        <svg viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-      </button>
-
-      <div className={`calc-overlay ${isCalcOpen ? 'open' : ''}`} onClick={(e) => { if(e.target === e.currentTarget) setIsCalcOpen(false); }}>
-        <div className="calc-modal">
+            <Footer />
+      <div className={`calc-modal ${isCalcOpen ? 'active' : ''}`}>
+        <div className="calc-modal-content">
           <div className="calc-modal-header">
-            <div className="calc-close" onClick={() => setIsCalcOpen(false)}>
-              <svg viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </div>
-            <div className="calc-modal-title">حاسبة تكلفة الزجاج</div>
-            <div className="calc-modal-sub">أدخل التفاصيل واحصل على تقدير فوري لميزانيتك</div>
+            <h3 className="calc-modal-title">احسب تكلفة مشروعك التقريبية</h3>
+            <button className="calc-modal-close" onClick={() => setIsCalcOpen(false)}>×</button>
           </div>
           <div className="calc-modal-body">
             <div className="calc-field">

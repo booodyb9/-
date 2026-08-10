@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import SEO from '../../components/SEO';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import WhatsAppInlineCTA from '../../components/WhatsAppInlineCTA';
 import { useContent } from '../../contexts/ContentContext';
 import { PortfolioProject } from '../dashboard/types';
 import { ArrowRight, Calendar, MapPin, Briefcase, User, Wrench, Phone, MessageCircle, X, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
