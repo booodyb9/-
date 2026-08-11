@@ -7,6 +7,7 @@ import AmbientBackground from './components/AmbientBackground';
 import AnimatedRoutes from './components/AnimatedRoutes';
 import ScrollToTop from './components/ScrollToTop';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
+import DynamicContactLinks from './components/DynamicContactLinks';
 
 const AILeadAssistant = React.lazy(() => import('./components/AILeadAssistant'));
 
@@ -19,6 +20,7 @@ export default function App() {
             <AmbientBackground />
             <BrowserRouter>
               <ScrollToTop />
+              <DynamicContactLinks />
               <AnimatedRoutes />
               <FloatingWhatsApp />
               <Suspense fallback={null}>
