@@ -1,106 +1,37 @@
-import React from 'react';
-import { Users, FileText, Image, MessageSquare, Activity, ArrowUpRight, ArrowDownRight, Eye, Edit3 } from 'lucide-react';
-
-const data = [
-  { name: 'الأحد', views: 4000, visitors: 2400 },
-  { name: 'الإثنين', views: 3000, visitors: 1398 },
-  { name: 'الثلاثاء', views: 2000, visitors: 9800 },
-  { name: 'الأربعاء', views: 2780, visitors: 3908 },
-  { name: 'الخميس', views: 1890, visitors: 4800 },
-  { name: 'الجمعة', views: 2390, visitors: 3800 },
-  { name: 'السبت', views: 3490, visitors: 4300 },
-];
+import React, { useEffect, useMemo, useState } from 'react';
+import { FileText, Image, MessageSquare, Eye, Target, Flame } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import type { Lead } from './types';
 
 export default function DashboardHome({ messages = [], contents = [], mediaFiles = [] }: any) {
-  const unreadMessages = (messages || []).filter((m: any) => !m?.is_read).length;
-  
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">نظرة عامة على الموقع</h2>
-        <div className="text-sm text-gray-500">آخر تحديث: منذ لحظات</div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="إجمالي الزيارات" value="-" trend="" isUp={true} icon={Eye} color="text-blue-600" bg="bg-blue-50" />
-        <StatCard title="رسائل جديدة" value={unreadMessages.toString()} trend="" isUp={true} icon={MessageSquare} color="text-green-600" bg="bg-green-50" />
-        <StatCard title="الصفحات النشطة" value={(contents || []).length.toString()} trend="" isUp={true} icon={FileText} color="text-purple-600" bg="bg-purple-50" />
-        <StatCard title="الوسائط المرفوعة" value={(mediaFiles || []).length.toString()} trend="" isUp={true} icon={Image} color="text-orange-600" bg="bg-orange-50" />
-      </div>
+  const unreadMessages = (messages || []).filter((m: any) => !m?.is_read && m?.status !== 'archived').length;
+  const [leads, setLeads] = useState<Lead[]>([]);
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold mb-4">إحصائيات الزوار (أسبوعي)</h3>
-          <div className="h-80 w-full" dir="ltr">
-            <div width="100%" height="100%">
-              <div data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                
-                
-                
-                
-                
-                
-              </div>
-            </div>
-          </div>
-        </div>
+  useEffect(() => {
+    const load = async () => {
+      const { data, error } = await supabase.from('leads').select('*').order('created_at', { ascending: false }).limit(20);
+      if (!error) setLeads((data || []) as Lead[]);
+    };
+    load();
+  }, []);
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold mb-4">أحدث النشاطات</h3>
-          <div className="space-y-4">
-            <ActivityItem text="تم نشر مقال جديد 'أفضل أنواع الزجاج'" time="منذ ساعتين" type="publish" />
-            <ActivityItem text="رسالة جديدة من 'أحمد محمد'" time="منذ 4 ساعات" type="message" />
-            <ActivityItem text="تم رفع 5 صور جديدة لمعرض الأعمال" time="منذ 5 ساعات" type="upload" />
-            <ActivityItem text="تحديث إعدادات SEO للصفحة الرئيسية" time="أمس" type="settings" />
-            <ActivityItem text="تعديل صفحة 'من نحن'" time="أمس" type="edit" />
-          </div>
-        </div>
-      </div>
+  const hot = leads.filter((l) => l.temperature === 'hot').length;
+  const recent = useMemo(() => leads.slice(0, 6), [leads]);
+
+  const cards = [
+    { title: 'رسائل جديدة', value: unreadMessages.toString(), icon: MessageSquare },
+    { title: 'العملاء المحتملون', value: leads.length.toString(), icon: Target },
+    { title: 'Hot Leads', value: hot.toString(), icon: Flame },
+    { title: 'الصفحات والمحتوى', value: (contents || []).length.toString(), icon: FileText },
+    { title: 'الوسائط المرفوعة', value: (mediaFiles || []).length.toString(), icon: Image },
+  ];
+
+  return <div className="space-y-6" dir="rtl">
+    <div><h2 className="text-2xl font-bold text-gray-900">نظرة عامة على الموقع</h2><p className="text-sm text-gray-500 mt-1">إحصائيات حقيقية من بيانات الموقع. لا يتم عرض أرقام زيارات وهمية.</p></div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">{cards.map(({ title, value, icon: Icon }) => <div key={title} className="bg-white p-5 rounded-xl border"><div className="w-10 h-10 rounded-lg bg-blue-50 text-[#0284C7] flex items-center justify-center mb-4"><Icon className="w-5 h-5" /></div><div className="text-2xl font-bold">{value}</div><div className="text-sm text-gray-500 mt-1">{title}</div></div>)}</div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2 bg-white p-6 rounded-xl border"><h3 className="text-lg font-bold mb-4">أحدث العملاء المحتملين</h3>{recent.length ? <div className="divide-y">{recent.map((lead) => <div key={lead.id} className="py-3 flex items-center justify-between gap-3"><div><div className="font-bold">{lead.name || 'بدون اسم'}</div><div className="text-xs text-gray-500">{lead.service || lead.source}</div></div><div className="text-left"><div className="font-bold text-sm">{lead.score}/100</div><div className="text-xs text-gray-500">{lead.temperature}</div></div></div>)}</div> : <div className="py-10 text-center text-gray-500">لا توجد Leads مسجلة حتى الآن.</div>}</div>
+      <div className="bg-white p-6 rounded-xl border"><h3 className="text-lg font-bold mb-4">إحصائيات الزوار</h3><div className="min-h-40 flex flex-col items-center justify-center text-center text-gray-500"><Eye className="w-10 h-10 opacity-30 mb-3" /><p>لا توجد خدمة Analytics حقيقية مرتبطة حالياً.</p><p className="text-xs mt-2">لن يتم اختراع أرقام زيارات.</p></div></div>
     </div>
-  );
-}
-
-function StatCard({ title, value, trend, isUp, icon: Icon, color, bg }: any) {
-  return (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-      <div className="flex justify-between items-start mb-4">
-        <div className={`p-3 rounded-lg ${bg} ${color}`}>
-          <Icon className="w-6 h-6" />
-        </div>
-        <div className={`flex items-center gap-1 text-sm font-bold ${isUp ? 'text-green-600' : 'text-red-600'}`}>
-          {isUp ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-          <span dir="ltr">{trend}</span>
-        </div>
-      </div>
-      <div>
-        <h4 className="text-gray-500 text-sm font-medium mb-1">{title}</h4>
-        <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
-      </div>
-    </div>
-  );
-}
-
-function ActivityItem({ text, time, type }: any) {
-  const getIcon = () => {
-    switch (type) {
-      case 'publish': return <FileText className="w-4 h-4 text-green-500" />;
-      case 'message': return <MessageSquare className="w-4 h-4 text-blue-500" />;
-      case 'upload': return <Image className="w-4 h-4 text-purple-500" />;
-      case 'settings': return <Activity className="w-4 h-4 text-orange-500" />;
-      case 'edit': return <Edit3 className="w-4 h-4 text-gray-500" />;
-      default: return <Activity className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  return (
-    <div className="flex items-start gap-3">
-      <div className="p-2 bg-gray-50 rounded-full shrink-0 border border-gray-100">
-        {getIcon()}
-      </div>
-      <div>
-        <p className="text-sm font-bold text-gray-900">{text}</p>
-        <p className="text-xs text-gray-500 mt-1">{time}</p>
-      </div>
-    </div>
-  );
+  </div>;
 }
