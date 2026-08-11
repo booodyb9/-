@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const DEFAULT_GEMINI_MODEL = 'gemini-3.6-flash';
 
 export function getServerConfig() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -16,7 +17,9 @@ export function getServerConfig() {
 export function createServerClients() {
   const { supabaseUrl, supabaseAnonKey, geminiApiKey } = getServerConfig();
   return {
-    supabase: createClient(supabaseUrl, supabaseAnonKey),
+    supabase: createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    }),
     ai: new GoogleGenAI({ apiKey: geminiApiKey })
   };
 }
@@ -32,15 +35,21 @@ export async function buildBusinessContext(supabase) {
   return JSON.stringify(selected).slice(0, 24000);
 }
 
-export async function requireAdmin(req, supabase) {
+export async function requireAdmin(req) {
   const auth = req.headers.authorization || req.headers.Authorization || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   if (!token) return null;
 
-  const { data: userData, error: userError } = await supabase.auth.getUser(token);
+  const { supabaseUrl, supabaseAnonKey } = getServerConfig();
+  const authedSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+
+  const { data: userData, error: userError } = await authedSupabase.auth.getUser(token);
   if (userError || !userData?.user) return null;
 
-  const { data: admin, error: adminError } = await supabase
+  const { data: admin, error: adminError } = await authedSupabase
     .from('admins')
     .select('user_id,email')
     .eq('user_id', userData.user.id)
@@ -59,6 +68,10 @@ export function validateImagePayload(image) {
   return { mimeType, data };
 }
 
+function modelName() {
+  return process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+}
+
 export async function generateAssistantReply({ ai, supabase, messages }) {
   const safeMessages = Array.isArray(messages) ? messages.slice(-12) : [];
   const businessContext = await buildBusinessContext(supabase);
@@ -67,7 +80,7 @@ export async function generateAssistantReply({ ai, supabase, messages }) {
   const prompt = `أنت مساعد مبيعات وخدمة عملاء لشركة زجاج الرياض. أجب بالعربية باختصار ووضوح. استخدم فقط معلومات الشركة والخدمات الموجودة في السياق أدناه. لا تخترع أسعاراً أو مواعيد أو خدمات غير موجودة. إذا احتاج العميل سعراً نهائياً، اطلب المقاسات والمعاينة أو وجّهه لطلب عرض سعر/واتساب. لا تدّع تنفيذ حجز أو طلب لم يتم فعلياً.\n\nسياق الشركة:\n${businessContext}\n\nالمحادثة:\n${conversation}\n\nاكتب الرد المناسب الآن.`;
 
   const response = await ai.models.generateContent({
-    model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+    model: modelName(),
     contents: prompt
   });
   return String(response.text || '').trim();
@@ -78,7 +91,7 @@ export async function analyzeLocationImage({ ai, image, note }) {
   const prompt = `حلل هذه الصورة كمستشار حلول زجاج معماري لشركة زجاج في الرياض. أعطِ بالعربية: 1) وصفاً مختصراً لما يظهر، 2) نوع تطبيق الزجاج المحتمل، 3) اقتراح حل مناسب مبدئي، 4) اعتبارات سلامة/تنفيذ عامة، 5) المعلومات الإضافية التي يجب طلبها من العميل. لا تستنتج قياسات دقيقة ولا تعط سعراً نهائياً. اختم بهذه العبارة حرفياً: "هذا اقتراح مبدئي بناءً على الصورة، والتسعير والتنفيذ النهائي يحتاجان إلى المقاسات والمعاينة الفعلية."\nملاحظة العميل: ${String(note || '').slice(0, 1500)}`;
 
   const response = await ai.models.generateContent({
-    model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+    model: modelName(),
     contents: [
       { text: prompt },
       { inlineData: { mimeType: validated.mimeType, data: validated.data } }
@@ -104,7 +117,7 @@ export async function generateAdminContent({ ai, task, title, content, image }) 
   }
 
   const response = await ai.models.generateContent({
-    model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+    model: modelName(),
     contents,
     config: task === 'seo' ? { responseMimeType: 'application/json' } : undefined
   });
