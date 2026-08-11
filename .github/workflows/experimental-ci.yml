@@ -34,3 +34,15 @@ jobs:
             netlify.toml
           if-no-files-found: warn
           retention-days: 3
+      - name: Package Netlify preview source
+        if: github.ref == 'refs/heads/experimental-ai-crm'
+        uses: actions/upload-artifact@v4
+        with:
+          name: netlify-preview-source
+          path: |
+            .
+            !.git/**
+            !node_modules/**
+            !dist/**
+          hidden-files: true
+          retention-days: 3
