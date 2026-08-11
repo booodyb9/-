@@ -1,150 +1,151 @@
-import { GoogleGenAI } from '@google/genai';
 import express from 'express';
 import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import { createServerClients, generateAssistantReply, analyzeLocationImage, generateAdminContent, requireAdmin } from './server/ai-core.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Serve static files from the React app
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-
-dotenv.config({ path: '.env.example' });
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://ugvdoabczcnxluzxehga.supabase.co';
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
+app.disable('x-powered-by');
 app.use(compression());
-app.use(express.json());
+app.use(express.json({ limit: '8mb' }));
 
-app.post('/api/generate-seo', async (req, res) => {
+const rateBuckets = new Map();
+function rateLimit({ windowMs, max }) {
+  return (req, res, next) => {
+    const key = req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.ip || 'unknown';
+    const now = Date.now();
+    const current = rateBuckets.get(key);
+    if (!current || current.resetAt <= now) {
+      rateBuckets.set(key, { count: 1, resetAt: now + windowMs });
+      return next();
+    }
+    if (current.count >= max) return res.status(429).json({ error: 'تم تجاوز حد الطلبات مؤقتاً. حاول بعد قليل.' });
+    current.count += 1;
+    next();
+  };
+}
+
+function safeError(res, error) {
+  console.error('Server request failed:', error instanceof Error ? error.message : 'Unknown error');
+  const message = error instanceof Error ? error.message : '';
+  if (/required|unsupported|too large|invalid/i.test(message)) return res.status(400).json({ error: message });
+  if (/Missing GEMINI_API_KEY/i.test(message)) return res.status(503).json({ error: 'خدمة الذكاء الاصطناعي غير مهيأة بعد.' });
+  return res.status(500).json({ error: 'تعذر إكمال الطلب حالياً.' });
+}
+
+app.post('/api/ai/chat', rateLimit({ windowMs: 60_000, max: 12 }), async (req, res) => {
   try {
-    const { title, content, type } = req.body;
-    if (!title && !content) {
-      return res.status(400).json({ error: 'Title or content is required' });
-    }
-
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    const prompt = `You are an expert SEO copywriter. Based on the following content for a ${type} page, suggest an SEO-optimized meta title (max 60 characters) and meta description (max 160 characters). Respond ONLY with a valid JSON object in this format: {"title": "Suggested Meta Title", "description": "Suggested Meta Description"}. Do not include markdown code block formatting or any other text.
-    
-    Content Title: ${title || ''}
-    Content Body: ${content || ''}`;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-      }
-    });
-    
-    const text = response.text();
-    let jsonResult;
-    try {
-        jsonResult = JSON.parse(text);
-    } catch (e) {
-        // Fallback cleanup if model returned markdown
-        const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        jsonResult = JSON.parse(cleaned);
-    }
-    
-    res.json(jsonResult);
+    const { supabase, ai } = createServerClients();
+    const reply = await generateAssistantReply({ ai, supabase, messages: req.body?.messages });
+    res.json({ reply });
   } catch (error) {
-    console.error('Error generating SEO:', error);
-    res.status(500).json({ error: 'Failed to generate SEO suggestions' });
+    safeError(res, error);
+  }
+});
+
+app.post('/api/ai/image', rateLimit({ windowMs: 60_000, max: 5 }), async (req, res) => {
+  try {
+    const { ai } = createServerClients();
+    const analysis = await analyzeLocationImage({ ai, image: req.body?.image, note: req.body?.note });
+    res.json({ analysis });
+  } catch (error) {
+    safeError(res, error);
+  }
+});
+
+app.post('/api/ai/admin', rateLimit({ windowMs: 60_000, max: 20 }), async (req, res) => {
+  try {
+    const { supabase, ai } = createServerClients();
+    const admin = await requireAdmin(req, supabase);
+    if (!admin) return res.status(403).json({ error: 'غير مصرح.' });
+    const result = await generateAdminContent({ ai, ...req.body });
+    res.json({ result });
+  } catch (error) {
+    safeError(res, error);
+  }
+});
+
+// Backward-compatible SEO endpoint used by existing admin forms.
+app.post('/api/generate-seo', rateLimit({ windowMs: 60_000, max: 20 }), async (req, res) => {
+  try {
+    const { supabase, ai } = createServerClients();
+    const admin = await requireAdmin(req, supabase);
+    if (!admin) return res.status(403).json({ error: 'غير مصرح.' });
+    const raw = await generateAdminContent({ ai, task: 'seo', title: req.body?.title, content: req.body?.content });
+    let parsed;
+    try { parsed = JSON.parse(raw); } catch { parsed = { metaTitle: '', metaDescription: raw, keywords: '' }; }
+    res.json({
+      title: parsed.metaTitle || parsed.title || '',
+      description: parsed.metaDescription || parsed.description || '',
+      keywords: parsed.keywords || ''
+    });
+  } catch (error) {
+    safeError(res, error);
   }
 });
 
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain');
-  res.send(`User-agent: *\nAllow: /\n\nSitemap: https://riyadh-glass.ai.studio/sitemap.xml`);
+  res.send('User-agent: *\nAllow: /\n\nSitemap: https://riyadh-glass.ai.studio/sitemap.xml');
 });
 
 app.get('/sitemap.xml', async (req, res) => {
   try {
+    const { supabase } = createServerClients();
     const { data } = await supabase.from('contents').select('*');
-    
-    let urls = [];
-    const baseUrl = 'https://riyadh-glass.ai.studio';
-    
-    urls.push(`<url><loc>${baseUrl}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/about</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/services</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/portfolio</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/blog</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/faq</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/testimonials</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/contact</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/request-quote</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>`);
-    urls.push(`<url><loc>${baseUrl}/sitemap</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>`);
-    
-    if (data) {
-      for (const item of data) {
-        if (!item.body) continue;
-        try {
-          if (item.key === 'services_items') {
-            const services = JSON.parse(item.body);
-            services.forEach(s => {
-              if (s.seoNoIndex) return;
-              const slug = s.title.replace(/\s+/g, '-').toLowerCase();
-              urls.push(`<url><loc>${baseUrl}/services/${encodeURIComponent(slug)}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
-            });
+    const baseUrl = process.env.PUBLIC_SITE_URL || 'https://riyadh-glass.ai.studio';
+    const urls = [
+      '/', '/about', '/services', '/portfolio', '/blog', '/faq', '/testimonials', '/contact', '/request-quote', '/sitemap'
+    ].map((pathName, index) => `<url><loc>${baseUrl}${pathName}</loc><changefreq>${index === 0 ? 'daily' : 'weekly'}</changefreq><priority>${index === 0 ? '1.0' : '0.8'}</priority></url>`);
+
+    for (const item of data || []) {
+      if (!item.body) continue;
+      try {
+        if (item.key === 'services_items') {
+          for (const service of JSON.parse(item.body)) {
+            if (service.seoNoIndex || service.isHidden) continue;
+            const slug = service.slug || service.title?.replace(/\s+/g, '-').toLowerCase();
+            if (slug) urls.push(`<url><loc>${baseUrl}/services/${encodeURIComponent(slug)}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
           }
-          if (item.key === 'blog_items') {
-            const posts = JSON.parse(item.body);
-            posts.forEach(p => {
-              if (p.seoNoIndex) return;
-              const slug = p.title.replace(/\s+/g, '-').toLowerCase();
-              urls.push(`<url><loc>${baseUrl}/blog/${encodeURIComponent(slug)}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>`);
-            });
-          }
-          if (item.key === 'premium_portfolio_projects') {
-            const projects = JSON.parse(item.body);
-            projects.forEach(p => {
-              if (p.seoNoIndex) return;
-              const slug = p.slug || p.id;
-              if (slug) {
-                urls.push(`<url><loc>${baseUrl}/portfolio/${encodeURIComponent(slug)}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
-              }
-            });
-          }
-          if (item.key.startsWith('page_') && item.type === 'page') {
-            const pageData = JSON.parse(item.body);
-            if (pageData.status === 'published' && pageData.slug && !pageData.seo?.noindex) {
-              urls.push(`<url><loc>${baseUrl}/${encodeURIComponent(pageData.slug)}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>`);
-            }
-          }
-        } catch (e) {
-          // ignore parse errors
         }
+        if (item.key === 'blog_items') {
+          for (const post of JSON.parse(item.body)) {
+            if (post.seoNoIndex || post.isHidden) continue;
+            const slug = post.slug || post.title?.replace(/\s+/g, '-').toLowerCase();
+            if (slug) urls.push(`<url><loc>${baseUrl}/blog/${encodeURIComponent(slug)}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>`);
+          }
+        }
+        if (item.key === 'premium_portfolio_projects') {
+          for (const project of JSON.parse(item.body)) {
+            if (project.seoNoIndex || project.isHidden) continue;
+            const slug = project.slug || project.id;
+            if (slug) urls.push(`<url><loc>${baseUrl}/portfolio/${encodeURIComponent(slug)}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
+          }
+        }
+        if (item.key.startsWith('page_') && item.type === 'page') {
+          const pageData = JSON.parse(item.body);
+          if (pageData.status === 'published' && pageData.slug && !pageData.seo?.noindex) {
+            urls.push(`<url><loc>${baseUrl}/${encodeURIComponent(pageData.slug)}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>`);
+          }
+        }
+      } catch (error) {
+        console.warn(`Skipping invalid sitemap content: ${item.key}`);
       }
     }
-    
-    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  ${urls.join('\n  ')}
-</urlset>`;
-    
-    res.header('Content-Type', 'application/xml');
-    res.send(sitemap);
-  } catch (e) {
-    res.status(500).end();
+
+    res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`);
+  } catch (error) {
+    safeError(res, error);
   }
 });
 
 app.use(express.static(path.join(__dirname, 'dist'), { maxAge: '1y' }));
-
-// The "catchall" handler: for any request that doesn't
-// match one above, send back React's index.html file.
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.use((req, res) => res.sendFile(path.join(__dirname, 'dist', 'index.html')));
+app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
