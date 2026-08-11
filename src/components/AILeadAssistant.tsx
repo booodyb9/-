@@ -100,7 +100,7 @@ export default function AILeadAssistant() {
     }
     const { score, temperature } = computeLeadScore({ hasContactDetails: true, usedAiAssistant: true, uploadedImage: messages.some((m) => m.content.includes('📷')) });
     const { error: insertError } = await supabase.from('leads').insert({
-      name: lead.name.trim() || null,
+      name: lead.name.trim() || 'عميل من الموقع',
       phone: lead.phone.trim(),
       service: lead.service.trim() || null,
       source: messages.some((m) => m.content.includes('📷')) ? 'image_analysis' : 'ai_assistant',
