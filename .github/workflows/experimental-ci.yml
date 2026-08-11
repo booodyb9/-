@@ -18,4 +18,19 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm run build
+      - name: Build preview bundle
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://ugvdoabczcnxluzxehga.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_IgaHjtDYgW9UKVMDgH6EKA_qzBa22pl
+      - name: Package preview artifact
+        if: github.ref == 'refs/heads/experimental-ai-crm'
+        uses: actions/upload-artifact@v4
+        with:
+          name: netlify-preview-bundle
+          path: |
+            dist
+            netlify/functions
+            netlify.toml
+          if-no-files-found: warn
+          retention-days: 3
