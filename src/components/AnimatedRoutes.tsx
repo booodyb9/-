@@ -24,7 +24,7 @@ const SitemapPage = React.lazy(() => import('../pages/public/SitemapPage'));
 const DynamicPage = React.lazy(() => import('../pages/public/DynamicPage'));
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
-  <motion.div initial={{ opacity: 1, y: 0 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
+  <motion.div data-route-wrapper="true" initial={{ opacity: 1, y: 0 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
     {children}
   </motion.div>
 );
