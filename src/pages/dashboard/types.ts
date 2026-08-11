@@ -1,10 +1,43 @@
 export interface Message {
   id: number;
   name: string;
-  email: string;
+  email?: string;
+  phone?: string;
+  service?: string;
   message: string;
   created_at: string;
   is_read: boolean;
+  status?: 'new' | 'read' | 'replied' | 'archived';
+  archived_at?: string | null;
+}
+
+export interface Lead {
+  id: string;
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  service?: string | null;
+  source: string;
+  source_context?: Record<string, unknown>;
+  message?: string | null;
+  notes?: string | null;
+  status: 'new' | 'contacted' | 'interested' | 'quote_sent' | 'won' | 'lost' | 'closed';
+  score: number;
+  temperature: 'hot' | 'warm' | 'cold';
+  assigned_admin?: string | null;
+  follow_up_at?: string | null;
+  last_activity_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LeadActivity {
+  id: string;
+  lead_id: string;
+  activity_type: string;
+  details?: Record<string, unknown>;
+  created_by?: string | null;
+  created_at: string;
 }
 
 export interface Content {
