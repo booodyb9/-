@@ -10,6 +10,7 @@ import FloatingWhatsApp from './components/FloatingWhatsApp';
 import DynamicContactLinks from './components/DynamicContactLinks';
 
 const AILeadAssistant = React.lazy(() => import('./components/AILeadAssistant'));
+const SmartLeadPrompt = React.lazy(() => import('./components/SmartLeadPrompt'));
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
               <FloatingWhatsApp />
               <Suspense fallback={null}>
                 <AILeadAssistant />
+                <SmartLeadPrompt />
               </Suspense>
             </BrowserRouter>
           </div>
