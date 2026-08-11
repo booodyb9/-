@@ -58,7 +58,7 @@ export default function SmartLeadPrompt() {
     try {
       const source = openWhatsApp ? 'whatsapp_handoff' : ctx.source;
       const { error: insertError } = await supabase.from('leads').insert({
-        name: name.trim() || null,
+        name: name.trim() || 'عميل من الموقع',
         phone: phone.trim(),
         service: ctx.service || null,
         source,
