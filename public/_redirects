@@ -1,1 +1,5 @@
-/*    /index.html   200
+/api/ai/chat        /.netlify/functions/ai/chat          200
+/api/ai/image       /.netlify/functions/ai/image         200
+/api/ai/admin       /.netlify/functions/ai/admin         200
+/api/generate-seo   /.netlify/functions/ai/generate-seo  200
+/*                   /index.html                           200
