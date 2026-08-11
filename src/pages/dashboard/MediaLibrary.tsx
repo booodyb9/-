@@ -26,7 +26,7 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
   const [copiedId, setCopiedId] = useState<string | number | null>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+    const files = Array.from(e.target.files || []) as File[];
     if (!files.length) return;
     setUploading(true);
     const failures: string[] = [];
