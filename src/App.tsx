@@ -1,4 +1,3 @@
-import React, { Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -9,9 +8,7 @@ import ScrollToTop from './components/ScrollToTop';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import DynamicContactLinks from './components/DynamicContactLinks';
 import HomepageSectionController from './components/HomepageSectionController';
-
-const AILeadAssistant = React.lazy(() => import('./components/AILeadAssistant'));
-const SmartLeadPrompt = React.lazy(() => import('./components/SmartLeadPrompt'));
+import DeferredPublicEnhancements from './components/DeferredPublicEnhancements';
 
 export default function App() {
   return (
@@ -26,10 +23,7 @@ export default function App() {
               <HomepageSectionController />
               <AnimatedRoutes />
               <FloatingWhatsApp />
-              <Suspense fallback={null}>
-                <AILeadAssistant />
-                <SmartLeadPrompt />
-              </Suspense>
+              <DeferredPublicEnhancements />
             </BrowserRouter>
           </div>
         </ContentProvider>
