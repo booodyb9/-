@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -7,6 +7,8 @@ import AmbientBackground from './components/AmbientBackground';
 import AnimatedRoutes from './components/AnimatedRoutes';
 import ScrollToTop from './components/ScrollToTop';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
+
+const AILeadAssistant = React.lazy(() => import('./components/AILeadAssistant'));
 
 export default function App() {
   return (
@@ -19,6 +21,9 @@ export default function App() {
               <ScrollToTop />
               <AnimatedRoutes />
               <FloatingWhatsApp />
+              <Suspense fallback={null}>
+                <AILeadAssistant />
+              </Suspense>
             </BrowserRouter>
           </div>
         </ContentProvider>
