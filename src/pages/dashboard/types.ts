@@ -12,7 +12,7 @@ export interface Message {
 }
 
 export interface Lead {
-  id: string;
+  id: number | string;
   name?: string | null;
   phone?: string | null;
   email?: string | null;
@@ -24,6 +24,9 @@ export interface Lead {
   status: 'new' | 'contacted' | 'interested' | 'quote_sent' | 'won' | 'lost' | 'closed';
   score: number;
   temperature: 'hot' | 'warm' | 'cold';
+  calc_area?: number | null;
+  calc_type?: string | null;
+  calc_price?: number | null;
   assigned_admin?: string | null;
   follow_up_at?: string | null;
   last_activity_at: string;
@@ -32,8 +35,8 @@ export interface Lead {
 }
 
 export interface LeadActivity {
-  id: string;
-  lead_id: string;
+  id: number | string;
+  lead_id: number | string;
   activity_type: string;
   details?: Record<string, unknown>;
   created_by?: string | null;
@@ -74,14 +77,12 @@ export interface PortfolioProject {
   isFeatured: boolean;
   isHidden: boolean;
   order: number;
-
   seoTitle?: string;
   seoDescription?: string;
   seoKeywords?: string;
   seoCanonical?: string;
   seoImage?: string;
   seoNoIndex?: boolean;
-
   beforeImage?: string;
   afterImage?: string;
 }
