@@ -14,6 +14,9 @@ create table if not exists public.leads (
   status text not null default 'new',
   score integer not null default 0,
   temperature text not null default 'cold',
+  calc_area numeric,
+  calc_type text,
+  calc_price numeric,
   assigned_admin uuid,
   follow_up_at timestamptz,
   last_activity_at timestamptz not null default now(),
@@ -32,6 +35,9 @@ alter table public.leads add column if not exists notes text;
 alter table public.leads add column if not exists status text default 'new';
 alter table public.leads add column if not exists score integer default 0;
 alter table public.leads add column if not exists temperature text default 'cold';
+alter table public.leads add column if not exists calc_area numeric;
+alter table public.leads add column if not exists calc_type text;
+alter table public.leads add column if not exists calc_price numeric;
 alter table public.leads add column if not exists assigned_admin uuid;
 alter table public.leads add column if not exists follow_up_at timestamptz;
 alter table public.leads add column if not exists last_activity_at timestamptz default now();
