@@ -8,6 +8,7 @@ import AnimatedRoutes from './components/AnimatedRoutes';
 import ScrollToTop from './components/ScrollToTop';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import DynamicContactLinks from './components/DynamicContactLinks';
+import HomepageSectionController from './components/HomepageSectionController';
 
 const AILeadAssistant = React.lazy(() => import('./components/AILeadAssistant'));
 const SmartLeadPrompt = React.lazy(() => import('./components/SmartLeadPrompt'));
@@ -22,6 +23,7 @@ export default function App() {
             <BrowserRouter>
               <ScrollToTop />
               <DynamicContactLinks />
+              <HomepageSectionController />
               <AnimatedRoutes />
               <FloatingWhatsApp />
               <Suspense fallback={null}>
