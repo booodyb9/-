@@ -51,10 +51,36 @@ export default function Navbar() {
     <>
       <nav id="nav" className={isScrolled ? 'scrolled' : ''}>
         <div className="nav-inner">
-          <Link to="/" className="nav-logo" onClick={() => window.scrollTo(0,0)}>
-            <img src="/logo.png" alt="Riyadh Glass" className="h-12 w-auto object-contain drop-shadow-md" onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://wfmmedia.com/wp-content/uploads/2024/11/Modern-Glass-Facade-Architecture.webp'; // Fallback
-            }} />
+          <Link to="/" className="nav-logo flex items-center gap-3" onClick={() => window.scrollTo(0,0)}>
+            <div className="relative flex items-center justify-center w-12 h-12 shrink-0">
+              <svg viewBox="0 0 120 120" className="w-full h-full drop-shadow-lg">
+                <defs>
+                  <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#F5D76E" />
+                    <stop offset="50%" stopColor="#C59B27" />
+                    <stop offset="100%" stopColor="#8A6B1C" />
+                  </linearGradient>
+                  <linearGradient id="silver" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#FFFFFF" />
+                    <stop offset="50%" stopColor="#A0B2C6" />
+                    <stop offset="100%" stopColor="#5A728A" />
+                  </linearGradient>
+                  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="2" dy="4" stdDeviation="4" floodOpacity="0.3" />
+                  </filter>
+                </defs>
+                
+                {/* Z */}
+                <path d="M25 35 L75 35 L40 85 L95 85" fill="none" stroke="url(#silver)" strokeWidth="16" strokeLinejoin="miter" filter="url(#shadow)" />
+                
+                {/* R */}
+                <path d="M50 25 L85 25 C100 25 105 35 105 45 C105 55 95 62 85 62 L50 62 Z M50 25 L50 95 M75 62 L100 95" fill="none" stroke="url(#gold)" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round" filter="url(#shadow)" />
+              </svg>
+            </div>
+            <div className="flex flex-col justify-center">
+              <span className="text-xl font-bold leading-tight text-gray-900" style={{ fontFamily: 'var(--font-heading)' }}>زجاج الرياض</span>
+              <span className="text-[0.65rem] font-bold tracking-[0.2em] text-gray-500 uppercase leading-none mt-1">Zujaj Alriyad</span>
+            </div>
           </Link>
 
           <ul className="nav-links">

@@ -902,18 +902,34 @@ body {
   transition: all var(--t-base) var(--ease-spring);
   position: relative;
 }
-.fab:hover { transform: scale(1.12); }
-.fab-wa { background: #25D366; }
+.fab:hover { transform: scale(1.12) !important; animation-play-state: paused; }
+.fab-wa { background: #25D366; animation: fab-pulse-scale 2s infinite ease-in-out; }
 .fab-wa::before {
   content: ''; position: absolute;
   inset: -4px; border-radius: 50%;
   border: 2px solid rgba(37,211,102,0.4);
   animation: fab-ring 2s ease-in-out infinite;
 }
+
+.fab-phone { background: var(--primary-600); animation: fab-pulse-scale 2s infinite ease-in-out; animation-delay: 1s; }
+.fab-phone::before {
+  content: ''; position: absolute;
+  inset: -4px; border-radius: 50%;
+  border: 2px solid rgba(2, 132, 199, 0.4);
+  animation: fab-ring 2s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
 @keyframes fab-ring {
   0%   { transform: scale(1); opacity: 0.8; }
   100% { transform: scale(1.5); opacity: 0; }
 }
+@keyframes fab-pulse-scale {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
 .fab-wa svg { width: 28px; height: 28px; fill: white; }
 
 /* Chat bubble */
@@ -1153,3 +1169,8 @@ body {
 
 @keyframes fadeIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
 @keyframes spin { to { transform:rotate(360deg); } }
+
+/* Continuous linear Swiper */
+.continuous-swiper .swiper-wrapper {
+  transition-timing-function: linear !important;
+}

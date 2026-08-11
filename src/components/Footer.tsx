@@ -7,10 +7,29 @@ export default function Footer() {
     <footer id="footer">
       <div className="footer-inner">
         <div className="footer-brand">
-          <div className="footer-brand-name">
-            <img src="/logo.png" alt="Riyadh Glass" className="h-10 w-auto object-contain drop-shadow-sm brightness-0 invert" onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://wfmmedia.com/wp-content/uploads/2024/11/Modern-Glass-Facade-Architecture.webp'; // Fallback
-            }} />
+          <div className="footer-brand-name flex items-center gap-3">
+            <div className="relative flex items-center justify-center w-10 h-10 shrink-0">
+              <svg viewBox="0 0 120 120" className="w-full h-full drop-shadow-lg">
+                <defs>
+                  <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#F5D76E" />
+                    <stop offset="50%" stopColor="#C59B27" />
+                    <stop offset="100%" stopColor="#8A6B1C" />
+                  </linearGradient>
+                  <linearGradient id="silver" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#FFFFFF" />
+                    <stop offset="50%" stopColor="#A0B2C6" />
+                    <stop offset="100%" stopColor="#5A728A" />
+                  </linearGradient>
+                </defs>
+                <path d="M25 35 L75 35 L40 85 L95 85" fill="none" stroke="url(#silver)" strokeWidth="16" strokeLinejoin="miter" />
+                <path d="M50 25 L85 25 C100 25 105 35 105 45 C105 55 95 62 85 62 L50 62 Z M50 25 L50 95 M75 62 L100 95" fill="none" stroke="url(#gold)" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <div className="flex flex-col justify-center">
+              <span className="text-xl font-bold leading-tight text-white" style={{ fontFamily: 'var(--font-heading)' }}>زجاج الرياض</span>
+              <span className="text-[0.65rem] font-bold tracking-[0.2em] text-gray-400 uppercase leading-none mt-1">Zujaj Alriyad</span>
+            </div>
           </div>
           <p className="footer-brand-desc">شركتك الموثوقة لجميع أعمال وتوريدات الزجاج في مدينة الرياض. جودة عالمية، أسعار تنافسية، وخدمة احترافية منذ 2009.</p>
         </div>

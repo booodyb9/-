@@ -4,12 +4,12 @@ import { supabase } from '../../lib/supabase';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import Navbar from '../../components/Navbar';
+import LazyImage from '../../components/LazyImage';
 import Hero from '../../components/Hero';
 import GallerySlider from '../../components/GallerySlider';
 import Blog from '../../components/Blog';
 import SectionCTA from '../../components/SectionCTA';
 import Footer from '../../components/Footer';
-import { buildMessagePayload } from '../dashboard/dashboard-utils.mjs';
 
 export default function Home() {
   const { getContent } = useContent();
@@ -243,18 +243,16 @@ export default function Home() {
     setIsSubmitting(true);
     
     try {
-      const calculatorDetails = calcResult.total
-        ? `المساحة: ${calcArea || '-'} م²، النوع: ${calcType || '-'}، التقدير: ${calcResult.total} ر.س.`
-        : '';
-      const { error } = await supabase.from('messages').insert([
-        buildMessagePayload({
-          name,
-          phone,
-          service,
-          message: [message, calculatorDetails].filter(Boolean).join(' | '),
-          source: 'النموذج الرئيسي',
-        }),
-      ]);
+      const { error } = await supabase.from('leads').insert([{
+        name,
+        phone,
+        service: service || null,
+        message: message || null,
+        calc_area: calcArea || null,
+        calc_type: calcType || null,
+        calc_price: calcResult.total || null,
+        source: 'website'
+      }]);
       
       if (error) throw error;
       
@@ -291,6 +289,8 @@ export default function Home() {
       <Navbar />
 
       <Hero />
+
+      <GallerySlider />
 
       <section id="stats">
         <div className="stats-grid container reveal">
@@ -395,7 +395,7 @@ export default function Home() {
 
           <div className="why-image reveal reveal-delay-2">
             <div className="why-img-card">
-              <img loading="lazy" decoding="async" src="https://images.stockcake.com/public/4/6/3/463ccf5d-b90d-4323-b34b-642ce5f2261c_large/luminous-glass-architecture-stockcake.jpg" alt="أعمال زجاجية فاخرة" />
+              <LazyImage src="https://images.stockcake.com/public/4/6/3/463ccf5d-b90d-4323-b34b-642ce5f2261c_large/luminous-glass-architecture-stockcake.jpg" alt="أعمال زجاجية فاخرة" />
               <div className="why-overlay-stat pos-top-left" style={{top:24, right: -20, left: 'auto'}}>
                 <div className="why-stat-big">+500</div>
                 <div className="why-stat-label">مشروع ناجح</div>
@@ -428,7 +428,7 @@ export default function Home() {
           <div className="gallery-grid reveal">
             {projects.map((g, i) => (
               <div key={i} className={`gallery-item ${g.span}`} style={{ display: (activeFilter === 'all' || activeFilter === g.cat) ? 'block' : 'none' }}>
-                <img loading="lazy" decoding="async" className="gallery-img" src={g.img} alt={g.title} />
+                <LazyImage className="gallery-img" src={g.img} alt={g.title} />
                 <div className="gallery-overlay">
                   <div className="gallery-title">{g.title}</div>
                   <div className="gallery-cat">{g.subtitle}</div>
@@ -439,7 +439,7 @@ export default function Home() {
         </div>
       </section>
       <div className="py-8 bg-[#0a0a0a]"><SectionCTA /></div>
-      <GallerySlider />
+      
       <section id="partners">
         <div className="partners-inner">
           <div className="partners-title">CLIENTS & PARTNERS · عملاؤنا وشركاؤنا</div>

@@ -20,8 +20,6 @@ export default function SEO({ noindex, title, description, keywords, canonical, 
   const location = useLocation();
   const path = location.pathname;
   const settingsContent = getContent('site_settings');
-  const seoContent = getContent('seo_settings');
-  const socialContent = getContent('social_links');
   
   let siteSettings: any = {};
   if (settingsContent?.body) {
@@ -29,28 +27,12 @@ export default function SEO({ noindex, title, description, keywords, canonical, 
       siteSettings = JSON.parse(settingsContent.body);
     } catch(e) {}
   }
-
-  let globalSeo: any = {};
-  if (seoContent?.body) {
-    try {
-      const parsed = JSON.parse(seoContent.body);
-      globalSeo = Array.isArray(parsed) ? (parsed[0] || {}) : parsed;
-    } catch(e) {}
-  }
-
-  let socialLinks: string[] = [];
-  if (socialContent?.body) {
-    try {
-      const parsed = JSON.parse(socialContent.body);
-      if (Array.isArray(parsed)) socialLinks = parsed.map(item => item?.url).filter(Boolean);
-    } catch(e) {}
-  }
   
   const defaultSeoData = {
     ar: {
-      title: globalSeo.title || siteSettings.defaultMetaTitle || 'شركة زجاج الرياض | تركيب زجاج الرياض | واجهات، كبائن شاور، ومرايا',
-      description: globalSeo.description || siteSettings.defaultMetaDescription || 'شركة زجاج الرياض لتركيب وتفصيل الزجاج في الرياض. متخصصون في الواجهات الزجاجية (ستركشر)، القواطع المكتبية، كبائن الشاور، المرايا الديكورية، وزجاج السيكوريت بأسعار منافسة وجودة عالية.',
-      keywords: globalSeo.keywords || 'زجاج الرياض, شركة زجاج الرياض, تركيب زجاج بالرياض, محلات زجاج في الرياض, مصنع زجاج الرياض, زجاج سيكوريت الرياض, تفصيل زجاج بالرياض, كبائن شاور الرياض, واجهات زجاجية الرياض, قواطع زجاجية للمكاتب, مرايا ديكور الرياض, أبواب زجاجية',
+      title: siteSettings.defaultMetaTitle || 'شركة زجاج الرياض | تركيب زجاج الرياض | واجهات، كبائن شاور، ومرايا',
+      description: siteSettings.defaultMetaDescription || 'شركة زجاج الرياض لتركيب وتفصيل الزجاج في الرياض. متخصصون في الواجهات الزجاجية (ستركشر)، القواطع المكتبية، كبائن الشاور، المرايا الديكورية، وزجاج السيكوريت بأسعار منافسة وجودة عالية.',
+      keywords: 'زجاج الرياض, شركة زجاج الرياض, تركيب زجاج بالرياض, محلات زجاج في الرياض, مصنع زجاج الرياض, زجاج سيكوريت الرياض, تفصيل زجاج بالرياض, كبائن شاور الرياض, واجهات زجاجية الرياض, قواطع زجاجية للمكاتب, مرايا ديكور الرياض, أبواب زجاجية',
     },
     en: {
       title: 'Riyadh Glass Company | Glass Installation Riyadh | Facades & Partitions',
@@ -66,9 +48,9 @@ export default function SEO({ noindex, title, description, keywords, canonical, 
   const pageKeywords = keywords || defaultData.keywords;
   
   // Update domain here if needed
-  const baseUrl = (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, '');
+  const baseUrl = 'https://riyadh-glass.ai.studio';
   const url = `${baseUrl}${path}`;
-  const ogImage = image || globalSeo.ogImage || `${baseUrl}/og-image.jpg`;
+  const ogImage = image || `${baseUrl}/og-image.jpg`;
 
   const pathParts = path.split('/').filter(p => p);
   const breadcrumbList = {
@@ -142,7 +124,7 @@ export default function SEO({ noindex, title, description, keywords, canonical, 
           "contactType": "customer service",
           "availableLanguage": ["Arabic", "English"]
         },
-        "sameAs": socialLinks.length > 0 ? socialLinks : siteSettings.socialLinks ? Object.values(siteSettings.socialLinks).filter(Boolean) : [
+        "sameAs": siteSettings.socialLinks ? Object.values(siteSettings.socialLinks).filter(Boolean) : [
           "https://twitter.com/riyadhglass",
           "https://facebook.com/riyadhglass",
           "https://instagram.com/riyadhglass"

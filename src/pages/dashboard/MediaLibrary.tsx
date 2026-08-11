@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Upload, Trash2, Copy, Search, File, Image as ImageIcon, Video, Folder, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
 import { MediaFile } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '../../lib/supabase';
-import { inferMediaType } from './dashboard-utils.mjs';
 
 interface Props {
   mediaFiles: MediaFile[];
@@ -21,33 +20,27 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     setUploading(true);
-    const uploadedPaths: string[] = [];
     try {
       const files = Array.from(e.target.files);
-      const newFiles = [];
-
-      for (const file of files) {
+      const newFiles = await Promise.all(files.map(async (file: File) => {
         const fileExt = file.name.split('.').pop();
         const fileName = `${uuidv4()}.${fileExt}`;
-        const filePath = fileName;
+        const filePath = `${fileName}`;
         
         const { error: uploadError } = await supabase.storage
           .from('media')
           .upload(filePath, file);
           
         if (uploadError) throw uploadError;
-        uploadedPaths.push(filePath);
         
         const { data } = supabase.storage.from('media').getPublicUrl(filePath);
         
-        newFiles.push({
+        return {
           name: file.name,
           url: data.publicUrl,
-          storage_path: `media/${filePath}`,
-          type: inferMediaType(file),
-          size: file.size,
-        });
-      }
+          storage_path: `media/${filePath}`
+        };
+      }));
       
       const { error } = await supabase.from('media').insert(newFiles);
       if (error) throw error;
@@ -55,10 +48,7 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
       fetchMedia();
     } catch (err) {
       console.error(err);
-      if (uploadedPaths.length > 0) {
-        await supabase.storage.from('media').remove(uploadedPaths);
-      }
-      alert('فشل رفع الملفات. لم يتم الاحتفاظ برفع جزئي.');
+      alert('Upload failed');
     } finally {
       setUploading(false);
     }
@@ -71,13 +61,11 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
       if (fileToDelete) {
         if (fileToDelete.storage_path) {
            const path = fileToDelete.storage_path.replace('media/', '');
-           const { error: storageError } = await supabase.storage.from('media').remove([path]);
-           if (storageError) throw storageError;
+           await supabase.storage.from('media').remove([path]);
         } else if (fileToDelete.url) {
            const urlParts = fileToDelete.url.split('/');
            const fileName = urlParts[urlParts.length - 1];
-           const { error: storageError } = await supabase.storage.from('media').remove([fileName]);
-           if (storageError) throw storageError;
+           await supabase.storage.from('media').remove([fileName]);
         }
       }
       const { error } = await supabase.from('media').delete().eq('id', id);
@@ -85,7 +73,7 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
       fetchMedia();
     } catch (err) {
       console.error(err);
-      alert('فشل حذف الملف. لم يتم حذف سجل قاعدة البيانات.');
+      alert('Delete failed');
     }
   };
 
@@ -105,7 +93,7 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
 
   const filteredMedia = (mediaFiles || []).filter(m => {
     const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filter === 'all' || inferMediaType(m) === filter;
+    const matchesFilter = filter === 'all' || (m.type === filter || (filter === 'image' && m.url && m.url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i)) || (filter === 'video' && m.url && m.url.match(/\.(mp4|webm|ogg)$/i)));
     return matchesSearch && matchesFilter;
   });
 
@@ -140,7 +128,7 @@ export default function MediaLibrary({ mediaFiles, fetchMedia, onSelect, isModal
           <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all' ? 'bg-[#0284C7] text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>الكل</button>
           <button onClick={() => setFilter('image')} className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'image' ? 'bg-[#0284C7] text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>صور</button>
           <button onClick={() => setFilter('video')} className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'video' ? 'bg-[#0284C7] text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>فيديو</button>
-          <button onClick={() => setFilter('pdf')} className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'pdf' ? 'bg-[#0284C7] text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>مستندات PDF</button>
+          <button onClick={() => setFilter('document')} className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'document' ? 'bg-[#0284C7] text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>مستندات</button>
         </div>
       </div>
 

@@ -120,18 +120,19 @@ export default function ProjectStats() {
             <h4 className="text-xl font-bold text-[#0F172A] mb-6 text-center">
               {language === 'ar' ? 'متوسط وقت تنفيذ المشاريع (بالأيام)' : 'Average Project Timeline (Days)'}
             </h4>
-            <div className="h-80 w-full flex flex-col justify-center gap-5" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-              {timelineData.map(item => (
-                <div key={item.name}>
-                  <div className="flex justify-between text-sm font-bold text-gray-700 mb-2">
-                    <span>{item.name}</span>
-                    <span>{item.days}</span>
-                  </div>
-                  <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#0284C7] rounded-full" style={{ width: `${(item.days / 14) * 100}%` }} />
-                  </div>
+            <div className="h-80 w-full" dir="ltr">
+              <div width="100%" height="100%">
+                <div
+                  data={timelineData}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                >
+                  
+                  
+                  
+                  
+                  
                 </div>
-              ))}
+              </div>
             </div>
           </motion.div>
 
@@ -146,20 +147,22 @@ export default function ProjectStats() {
             <h4 className="text-xl font-bold text-[#0F172A] mb-6 text-center">
               {language === 'ar' ? 'تطور كفاءة استخدام المواد والتوفير (%)' : 'Material Efficiency & Savings Progress (%)'}
             </h4>
-            <div className="h-80 w-full flex items-end justify-between gap-3" dir="ltr">
-              {efficiencyData.map(item => (
-                <div key={item.year} className="flex-1 h-full flex flex-col justify-end items-center gap-2">
-                  <div className="w-full flex items-end justify-center gap-1 h-60">
-                    <div className="w-2/5 bg-[#0284C7] rounded-t-md" style={{ height: `${item.efficiency}%` }} title={`${item.efficiency}%`} />
-                    <div className="w-2/5 bg-emerald-400 rounded-t-md" style={{ height: `${item.savings}%` }} title={`${item.savings}%`} />
-                  </div>
-                  <span className="text-xs font-bold text-gray-600">{item.year}</span>
+            <div className="h-80 w-full" dir="ltr">
+              <div width="100%" height="100%">
+                <div
+                  data={efficiencyData}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                >
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
                 </div>
-              ))}
-            </div>
-            <div className="flex justify-center gap-6 text-xs font-bold mt-2">
-              <span className="flex items-center gap-2"><span className="w-3 h-3 bg-[#0284C7] rounded-sm" />{language === 'ar' ? 'الكفاءة' : 'Efficiency'}</span>
-              <span className="flex items-center gap-2"><span className="w-3 h-3 bg-emerald-400 rounded-sm" />{language === 'ar' ? 'التوفير' : 'Savings'}</span>
+              </div>
             </div>
           </motion.div>
         </div>

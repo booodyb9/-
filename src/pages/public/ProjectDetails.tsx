@@ -19,9 +19,8 @@ import 'swiper/css/free-mode';
 
 export default function ProjectDetails() {
   const { slug } = useParams();
-  const { getContent, loading } = useContent();
+  const { getContent } = useContent();
   const [project, setProject] = useState<PortfolioProject | null>(null);
-  const [resolved, setResolved] = useState(false);
   const [relatedProjects, setRelatedProjects] = useState<PortfolioProject[]>([]);
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
   
@@ -34,8 +33,6 @@ export default function ProjectDetails() {
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    if (loading) return;
-    setResolved(false);
     const portfolioContent = getContent('premium_portfolio_projects');
     if (portfolioContent && portfolioContent.body) {
       try {
@@ -49,15 +46,9 @@ export default function ProjectDetails() {
             .slice(0, 3);
           setRelatedProjects(related);
         }
-      } catch (e) {
-        console.error('Failed to parse portfolio projects:', e);
-        setProject(null);
-      }
-    } else {
-      setProject(null);
+      } catch (e) {}
     }
-    setResolved(true);
-  }, [slug, getContent, loading]);
+  }, [slug, getContent]);
 
   const handleMove = (clientX: number) => {
     if (!sliderRef.current || !isDragging) return;
@@ -91,29 +82,13 @@ export default function ProjectDetails() {
     }
   } : undefined;
 
-  if (loading || !resolved) {
+  if (!project) {
     return (
       <>
         <Navbar />
         <main className="min-h-screen pt-32 pb-12 px-4 flex flex-col items-center justify-center bg-gray-50">
           <div className="w-16 h-16 border-4 border-[#0284C7] border-t-transparent rounded-full animate-spin mb-6"></div>
           <div className="text-2xl font-bold text-gray-600 mb-4">جاري التحميل...</div>
-          <Link to="/portfolio" className="text-[#0284C7] hover:underline font-bold">العودة لمعرض الأعمال</Link>
-        </main>
-        <Footer />
-      </>
-    );
-  }
-
-  if (!project) {
-    return (
-      <>
-        <SEO title="المشروع غير موجود | زجاج الرياض" noindex />
-        <Navbar />
-        <main className="min-h-screen pt-32 pb-12 px-4 flex flex-col items-center justify-center bg-gray-50 text-center">
-          <div className="text-7xl font-bold text-[#0284C7] mb-4">404</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">المشروع غير موجود</h1>
-          <p className="text-gray-600 mb-6">قد يكون المشروع حُذف أو تغيّر رابطه.</p>
           <Link to="/portfolio" className="text-[#0284C7] hover:underline font-bold">العودة لمعرض الأعمال</Link>
         </main>
         <Footer />

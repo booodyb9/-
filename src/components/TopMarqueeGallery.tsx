@@ -1,14 +1,11 @@
 import React, { useMemo } from 'react';
 import { useContent } from '../contexts/ContentContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, EffectCoverflow, Navigation, Pagination } from 'swiper/modules';
+import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import LazyImage from './LazyImage';
-import 'swiper/css/effect-coverflow';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 
-export default function GallerySlider() {
+export default function TopMarqueeGallery() {
   const { getContent } = useContent();
   const portfolioContent = getContent('premium_portfolio_projects');
   
@@ -50,7 +47,7 @@ export default function GallerySlider() {
       ];
     }
     
-    return parsed.filter(p => !p.isHidden).slice(0, 8).map(p => ({
+    return parsed.filter((p: any) => !p.isHidden).slice(0, 10).map((p: any) => ({
       img: p.coverImage || p.image || 'https://wfmmedia.com/wp-content/uploads/2024/11/Modern-Glass-Facade-Architecture.webp',
       title: p.title,
       subtitle: p.category || 'PROJECT'
@@ -58,42 +55,27 @@ export default function GallerySlider() {
   }, [portfolioContent]);
 
   return (
-    <section className="bg-gray-50 py-20 overflow-hidden" >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">جولة في أعمالنا المميزة</h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">تصفح أبرز المشاريع التي قمنا بتنفيذها مؤخراً باستخدام أحدث تقنيات الزجاج</p>
-      </div>
-
+    <section className="bg-[#0a0a0a] py-12 overflow-hidden border-b border-white/10">
       <div className="w-full">
         <Swiper
-          effect={'coverflow'}
-          grabCursor={true}
-          centeredSlides={true}
+          slidesPerView="auto"
+          spaceBetween={24}
           loop={true}
-          slidesPerView={'auto'}
-          coverflowEffect={{
-            rotate: 20,
-            stretch: 0,
-            depth: 200,
-            modifier: 1,
-            slideShadows: true,
-          }}
+          speed={4000}
+          allowTouchMove={false}
           autoplay={{
-            delay: 2000,
+            delay: 0,
             disableOnInteraction: false,
           }}
-          pagination={{ clickable: true }}
-          navigation={true}
-          modules={[EffectCoverflow, Pagination, Navigation, Autoplay]}
-          className="w-full max-w-7xl px-4 py-12"
-          style={{ '--swiper-theme-color': '#0284C7' } as any}
+          modules={[Autoplay]}
+          className="w-full continuous-swiper"
         >
-          {slides.map((slide, index) => (
-            <SwiperSlide key={index} className="!w-[300px] !h-[400px] md:!w-[500px] md:!h-[500px] relative rounded-xl overflow-hidden shadow-2xl group" >
-              <LazyImage src={slide.img} alt={slide.title} className="!absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-              <div className="!absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-8 opacity-90 transition-opacity group-hover:opacity-100">
-                <span className="text-[#0284C7] font-bold text-sm tracking-wider uppercase mb-2">{slide.subtitle}</span>
-                <h3 className="text-white text-2xl font-bold">{slide.title}</h3>
+          {slides.map((slide: any, index: number) => (
+            <SwiperSlide key={index} className="!w-[280px] md:!w-[380px] aspect-[4/3] relative rounded-xl overflow-hidden group cursor-pointer" >
+              <LazyImage src={slide.img} alt={slide.title} className="!absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+              <div className="!absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-6 opacity-80 transition-opacity group-hover:opacity-100">
+                <span className="text-[#0284C7] font-bold text-xs tracking-wider uppercase mb-1">{slide.subtitle}</span>
+                <h3 className="text-white text-lg font-bold">{slide.title}</h3>
               </div>
             </SwiperSlide>
           ))}

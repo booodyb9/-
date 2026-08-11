@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import LazyImage from './LazyImage';
 import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Calendar, ArrowLeft } from 'lucide-react';
@@ -83,7 +84,7 @@ export default function Blog() {
             >
               <div className="relative h-48 overflow-hidden bg-gray-200">
                 {post.image && typeof post.image === 'string' && post.image.trim() !== '' && (
-                  <img loading="lazy" decoding="async"
+                  <LazyImage 
                     src={post.image}
                     alt={post.title || 'صورة'}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

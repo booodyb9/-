@@ -1,8 +1,7 @@
 export interface Message {
-  id: string | number;
+  id: number;
   name: string;
-  email?: string;
-  phone?: string;
+  email: string;
   message: string;
   created_at: string;
   is_read: boolean;
@@ -14,8 +13,6 @@ export interface Content {
   title: string;
   body: string;
   type: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
 export interface MediaFile {
@@ -40,8 +37,6 @@ export interface PortfolioProject {
   completionDate: string;
   materialsUsed: string;
   coverImage: string;
-  image?: string;
-  date?: string;
   galleryImages: string[];
   isFeatured: boolean;
   isHidden: boolean;

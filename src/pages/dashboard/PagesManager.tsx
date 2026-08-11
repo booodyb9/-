@@ -1,13 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Plus, Edit3, Trash2, GripVertical, Settings, Sparkles, Loader2 } from 'lucide-react';
-import ReactQuill from 'react-quill-new';
-import 'react-quill-new/dist/quill.snow.css';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { supabase, saveContent } from '../../lib/supabase';
 import { useContent } from '../../contexts/ContentContext';
 import { v4 as uuidv4 } from 'uuid';
 import imageCompression from 'browser-image-compression';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { hasDuplicateSlug, parsePageContent } from './dashboard-utils.mjs';
 
 interface Props {
   pages: any[];
@@ -15,17 +14,15 @@ interface Props {
 }
 
 const AVAILABLE_SECTIONS = [
-  'Hero', 'Services', 'Process', 'GlassVisualizer', 'ProjectStats',
+  'Hero', 'About', 'Services', 'Process', 'GlassVisualizer', 'ProjectStats', 
   'Features', 'Gallery', 'Testimonials', 'TrustedPartners', 
-  'FAQ', 'Maintenance', 'Blog', 'Contact'
+  'FAQ', 'Maintenance', 'Blog', 'Contact', 'CustomHTML'
 ];
 
 const DraggableAny = Draggable as any;
 
 export default function PagesManager({ pages, fetchContents }: Props) {
-  const parsedPages = useMemo(() => (pages || []).map(parsePageContent), [pages]);
-  const validPages = parsedPages.filter(page => !page.parseError && page.parsed);
-  const malformedPages = parsedPages.filter(page => page.parseError);
+  const parsedPages = (pages || []).map(p => ({ ...p, parsed: p.parsed || (p.body ? JSON.parse(p.body) : {}) }));
   const { updateContent } = useContent();
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editingPage, setEditingPage] = useState<any>(null);
@@ -112,11 +109,7 @@ export default function PagesManager({ pages, fetchContents }: Props) {
       const { data } = supabase.storage.from('media').getPublicUrl(fileName);
       
       const newImage = { name: file.name, url: data.publicUrl, storage_path: `media/${fileName}` };
-      const { error: mediaError } = await supabase.from('media').insert([newImage]);
-      if (mediaError) {
-        await supabase.storage.from('media').remove([fileName]);
-        throw mediaError;
-      }
+      await supabase.from('media').insert([newImage]);
       
       if (isSeo) {
         setEditingPage({...editingPage, parsed: {...editingPage.parsed, seo: {...editingPage.parsed?.seo, [fieldName]: data.publicUrl}}});
@@ -133,12 +126,6 @@ export default function PagesManager({ pages, fetchContents }: Props) {
 
     if (!editingPage.parsed?.title || !editingPage.parsed?.slug) {
       alert('يرجى إدخال عنوان ورابط الصفحة');
-      return;
-    }
-
-    const pageSlugs = validPages.map(page => ({ id: page.key, slug: page.parsed.slug }));
-    if (hasDuplicateSlug(editingPage.parsed.slug, pageSlugs, editingPage.key)) {
-      alert('رابط الصفحة مستخدم بالفعل. اختر رابطاً مختلفاً.');
       return;
     }
 
@@ -207,7 +194,7 @@ export default function PagesManager({ pages, fetchContents }: Props) {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">تعديل الصفحة: {editingPage.parsed?.title}</h2>
           <div className="flex gap-2">
-            <button onClick={() => { setEditingKey(null); setEditingPage(null); }} className="px-4 py-2 border rounded">إلغاء</button>
+            <button onClick={() => setEditingKey(null)} className="px-4 py-2 border rounded">إلغاء</button>
             <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-[#0284C7] text-white rounded font-bold">
               {saving ? 'جاري الحفظ...' : 'حفظ الصفحة'}
             </button>
@@ -416,11 +403,6 @@ export default function PagesManager({ pages, fetchContents }: Props) {
           {successMessage}
         </div>
       )}
-      {malformedPages.length > 0 && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-md mb-6 border border-red-200">
-          تعذر قراءة {malformedPages.length} صفحة لأن محتواها ليس JSON صالحاً. لم يتم حذفها أو تعديلها.
-        </div>
-      )}
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
@@ -433,11 +415,11 @@ export default function PagesManager({ pages, fetchContents }: Props) {
             </tr>
           </thead>
           <tbody>
-            {validPages.length === 0 ? (
+            {(parsedPages || []).length === 0 ? (
                 <tr>
                     <td colSpan={4} className="p-8 text-center text-gray-500">لا توجد صفحات إضافية، يمكنك إنشاء صفحة جديدة.</td>
                 </tr>
-            ) : validPages.map((page: any) => (
+            ) : (parsedPages || []).map((page: any) => (
               <tr key={page.key} className="border-b hover:bg-gray-50">
                 <td className="p-4 font-bold text-gray-900">{page.parsed.title}</td>
                 <td className="p-4 text-left" dir="ltr"><a href={`/${page.parsed.slug}`} target="_blank" className="text-blue-600 hover:underline">/{page.parsed.slug}</a></td>

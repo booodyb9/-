@@ -11,16 +11,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Serve static files from the React app
-
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
-dotenv.config();
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
+dotenv.config({ path: '.env.example' });
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://ugvdoabczcnxluzxehga.supabase.co';
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
-const siteUrl = (process.env.SITE_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
-
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.use(compression());
 app.use(express.json());
@@ -30,9 +27,6 @@ app.post('/api/generate-seo', async (req, res) => {
     const { title, content, type } = req.body;
     if (!title && !content) {
       return res.status(400).json({ error: 'Title or content is required' });
-    }
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(503).json({ error: 'SEO generation is not configured' });
     }
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -48,9 +42,8 @@ app.post('/api/generate-seo', async (req, res) => {
         responseMimeType: "application/json",
       }
     });
-
-    const text = response.text;
-    if (!text) throw new Error('Gemini returned an empty response');
+    
+    const text = response.text();
     let jsonResult;
     try {
         jsonResult = JSON.parse(text);
@@ -59,7 +52,7 @@ app.post('/api/generate-seo', async (req, res) => {
         const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
         jsonResult = JSON.parse(cleaned);
     }
-
+    
     res.json(jsonResult);
   } catch (error) {
     console.error('Error generating SEO:', error);
@@ -69,17 +62,15 @@ app.post('/api/generate-seo', async (req, res) => {
 
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain');
-  res.send(`User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml`);
+  res.send(`User-agent: *\nAllow: /\n\nSitemap: https://riyadh-glass.ai.studio/sitemap.xml`);
 });
 
 app.get('/sitemap.xml', async (req, res) => {
   try {
-    const { data } = supabase
-      ? await supabase.from('contents').select('*')
-      : { data: null };
+    const { data } = await supabase.from('contents').select('*');
     
     let urls = [];
-    const baseUrl = siteUrl;
+    const baseUrl = 'https://riyadh-glass.ai.studio';
     
     urls.push(`<url><loc>${baseUrl}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`);
     urls.push(`<url><loc>${baseUrl}/about</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);

@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Home, Building, Maximize, Droplets, LayoutGrid, Store, ArrowLeft } from 'lucide-react';
 import CostCalculator from './CostCalculator';
+import LazyImage from './LazyImage';
 import { useContent } from '../contexts/ContentContext';
 
 const defaultServices = [
@@ -120,7 +121,7 @@ export default function Services() {
             >
               <div className="h-56 overflow-hidden relative shrink-0">
                 {service.image && typeof service.image === 'string' && service.image.trim() !== '' && (
-                  <img loading="lazy" decoding="async"
+                  <LazyImage 
                     src={service.image}
                     alt={service.title || 'صورة'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
