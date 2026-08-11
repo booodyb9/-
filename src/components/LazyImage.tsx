@@ -4,6 +4,9 @@ interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt: string;
   className?: string;
+  loading?: 'eager' | 'lazy';
+  decoding?: 'async' | 'auto' | 'sync';
+  onLoad?: React.ReactEventHandler<HTMLImageElement>;
 }
 
 export default function LazyImage({
