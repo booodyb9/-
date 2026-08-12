@@ -105,3 +105,12 @@
 }
 
 @import './new-theme.css';
+
+@keyframes introSweep { 0% { transform: translateX(-110%); opacity: 0; } 30% { opacity: .9; } 100% { transform: translateX(110%); opacity: 0; } }
+@keyframes introGlassIn { 0% { opacity: 0; transform: translateY(18px) scale(.9); filter: blur(12px); } 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+@keyframes introTitleIn { 0% { opacity: 0; transform: translateY(12px); letter-spacing: .18em; } 100% { opacity: 1; transform: translateY(0); letter-spacing: 0; } }
+.intro-light-sweep { animation: introSweep 1.8s cubic-bezier(.22,1,.36,1) both; }
+.intro-glass-logo { animation: introGlassIn .85s cubic-bezier(.16,1,.3,1) both; }
+.intro-brand-title { animation: introTitleIn .8s .4s cubic-bezier(.16,1,.3,1) both; }
+.intro-brand-line { animation: introGlassIn .7s .7s both; }
+@media (prefers-reduced-motion: reduce) { .intro-light-sweep,.intro-glass-logo,.intro-brand-title,.intro-brand-line { animation: none !important; } }
