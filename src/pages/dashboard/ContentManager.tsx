@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { Edit3, Save } from 'lucide-react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -30,8 +30,12 @@ export const SECTIONS: Section[] = [
     title: 'صور البانر الرئيسي', 
     type: 'array',
     schema: [
+      { key: 'title', label: 'عنوان الشريحة (اختياري)', type: 'text' },
+      { key: 'description', label: 'وصف مختصر (اختياري)', type: 'textarea' },
       { key: 'alt', label: 'وصف الصورة (Alt Text)', type: 'text' },
-      { key: 'url', label: 'رابط الصورة', type: 'image' },
+      { key: 'url', label: 'صورة الهيرو', type: 'image' },
+      { key: 'isPrimary', label: 'الصورة الرئيسية', type: 'boolean' },
+      { key: 'isHidden', label: 'إخفاء الصورة', type: 'boolean' },
     ]
   },
   { key: 'services_intro', title: 'مقدمة الخدمات', type: 'rich_text' },
@@ -46,6 +50,7 @@ export const SECTIONS: Section[] = [
       { key: 'bgImage', label: 'صورة الخلفية', type: 'image' },
       { key: 'icon', label: 'اسم الأيقونة (مثال: Home)', type: 'text' },
       { key: 'isHidden', label: 'إخفاء الخدمة', type: 'boolean' },
+      { key: 'featured', label: 'خدمة مميزة (Featured)', type: 'boolean' },
       { key: 'seoTitle', label: 'SEO عنوان', type: 'text' },
       { key: 'seoDescription', label: 'SEO وصف', type: 'textarea' },
       { key: 'seoKeywords', label: 'SEO كلمات مفتاحية', type: 'text' },
@@ -74,7 +79,6 @@ export const SECTIONS: Section[] = [
     title: 'صورة لماذا تختارنا',
     type: 'array',
     schema: [
-      
       { key: 'image', label: 'رابط الصورة', type: 'image' },
       { key: 'seoTitle', label: 'SEO عنوان', type: 'text' },
       { key: 'seoDescription', label: 'SEO وصف', type: 'textarea' },
@@ -82,7 +86,6 @@ export const SECTIONS: Section[] = [
       { key: 'seoCanonical', label: 'SEO Canonical URL', type: 'text' },
       { key: 'seoImage', label: 'SEO OG Image', type: 'image' },
       { key: 'seoNoIndex', label: 'منع الأرشفة (NoIndex)', type: 'boolean' },
-
     ]
   },
   { 
@@ -111,7 +114,6 @@ export const SECTIONS: Section[] = [
       { key: 'title', label: 'عنوان المشروع', type: 'text' },
       { key: 'category', label: 'القسم (مثل: واجهات, قواطع)', type: 'text' },
       { key: 'description', label: 'وصف المشروع', type: 'textarea' },
-      
       { key: 'image', label: 'رابط الصورة', type: 'image' },
       { key: 'seoTitle', label: 'SEO عنوان', type: 'text' },
       { key: 'seoDescription', label: 'SEO وصف', type: 'textarea' },
@@ -119,7 +121,6 @@ export const SECTIONS: Section[] = [
       { key: 'seoCanonical', label: 'SEO Canonical URL', type: 'text' },
       { key: 'seoImage', label: 'SEO OG Image', type: 'image' },
       { key: 'seoNoIndex', label: 'منع الأرشفة (NoIndex)', type: 'boolean' },
-
       { key: 'className', label: 'كلاس CSS (اختياري - للتحكم بالحجم)', type: 'text' },
     ]
   },
@@ -155,7 +156,6 @@ export const SECTIONS: Section[] = [
       { key: 'excerpt', label: 'مقتطف (وصف قصير)', type: 'textarea' },
       { key: 'content', label: 'محتوى المقال', type: 'rich_text' },
       { key: 'date', label: 'التاريخ', type: 'text' },
-      
       { key: 'image', label: 'رابط الصورة', type: 'image' },
       { key: 'seoTitle', label: 'SEO عنوان', type: 'text' },
       { key: 'seoDescription', label: 'SEO وصف', type: 'textarea' },
@@ -163,7 +163,6 @@ export const SECTIONS: Section[] = [
       { key: 'seoCanonical', label: 'SEO Canonical URL', type: 'text' },
       { key: 'seoImage', label: 'SEO OG Image', type: 'image' },
       { key: 'seoNoIndex', label: 'منع الأرشفة (NoIndex)', type: 'boolean' },
-
     ]
   },
   { 
@@ -176,16 +175,8 @@ export const SECTIONS: Section[] = [
       { key: 'icon', label: 'اسم الأيقونة', type: 'text' },
     ]
   },
-  { 
-    key: 'visualizer_content', 
-    title: 'محتوى متخيل الزجاج', 
-    type: 'rich_text' 
-  },
-  { 
-    key: 'maintenance_content', 
-    title: 'نصائح الصيانة والعناية', 
-    type: 'rich_text' 
-  },
+  { key: 'visualizer_content', title: 'محتوى متخيل الزجاج', type: 'rich_text' },
+  { key: 'maintenance_content', title: 'نصائح الصيانة والعناية', type: 'rich_text' },
   { key: 'contact_content', title: 'تواصل معنا', type: 'rich_text' },
   { key: 'about_content', title: 'من نحن (About)', type: 'rich_text' },
   { 
@@ -241,6 +232,47 @@ const modules = {
   ],
 };
 
+function EditorPanel({ section, editingContent, setEditingContent, savingContent, onCancel, onSave }: {
+  section: Section;
+  editingContent: Content;
+  setEditingContent: (content: Content) => void;
+  savingContent: boolean;
+  onCancel: () => void;
+  onSave: () => void;
+}) {
+  return (
+    <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <h4 className="font-bold text-gray-800 mb-4 flex justify-between items-center">
+        تحرير: {section.title}
+        <button onClick={onCancel} className="text-gray-500 hover:text-gray-700 text-sm">إلغاء</button>
+      </h4>
+      {section.type === 'rich_text' ? (
+        <div className="bg-white" dir="rtl">
+          <ReactQuill
+            theme="snow"
+            value={editingContent.body || ''}
+            onChange={(val) => setEditingContent({ ...editingContent, body: val })}
+            modules={modules}
+            className="h-64 mb-12"
+          />
+        </div>
+      ) : section.type === 'array' && section.schema ? (
+        <ArrayEditor
+          value={editingContent.body || ''}
+          onChange={(val) => setEditingContent({ ...editingContent, body: val })}
+          schema={section.schema}
+        />
+      ) : null}
+      <div className="mt-4 flex justify-end">
+        <button onClick={onSave} disabled={savingContent} className="bg-[#0284C7] text-white px-6 py-2 rounded-md hover:bg-[#0369A1] transition-colors flex items-center gap-2 font-bold">
+          <Save className="w-4 h-4" />
+          {savingContent ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function ContentManager({ contents, fetchContents, token, filterKeys }: ContentManagerProps) {
   const { updateContent } = useContent();
 
@@ -253,13 +285,8 @@ export default function ContentManager({ contents, fetchContents, token, filterK
     if (!editingContent) return;
     setSavingContent(true);
     try {
-      
-      
       await saveContent(editingContent.key, editingContent.title, editingContent.type, editingContent.body);
-      
-      // Also update context directly for instant feedback
       updateContent(editingContent.key, editingContent.body);
-      
       fetchContents();
       setEditingKey(null);
       setEditingContent(null);
@@ -287,53 +314,6 @@ export default function ContentManager({ contents, fetchContents, token, filterK
     });
   }, [contents]);
 
-  const EditorComponent = memo(({ section }: { section: Section }) => {
-    if (editingKey !== section.key || !editingContent) return null;
-
-    return (
-      <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <h4 className="font-bold text-gray-800 mb-4 flex justify-between items-center">
-          تحرير: {section.title}
-          <button 
-            onClick={() => setEditingKey(null)}
-            className="text-gray-500 hover:text-gray-700 text-sm"
-          >
-            إلغاء
-          </button>
-        </h4>
-        
-        {section.type === 'rich_text' ? (
-          <div className="bg-white" dir="ltr">
-            <ReactQuill 
-              theme="snow" 
-              value={editingContent.body || ''} 
-              onChange={(val) => setEditingContent({ ...editingContent, body: val })}
-              modules={modules}
-              className="h-64 mb-12"
-            />
-          </div>
-        ) : section.type === 'array' && section.schema ? (
-          <ArrayEditor 
-            value={editingContent.body || ''}
-            onChange={(val) => setEditingContent({ ...editingContent, body: val })}
-            schema={section.schema}
-          />
-        ) : null}
-
-        <div className="mt-4 flex justify-end">
-          <button
-            onClick={handleSaveContent}
-            disabled={savingContent}
-            className="bg-[#0284C7] text-white px-6 py-2 rounded-md hover:bg-[#0369A1] transition-colors flex items-center gap-2 font-bold"
-          >
-            <Save className="w-4 h-4" />
-            {savingContent ? 'جاري الحفظ...' : 'حفظ التغييرات'}
-          </button>
-        </div>
-      </div>
-    );
-  });
-
   const sectionsToRender = filterKeys ? SECTIONS.filter(s => filterKeys.includes(s.key)) : SECTIONS;
 
   return (
@@ -358,7 +338,6 @@ export default function ContentManager({ contents, fetchContents, token, filterK
                   المعرف: <code className="bg-gray-100 px-1 rounded text-[#0284C7]">{section.key}</code>
                 </p>
               </div>
-              
               {editingKey !== section.key && (
                 <button
                   onClick={() => handleEdit(section.key, section.title, section.type)}
@@ -369,8 +348,16 @@ export default function ContentManager({ contents, fetchContents, token, filterK
                 </button>
               )}
             </div>
-            
-            <EditorComponent section={section} />
+            {editingKey === section.key && editingContent && (
+              <EditorPanel
+                section={section}
+                editingContent={editingContent}
+                setEditingContent={setEditingContent}
+                savingContent={savingContent}
+                onCancel={() => { setEditingKey(null); setEditingContent(null); }}
+                onSave={handleSaveContent}
+              />
+            )}
           </div>
         ))}
       </div>
