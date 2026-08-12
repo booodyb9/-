@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { motion } from 'motion/react';
 import { ArrowLeft, ArrowUpRight, ChevronLeft, ChevronRight, ShieldCheck, Sparkles, MapPin } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useContent } from '../contexts/ContentContext';
@@ -52,10 +51,10 @@ export default function Hero() {
         <div className="absolute bottom-0 left-0 w-[24rem] h-[24rem] rounded-full bg-cyan-100/45 blur-3xl" />
       </div>
 
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-24 pb-12 md:py-28 relative z-10">
-        <div className="grid lg:grid-cols-[0.92fr_1.08fr] gap-10 lg:gap-14 items-center">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .7 }} className="order-2 lg:order-1 text-center lg:text-right">
-            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white/70 backdrop-blur-xl px-4 py-2 text-xs sm:text-sm font-bold text-sky-800 shadow-sm mb-6">
+      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-12 md:py-28 relative z-10">
+        <div className="grid lg:grid-cols-[0.92fr_1.08fr] gap-8 sm:gap-10 lg:gap-14 items-center">
+          <div className="order-2 lg:order-1 text-center lg:text-right opacity-100 visible">
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white/75 backdrop-blur-xl px-4 py-2 text-xs sm:text-sm font-bold text-sky-800 shadow-sm mb-6">
               <Sparkles className="w-4 h-4" /> {language === 'ar' ? 'حلول زجاجية معمارية في الرياض' : 'Architectural glass solutions in Riyadh'}
             </div>
 
@@ -92,9 +91,9 @@ export default function Hero() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div initial={{ opacity: 0, scale: .98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .8 }} className="order-1 lg:order-2 relative">
+          <div className="order-1 lg:order-2 relative opacity-100 visible">
             <div className="absolute -inset-3 rounded-[2.5rem] bg-gradient-to-br from-white/80 via-sky-100/60 to-white/20 blur-xl" />
             <div className="relative rounded-[2rem] sm:rounded-[2.6rem] overflow-hidden border border-white shadow-[0_35px_90px_rgba(15,23,42,.16)] aspect-[4/5] sm:aspect-[16/13] lg:aspect-[5/6] xl:aspect-[6/5] bg-white group">
               <Swiper modules={[Autoplay, EffectFade, Navigation, Keyboard]} effect="fade" speed={900} autoplay={{ delay: 5200, disableOnInteraction: false }} keyboard={{ enabled: true }} navigation={{ nextEl: '.hero-next', prevEl: '.hero-prev' }} className="w-full h-full">
@@ -111,7 +110,7 @@ export default function Hero() {
                 <button className="hero-prev absolute z-20 top-1/2 -translate-y-1/2 left-3 w-10 h-10 rounded-full bg-white/80 backdrop-blur-xl border border-white shadow flex items-center justify-center text-slate-700" aria-label="الصورة السابقة"><ChevronLeft className="w-5 h-5" /></button>
               </>}
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
