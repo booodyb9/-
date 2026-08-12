@@ -23,7 +23,11 @@ export default function BrandIntro() {
   const soundEnabled = settings.introSoundEnabled !== false;
 
   useEffect(() => {
-    if (!enabled || window.sessionStorage.getItem(SESSION_KEY)) return;
+    if (!enabled) {
+      setVisible(false);
+      return;
+    }
+    if (window.sessionStorage.getItem(SESSION_KEY)) return;
     setVisible(true);
     const timer = window.setTimeout(() => {
       setVisible(false);
@@ -36,13 +40,16 @@ export default function BrandIntro() {
     if (!visible || !audioUrl || !soundEnabled || muted || !audioRef.current) return;
     const audio = audioRef.current;
     audio.volume = 0.9;
+    let playOnFirstInteraction: (() => void) | null = null;
     audio.play().catch(() => {
-      const playOnFirstInteraction = () => {
+      playOnFirstInteraction = () => {
         audio.play().catch(() => undefined);
-        window.removeEventListener('pointerdown', playOnFirstInteraction);
       };
       window.addEventListener('pointerdown', playOnFirstInteraction, { once: true });
     });
+    return () => {
+      if (playOnFirstInteraction) window.removeEventListener('pointerdown', playOnFirstInteraction);
+    };
   }, [visible, audioUrl, soundEnabled, muted]);
 
   if (!visible) return null;
