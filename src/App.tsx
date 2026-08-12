@@ -9,7 +9,6 @@ import FloatingWhatsApp from './components/FloatingWhatsApp';
 import DynamicContactLinks from './components/DynamicContactLinks';
 import HomepageSectionController from './components/HomepageSectionController';
 import DeferredPublicEnhancements from './components/DeferredPublicEnhancements';
-import BrandIntro from './components/BrandIntro';
 
 export default function App() {
   return (
@@ -17,7 +16,6 @@ export default function App() {
       <AuthProvider>
         <ContentProvider>
           <div className="min-h-screen bg-transparent font-sans text-right ltr:text-left relative z-0">
-            <BrandIntro />
             <AmbientBackground />
             <BrowserRouter>
               <ScrollToTop />
