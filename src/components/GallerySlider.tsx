@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useContent } from '../contexts/ContentContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectCoverflow, Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -9,6 +10,8 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 export default function GallerySlider() {
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
   const { getContent } = useContent();
   const portfolioContent = getContent('premium_portfolio_projects');
   
@@ -60,7 +63,7 @@ export default function GallerySlider() {
   return (
     <section className="bg-gray-50 py-20 overflow-hidden" >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">جولة في أعمالنا المميزة</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{isAr ? 'جولة في أعمالنا المميزة' : 'Tour Our Featured Works'}</h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">تصفح أبرز المشاريع التي قمنا بتنفيذها مؤخراً باستخدام أحدث تقنيات الزجاج</p>
       </div>
 

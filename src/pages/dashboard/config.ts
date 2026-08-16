@@ -1,8 +1,8 @@
-import { 
-  Home, LayoutDashboard, FileText, Image, Briefcase, 
-  Settings, Users, Shield, Activity, HardDrive, 
+import {
+  LayoutDashboard, FileText, Image, Briefcase,
+  Settings, Users, Shield, Activity, HardDrive,
   MessageSquare, Star, HelpCircle, Navigation, LayoutTemplate,
-  Search, Link, Map, Share2, FolderOpen
+  Search, Share2, FolderOpen, Target, BarChart3
 } from 'lucide-react';
 
 export const dashboardMenu = [
@@ -11,6 +11,8 @@ export const dashboardMenu = [
     items: [
       { id: 'home', label: 'الرئيسية والإحصائيات', icon: LayoutDashboard },
       { id: 'messages', label: 'صندوق الرسائل', icon: MessageSquare },
+      { id: 'leads', label: 'العملاء المحتملون CRM', icon: Target },
+      { id: 'conversion_analytics', label: 'تحليلات التحويل', icon: BarChart3 },
     ]
   },
   {
@@ -37,6 +39,7 @@ export const dashboardMenu = [
   {
     group: 'إعدادات الموقع',
     items: [
+      { id: 'ai_seo', label: 'الذكاء الاصطناعي (AI SEO)', icon: Search },
       { id: 'navigation', label: 'القوائم والروابط', icon: Navigation },
       { id: 'seo', label: 'إعدادات SEO', icon: Search },
       { id: 'performance', label: 'فحص الأداء والسرعة', icon: Activity },
@@ -45,7 +48,7 @@ export const dashboardMenu = [
     ]
   },
   {
-    group: 'النظام (قريباً)',
+    group: 'النظام',
     items: [
       { id: 'users', label: 'المستخدمين', icon: Users },
       { id: 'roles', label: 'الصلاحيات', icon: Shield },

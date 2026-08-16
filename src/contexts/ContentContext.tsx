@@ -18,9 +18,9 @@ const ContentContext = createContext<ContentContextType | undefined>(undefined);
 export interface MediaFile { id: string; url: string; name: string; created_at: string; storage_path: string; }
 
 export function ContentProvider({ children }: { children: ReactNode }) {
-  const [contents, setContents] = useState<Content[]>([]);
+  const [contents, setContents] = useState<Content[]>(() => { try { const cached = localStorage.getItem('rg_contents_cache'); return cached ? JSON.parse(cached) : []; } catch { return []; } });
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => { try { return !localStorage.getItem('rg_contents_cache'); } catch { return true; } });
 
     const fetchMedia = async () => {
     try {
@@ -47,7 +47,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error("Error fetching contents from Supabase:", error);
       } else if (data) {
-        setContents(data as Content[]);
+        setContents(data as Content[]); try { localStorage.setItem('rg_contents_cache', JSON.stringify(data)); } catch (e) {}
       }
     } catch (err) {
       console.error("Error fetching contents:", err);

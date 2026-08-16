@@ -76,7 +76,7 @@ export default function BlogDetails() {
         posts = JSON.parse(blogContent.body);
       } catch (e) {}
     }
-    const allPosts = [...posts, ...defaultBlogPosts];
+    const allPosts = posts.length > 0 ? posts : defaultBlogPosts;
     const found = allPosts.find((p: any) => 
       p.title === decodeURIComponent(slug || '') || 
       p.title.replace(/\s+/g, '-').toLowerCase() === slug

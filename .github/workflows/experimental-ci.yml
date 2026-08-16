@@ -1,0 +1,48 @@
+name: Experimental AI CRM CI
+
+on:
+  push:
+    branches: [experimental-ai-crm]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - name: Build preview bundle
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://ugvdoabczcnxluzxehga.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_IgaHjtDYgW9UKVMDgH6EKA_qzBa22pl
+      - name: Package preview artifact
+        if: github.ref == 'refs/heads/experimental-ai-crm'
+        uses: actions/upload-artifact@v4
+        with:
+          name: netlify-preview-bundle
+          path: |
+            dist
+            netlify/functions
+            netlify.toml
+          if-no-files-found: warn
+          retention-days: 3
+      - name: Package Netlify preview source
+        if: github.ref == 'refs/heads/experimental-ai-crm'
+        uses: actions/upload-artifact@v4
+        with:
+          name: netlify-preview-source
+          path: |
+            .
+            !.git/**
+            !node_modules/**
+            !dist/**
+          hidden-files: true
+          retention-days: 3

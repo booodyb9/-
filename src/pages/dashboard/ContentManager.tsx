@@ -1,7 +1,6 @@
 import { memo, useState, useCallback, useMemo } from 'react';
 import { Edit3, Save } from 'lucide-react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import SafeQuill from '../../components/SafeQuill';
 import { Content } from './types';
 import ArrayEditor from './ArrayEditor';
 import { useContent } from '../../contexts/ContentContext';
@@ -24,14 +23,33 @@ interface Section {
 }
 
 export const SECTIONS: Section[] = [
+    { 
+    key: 'brand_intro', 
+    title: 'مقدمة العلامة التجارية (Intro)', 
+    type: 'array',
+    schema: [
+      { key: 'enabled', label: 'تفعيل المقدمة', type: 'boolean' },
+      { key: 'logoUrl', label: 'شعار المقدمة', type: 'image' },
+      { key: 'audioUrl', label: 'ملف التعليق الصوتي (URL أو مسار ثابت)', type: 'text' },
+      { key: 'title', label: 'عنوان المقدمة', type: 'text' },
+      { key: 'duration', label: 'مدة المقدمة بالملي ثانية (مثال: 2500)', type: 'number' }
+    ]
+  },
   { key: 'hero_content', title: 'الرئيسية (نصوص البانر)', type: 'rich_text' },
   { 
     key: 'hero_images', 
-    title: 'صور البانر الرئيسي', 
+    title: 'صور الهيرو', 
     type: 'array',
     schema: [
-      { key: 'alt', label: 'وصف الصورة (Alt Text)', type: 'text' },
       { key: 'url', label: 'رابط الصورة', type: 'image' },
+      { key: 'alt', label: 'وصف الصورة (Alt Text)', type: 'text' },
+      { key: 'seoImageTitle', label: 'عنوان الصورة (SEO Image Title)', type: 'text' },
+      { key: 'visible', label: 'إظهار الصورة (مرئية للزوار)', type: 'boolean' },
+      { key: 'isDefault', label: 'تحديد كصورة رئيسية (Default)', type: 'boolean' },
+      { key: 'title', label: 'عنوان الشريحة (اختياري)', type: 'text' },
+      { key: 'description', label: 'وصف الشريحة (اختياري)', type: 'textarea' },
+      { key: 'ctaText', label: 'نص الزر الأساسي (اختياري)', type: 'text' },
+      { key: 'ctaLink', label: 'رابط الزر (اختياري)', type: 'text' }
     ]
   },
   { key: 'services_intro', title: 'مقدمة الخدمات', type: 'rich_text' },
@@ -41,7 +59,9 @@ export const SECTIONS: Section[] = [
     type: 'array',
     schema: [
       { key: 'title', label: 'عنوان الخدمة', type: 'text' },
-      { key: 'description', label: 'وصف الخدمة', type: 'textarea' },
+      { key: 'slug', label: 'الرابط المختصر (Slug)', type: 'text' },
+      { key: 'description', label: 'وصف الخدمة المختصر', type: 'textarea' },
+      { key: 'full_description', label: 'محتوى الخدمة التفصيلي', type: 'textarea' },
       { key: 'image', label: 'الصورة الرئيسية', type: 'image' },
       { key: 'bgImage', label: 'صورة الخلفية', type: 'image' },
       { key: 'icon', label: 'اسم الأيقونة (مثال: Home)', type: 'text' },
@@ -304,7 +324,7 @@ export default function ContentManager({ contents, fetchContents, token, filterK
         
         {section.type === 'rich_text' ? (
           <div className="bg-white" dir="ltr">
-            <ReactQuill 
+            <SafeQuill 
               theme="snow" 
               value={editingContent.body || ''} 
               onChange={(val) => setEditingContent({ ...editingContent, body: val })}

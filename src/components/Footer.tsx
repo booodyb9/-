@@ -1,8 +1,11 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Footer() {
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
   return (
     <footer id="footer">
       <div className="footer-inner">
@@ -27,21 +30,21 @@ export default function Footer() {
               </svg>
             </div>
             <div className="flex flex-col justify-center">
-              <span className="text-xl font-bold leading-tight text-white" style={{ fontFamily: 'var(--font-heading)' }}>زجاج الرياض</span>
+              <span className="text-xl font-bold leading-tight text-white" style={{ fontFamily: 'var(--font-heading)' }}>{isAr ? 'زجاج الرياض' : 'Riyadh Glass'}</span>
               <span className="text-[0.65rem] font-bold tracking-[0.2em] text-gray-400 uppercase leading-none mt-1">Zujaj Alriyad</span>
             </div>
           </div>
-          <p className="footer-brand-desc">شركتك الموثوقة لجميع أعمال وتوريدات الزجاج في مدينة الرياض. جودة عالمية، أسعار تنافسية، وخدمة احترافية منذ 2009.</p>
+          <p className="footer-brand-desc">{isAr ? 'شركتك الموثوقة لجميع أعمال وتوريدات الزجاج في مدينة الرياض. جودة عالمية، أسعار تنافسية، وخدمة احترافية منذ 2009.' : 'Your trusted company for all glass works and supplies in Riyadh. Global quality, competitive prices, and professional service since 2009.'}</p>
         </div>
         <div>
-          <div className="footer-col-title">خدماتنا</div>
+          <div className="footer-col-title">{isAr ? 'خدماتنا' : 'Our Services'}</div>
           <ul className="footer-links">
-            <li><Link to="/services/الواجهات-الزجاجية">الواجهات الزجاجية</Link></li>
-            <li><Link to="/services/القواطع-الزجاجية">القواطع المكتبية</Link></li>
+            <li><Link to="/services/الواجهات-الزجاجية">{isAr ? 'الواجهات الزجاجية' : 'Glass Facades'}</Link></li>
+            <li><Link to="/services/القواطع-الزجاجية">{isAr ? 'القواطع المكتبية' : 'Office Partitions'}</Link></li>
             <li><Link to="/services/كبائن-شاور">كبائن الشاور</Link></li>
-            <li><Link to="/services/أبواب-زجاجية">الأبواب الزجاجية</Link></li>
+            <li><Link to="/services/أبواب-زجاجية">{isAr ? 'الأبواب الزجاجية' : 'Glass Doors'}</Link></li>
             <li><Link to="/services/مرايا-ذكية">المرايا الديكورية</Link></li>
-            <li><Link to="/services/درابزين-زجاج">الدرابزين الزجاجي</Link></li>
+            <li><Link to="/services/درابزين-زجاج">{isAr ? 'الدرابزين الزجاجي' : 'Glass Handrails'}</Link></li>
           </ul>
         </div>
         <div>
@@ -50,9 +53,9 @@ export default function Footer() {
             <li><Link to="/about">من نحن</Link></li>
             <li><Link to="/portfolio">معرض الأعمال</Link></li>
             <li><Link to="/testimonials">آراء العملاء</Link></li>
-            <li><Link to="/blog">المدونة</Link></li>
-            <li><Link to="/faq">الأسئلة الشائعة</Link></li>
-            <li><Link to="/contact">تواصل معنا</Link></li>
+            <li><Link to="/blog">{isAr ? 'المدونة' : 'Blog'}</Link></li>
+            <li><Link to="/faq">{isAr ? 'الأسئلة الشائعة' : 'FAQ'}</Link></li>
+            <li><Link to="/contact">{isAr ? 'تواصل معنا' : 'Contact Us'}</Link></li>
           </ul>
         </div>
         <div>
@@ -61,14 +64,14 @@ export default function Footer() {
             <li><a href="tel:+966510233706" dir="ltr">+966 51 023 3706</a></li>
             <li><a href="mailto:info@riyadhglass.sa">info@riyadhglass.sa</a></li>
             <li><a href="#">طريق الملك فهد، العليا</a></li>
-            <li><a href="#">الرياض، المملكة العربية السعودية</a></li>
-            <li style={{marginTop:16}}><Link to="/privacy-policy">سياسة الخصوصية</Link></li>
-            <li><Link to="/terms">الشروط والأحكام</Link></li>
+            <li><a href="#">{isAr ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia'}</a></li>
+            <li style={{marginTop:16}}><Link to="/privacy-policy">{isAr ? 'سياسة الخصوصية' : 'Privacy Policy'}</Link></li>
+            <li><Link to="/terms">{isAr ? 'الشروط والأحكام' : 'Terms & Conditions'}</Link></li>
           </ul>
         </div>
       </div>
       <div className="footer-bottom">
-        <span>© 2026 شركة زجاج الرياض. جميع الحقوق محفوظة.</span>
+        <span>{isAr ? '© 2026 شركة زجاج الرياض. جميع الحقوق محفوظة.' : '© 2026 Riyadh Glass. All rights reserved.'}</span>
         <span style={{display:'flex',alignItems:'center',gap:16}}>
           <Link to="/privacy-policy">سياسة الخصوصية</Link>
           <Link to="/terms">الشروط والأحكام</Link>

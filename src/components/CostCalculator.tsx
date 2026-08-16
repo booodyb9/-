@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Calculator, ArrowLeft, Ruler, ChevronDown, Info } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const glassTypes = [
   { id: 'clear-10', name: 'زجاج شفاف سيكوريت 10 ملم', minPrice: 150, maxPrice: 250, description: 'زجاج معالج حرارياً مقاوم للصدمات، مثالي للواجهات والأبواب الداخلية.' },
@@ -12,6 +13,8 @@ const glassTypes = [
 ];
 
 export default function CostCalculator() {
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
   const [selectedGlass, setSelectedGlass] = useState(glassTypes[0].id);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [width, setWidth] = useState('');
@@ -43,16 +46,16 @@ export default function CostCalculator() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6 }}
-      className="mt-20 bg-white border border-gray-100 rounded-3xl shadow-[0_20px_60px_rgb(0,0,0,0.08)] overflow-hidden max-w-4xl mx-auto"
+      className="bg-white border border-gray-100 rounded-3xl shadow-[0_20px_60px_rgb(0,0,0,0.08)] overflow-hidden max-w-4xl mx-auto"
     >
       <div className="grid grid-cols-1 md:grid-cols-2">
         <div className="p-8 md:p-10 bg-[#0F172A] text-white flex flex-col justify-center">
           <div className="w-14 h-14 bg-white/10 text-[#0ea5e9] flex items-center justify-center mb-6 rounded-2xl shadow-inner border border-white/5">
             <Calculator className="h-6 w-6" />
           </div>
-          <h3 className="text-2xl font-bold mb-4">حاسبة التكلفة التقديرية</h3>
+          <h3 className="text-2xl font-bold mb-4">{isAr ? 'حاسبة التكلفة التقديرية' : 'Estimated Cost Calculator'}</h3>
           <p className="text-gray-400 mb-8 leading-relaxed text-sm">
-            احصل على تقدير مبدئي لتكلفة مشروعك. أدخل الأبعاد ونوع الزجاج المطلوب للحصول على النتيجة فوراً. السعر النهائي يعتمد على المعاينة الميدانية والإكسسوارات المستخدمة.
+            {isAr ? 'احصل على تقدير مبدئي لتكلفة مشروعك. أدخل الأبعاد ونوع الزجاج المطلوب للحصول على النتيجة فوراً. السعر النهائي يعتمد على المعاينة الميدانية والإكسسوارات المستخدمة.' : 'Get an initial estimate for your project. Enter dimensions and glass type for instant results. Final price depends on site inspection and accessories used.'}
           </p>
 
           <AnimatePresence mode="wait">
@@ -92,9 +95,12 @@ export default function CostCalculator() {
         <div className="p-8 md:p-10">
           <div className="space-y-6">
             <div ref={dropdownRef} className="relative z-20">
-              <label className="block text-sm font-bold text-gray-700 mb-2">نوع الزجاج</label>
+              <label htmlFor="glass-type" className="block text-sm font-bold text-gray-700 mb-2">نوع الزجاج</label>
               <button 
+                id="glass-type"
                 type="button"
+                aria-haspopup="listbox"
+                aria-expanded={isDropdownOpen}
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="w-full flex items-center justify-between bg-gray-50 rounded-xl border border-gray-200 text-gray-900 p-3 focus:outline-none focus:border-[#0ea5e9] focus:ring-2 focus:ring-[#0ea5e9]/20 transition-all"
               >
@@ -136,12 +142,13 @@ export default function CostCalculator() {
 
             <div className="grid grid-cols-2 gap-4 relative z-10">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">العرض (متر)</label>
+                <label htmlFor="calc-width" className="block text-sm font-bold text-gray-700 mb-2">العرض (متر)</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 start-0 pl-3 flex items-center pointer-events-none text-gray-400 ms-3">
                     <Ruler className="h-4 w-4" />
                   </div>
                   <input 
+                    id="calc-width"
                     type="number" 
                     min="0"
                     step="0.1"
@@ -153,12 +160,13 @@ export default function CostCalculator() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">الارتفاع (متر)</label>
+                <label htmlFor="calc-height" className="block text-sm font-bold text-gray-700 mb-2">الارتفاع (متر)</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 start-0 pl-3 flex items-center pointer-events-none text-gray-400 ms-3">
                     <Ruler className="h-4 w-4" />
                   </div>
                   <input 
+                    id="calc-height"
                     type="number"
                     min="0"
                     step="0.1"

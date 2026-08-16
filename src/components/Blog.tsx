@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { useContent } from '../contexts/ContentContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const defaultBlogPosts = [
   {
@@ -30,6 +31,8 @@ const defaultBlogPosts = [
 ];
 
 export default function Blog() {
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
   const { getContent } = useContent();
   const introContent = getContent('blog_intro');
   const itemsContent = getContent('blog_items');
@@ -38,7 +41,7 @@ export default function Blog() {
     if (itemsContent?.body) {
       try {
         const parsed = JSON.parse(itemsContent.body);
-        if (Array.isArray(parsed) && parsed.length > 0) return [...parsed, ...defaultBlogPosts.slice(parsed.length)].slice(0, Math.max(parsed.length, 3));
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {
         console.error("Failed to parse blog items", e);
       }
@@ -57,10 +60,10 @@ export default function Blog() {
           className="text-center max-w-3xl mx-auto mb-16"
         >
           <h2 className="text-[#0ea5e9] text-sm font-bold tracking-widest uppercase mb-4">
-            المدونة والمعرفة
+            {isAr ? 'المدونة والمعرفة' : 'Blog & Knowledge'}
           </h2>
           <h3 className="text-4xl md:text-5xl font-extrabold text-[#0F172A] leading-tight mb-6 tracking-tight">
-            أحدث المقالات والنصائح
+            {isAr ? 'أحدث المقالات' : 'Latest Articles'} والنصائح
           </h3>
           
           {introContent?.body ? (
@@ -107,7 +110,7 @@ export default function Blog() {
                 </p>
                 <div className="mt-auto">
                   <Link to={`/blog/${encodeURIComponent(post.title.replace(/\s+/g, '-').toLowerCase())}`} className="flex items-center text-[#0ea5e9] font-bold group-hover:text-[#0369A1] transition-colors">
-                    اقرأ المزيد
+                    {isAr ? 'اقرأ المزيد' : 'Read More'}
                     <ArrowLeft className="h-4 w-4 mr-2 transform group-hover:-translate-x-1 transition-transform" />
                   </Link>
                 </div>

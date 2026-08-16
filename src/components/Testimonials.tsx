@@ -3,33 +3,13 @@ import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Star, Quote, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useContent } from '../contexts/ContentContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, Navigation, EffectCards } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 import 'swiper/css/effect-cards';
-
-const defaultTestimonials = [
-  {
-    name: 'مؤسسة أبعاد التطوير',
-    role: 'مشروع واجهات تجارية',
-    content: 'تعاملنا مع شركة زجاج الرياض في تنفيذ واجهات مشروعنا التجاري. احترافية عالية في العمل، التزام دقيق بالمواعيد، وجودة تنفيذ تفوق التوقعات.',
-    rating: 5,
-  },
-  {
-    name: 'عبدالله السالم',
-    role: 'فيلا سكنية - الملقا',
-    content: 'قمت بتركيب نوافذ وكبائن شاور للفيلا. الشغل جداً نظيف ومرتب، والفريق متعاون جداً في تقديم الاستشارات والتعديلات المطلوبة. أنصح بالتعامل معهم.',
-    rating: 5,
-  },
-  {
-    name: 'شركة رؤية المستقبل',
-    role: 'قواطع مكتبية',
-    content: 'احترافية في التعامل وسرعة في الإنجاز. تم تركيب القواطع الزجاجية لمكاتبنا في وقت قياسي وبجودة عالية جداً تعكس صورة احترافية للشركة.',
-    rating: 5,
-  }
-];
 
 // Helper to generate a soft background color based on name
 const getAvatarColor = (name: string) => {
@@ -46,6 +26,29 @@ const getAvatarColor = (name: string) => {
 };
 
 export default function Testimonials() {
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
+
+  const defaultTestimonials = [
+  {
+    name: isAr ? 'مؤسسة أبعاد التطوير' : 'Abaad Dev Corp',
+    role: isAr ? 'مشروع واجهات تجارية' : 'Commercial Facades Project',
+    content: isAr ? 'تعاملنا مع شركة زجاج الرياض في تنفيذ واجهات مشروعنا التجاري. احترافية عالية في العمل، التزام دقيق بالمواعيد، وجودة تنفيذ تفوق التوقعات.' : 'We worked with Riyadh Glass on our commercial project facades. High professionalism, strict adherence to deadlines, and execution quality that exceeded expectations.',
+    rating: 5,
+  },
+  {
+    name: isAr ? 'عبدالله السالم' : 'Abdullah Al-Salem',
+    role: isAr ? 'فيلا سكنية - الملقا' : 'Residential Villa - Al Malqa',
+    content: isAr ? 'قمت بتركيب نوافذ وكبائن شاور للفيلا. الشغل جداً نظيف ومرتب، والفريق متعاون جداً في تقديم الاستشارات والتعديلات المطلوبة. أنصح بالتعامل معهم.' : 'I installed windows and shower cabins for the villa. The work is very clean and neat, and the team is very cooperative. Highly recommended.',
+    rating: 5,
+  },
+  {
+    name: isAr ? 'شركة رؤية المستقبل' : 'Future Vision Co',
+    role: isAr ? 'قواطع مكتبية' : 'Office Partitions',
+    content: isAr ? 'احترافية في التعامل وسرعة في الإنجاز. تم تركيب القواطع الزجاجية لمكاتبنا في وقت قياسي وبجودة عالية جداً تعكس صورة احترافية للشركة.' : 'Professionalism and speed. Glass partitions for our offices were installed in record time with very high quality.',
+    rating: 5,
+  }
+];
   const { getContent } = useContent();
   const itemsContent = getContent('testimonials_items');
   

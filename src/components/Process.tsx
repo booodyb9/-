@@ -2,34 +2,7 @@ import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { PhoneCall, Ruler, Hammer, Wrench, CheckCircle } from 'lucide-react';
 import { useContent } from '../contexts/ContentContext';
-
-const defaultSteps = [
-  {
-    icon: 'PhoneCall',
-    title: 'الاستشارة والاتفاق',
-    description: 'تواصل معنا لمناقشة متطلبات مشروعك، وسنقدم لك أفضل الحلول والخيارات المناسبة لميزانيتك وتفضيلاتك.',
-  },
-  {
-    icon: 'Ruler',
-    title: 'أخذ المقاسات',
-    description: 'يقوم فريقنا الفني بزيارة الموقع لأخذ المقاسات الدقيقة والرفع المساحي لضمان دقة التصنيع.',
-  },
-  {
-    icon: 'Hammer',
-    title: 'التصنيع والقص',
-    description: 'يتم قص وتجهيز الزجاج في مصانعنا بأحدث التقنيات لضمان أعلى معايير الجودة والصلابة.',
-  },
-  {
-    icon: 'Wrench',
-    title: 'التركيب',
-    description: 'يقوم فريق التركيب المتخصص لدينا بتركيب الزجاج والإكسسوارات باحترافية عالية وفي الوقت المحدد.',
-  },
-  {
-    icon: 'CheckCircle',
-    title: 'التسليم والضمان',
-    description: 'يتم تنظيف الموقع وتسليم العمل مع تقديم شهادة الضمان الشامل على جودة الزجاج والتركيب.',
-  }
-];
+import { useLanguage } from '../contexts/LanguageContext';
 
 const renderIcon = (iconName: string | undefined, index: number) => {
   const props = { className: "h-6 w-6" };
@@ -54,6 +27,36 @@ const renderIcon = (iconName: string | undefined, index: number) => {
 };
 
 export default function Process() {
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
+
+  const defaultSteps = [
+  {
+    icon: 'PhoneCall',
+    title: isAr ? 'الاستشارة والاتفاق' : 'Consultation & Agreement',
+    description: isAr ? 'تواصل معنا لمناقشة متطلبات مشروعك، وسنقدم لك أفضل الحلول والخيارات المناسبة لميزانيتك وتفضيلاتك.' : 'Contact us to discuss your project requirements, and we will provide the best solutions and options fitting your budget and preferences.',
+  },
+  {
+    icon: 'Ruler',
+    title: isAr ? 'أخذ المقاسات' : 'Measurements',
+    description: isAr ? 'يقوم فريقنا الفني بزيارة الموقع لأخذ المقاسات الدقيقة والرفع المساحي لضمان دقة التصنيع.' : 'Our technical team visits the site to take precise measurements and surveys to ensure manufacturing accuracy.',
+  },
+  {
+    icon: 'Hammer',
+    title: isAr ? 'التصنيع والقص' : 'Manufacturing & Cutting',
+    description: isAr ? 'يتم قص وتجهيز الزجاج في مصانعنا بأحدث التقنيات لضمان أعلى معايير الجودة والصلابة.' : 'Glass is cut and prepared in our factories using the latest technologies to ensure the highest standards of quality and durability.',
+  },
+  {
+    icon: 'Wrench',
+    title: isAr ? 'التركيب' : 'Installation',
+    description: isAr ? 'يقوم فريق التركيب المتخصص لدينا بتركيب الزجاج والإكسسوارات باحترافية عالية وفي الوقت المحدد.' : 'Our specialized installation team installs the glass and accessories with high professionalism and on time.',
+  },
+  {
+    icon: 'CheckCircle',
+    title: isAr ? 'التسليم والضمان' : 'Delivery & Warranty',
+    description: isAr ? 'يتم تنظيف الموقع وتسليم العمل مع تقديم شهادة الضمان الشامل على جودة الزجاج والتركيب.' : 'The site is cleaned and the work is delivered along with a comprehensive warranty certificate on glass quality and installation.',
+  }
+];
   const { getContent } = useContent();
   const itemsContent = getContent('process_items');
 
@@ -79,7 +82,7 @@ export default function Process() {
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto mb-20"
         >
-          <h2 className="text-[#0ea5e9] text-sm font-bold tracking-widest uppercase mb-4">آلية العمل</h2>
+          <h2 className="text-[#0ea5e9] text-sm font-bold tracking-widest uppercase mb-4">{isAr ? 'آلية العمل' : 'How We Work'}</h2>
           <h3 className="text-4xl md:text-5xl font-extrabold text-[#0F172A] leading-tight tracking-tight">
             خطوات التنفيذ
           </h3>

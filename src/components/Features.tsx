@@ -2,29 +2,7 @@ import { useMemo } from 'react';
 import { Shield, Clock, Wrench, ThumbsUp, Medal, Gem } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useContent } from '../contexts/ContentContext';
-
-const defaultFeatures = [
-  {
-    icon: 'Shield',
-    title: 'جودة لا تضاهى',
-    description: 'نستخدم أفضل أنواع الزجاج المطابق للمواصفات السعودية والعالمية.'
-  },
-  {
-    icon: 'Clock',
-    title: 'التزام بالمواعيد',
-    description: 'نقدر وقت عملائنا، لذا نحرص على تسليم المشاريع في الوقت المتفق عليه.'
-  },
-  {
-    icon: 'Wrench',
-    title: 'فريق محترف',
-    description: 'لدينا طاقم من المهندسين والفنيين ذوي الخبرة الطويلة في التركيب.'
-  },
-  {
-    icon: 'ThumbsUp',
-    title: 'أسعار تنافسية',
-    description: 'نقدم أفضل الأسعار في سوق الرياض مع الحفاظ على أعلى معايير الجودة.'
-  }
-];
+import { useLanguage } from '../contexts/LanguageContext';
 
 const renderIcon = (iconName: string | undefined, index: number) => {
   const props = { className: "h-6 w-6" };
@@ -49,6 +27,31 @@ const renderIcon = (iconName: string | undefined, index: number) => {
 };
 
 export default function Features() {
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
+
+  const defaultFeatures = [
+  {
+    icon: 'Shield',
+    title: isAr ? 'جودة لا تضاهى' : 'Unmatched Quality',
+    description: isAr ? 'نستخدم أفضل أنواع الزجاج المطابق للمواصفات السعودية والعالمية.' : 'We use the finest glass types matching local and international standards.'
+  },
+  {
+    icon: 'Clock',
+    title: isAr ? 'التزام بالمواعيد' : 'On-Time Delivery',
+    description: isAr ? 'نقدر وقت عملائنا، لذا نحرص على تسليم المشاريع في الوقت المتفق عليه.' : 'We value your time, delivering projects strictly on schedule.'
+  },
+  {
+    icon: 'Wrench',
+    title: isAr ? 'فريق محترف' : 'Professional Team',
+    description: isAr ? 'لدينا طاقم من المهندسين والفنيين ذوي الخبرة الطويلة في التركيب.' : 'Our team consists of highly experienced engineers and technicians.'
+  },
+  {
+    icon: 'ThumbsUp',
+    title: isAr ? 'أسعار تنافسية' : 'Competitive Prices',
+    description: isAr ? 'نقدم أفضل الأسعار في سوق الرياض مع الحفاظ على أعلى معايير الجودة.' : 'We offer the best prices in the Riyadh market while maintaining highest quality standards.'
+  }
+];
   const { getContent } = useContent();
   const introContent = getContent('features_intro');
   const itemsContent = getContent('features_items');
@@ -79,7 +82,7 @@ export default function Features() {
   }, [imageContent]);
 
   return (
-    <section className="py-24 bg-white relative overflow-hidden">
+    <section id="why" className="py-24 bg-white relative overflow-hidden">
       {/* Decorative abstract elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gray-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
       

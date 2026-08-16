@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Search, ChevronRight, ChevronLeft, MapPin, Briefcase, ArrowUpRight, ZoomIn, ArrowLeft } from 'lucide-react';
 import { useContent } from '../contexts/ContentContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { PortfolioProject } from '../pages/dashboard/types';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, Navigation, Keyboard } from 'swiper/modules';
@@ -75,7 +76,9 @@ const defaultProjects: PortfolioProject[] = ([
 ] as unknown as PortfolioProject[]);
 
 export default function Gallery({ limit, featuredOnly }: { limit?: number, featuredOnly?: boolean }) {
-  const [activeCategory, setActiveCategory] = useState('الكل');
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
+  const [activeCategory, setActiveCategory] = useState(isAr ? 'الكل' : 'All');
   const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState<PortfolioProject[]>([]);
   const [totalProjects, setTotalProjects] = useState(0);
@@ -114,11 +117,11 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
 
   const categories = useMemo(() => {
     const cats = new Set(projects.map(p => p.category));
-    return ['الكل', ...Array.from(cats)];
+    return [isAr ? 'الكل' : 'All', ...Array.from(cats)];
   }, [projects]);
 
   const filteredProjects = useMemo(() => {
-    let result = activeCategory === 'الكل' 
+    let result = activeCategory === (isAr ? 'الكل' : 'All') 
       ? projects 
       : projects.filter(p => p.category === activeCategory);
       
@@ -159,7 +162,7 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
   const currentLightboxProject = lightboxIndex !== null ? filteredProjects[lightboxIndex] : null;
 
   return (
-    <section className="py-24 bg-gray-50 relative overflow-hidden" id="portfolio">
+    <section className="py-24 bg-gray-50 relative overflow-hidden" id="gallery">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {limit ? (
@@ -188,7 +191,7 @@ export default function Gallery({ limit, featuredOnly }: { limit?: number, featu
               className="max-w-2xl"
             >
               <h2 className="text-[#0284C7] text-sm font-bold tracking-widest uppercase mb-3">
-                معرض الأعمال
+                {isAr ? 'معرض الأعمال' : 'Portfolio'}
               </h2>
               <h3 className="text-3xl md:text-5xl font-extrabold text-[#0F172A] leading-tight mb-6">
                 مشاريع نفخر بها

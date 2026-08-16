@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useContent } from '../contexts/ContentContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../translations';
+import { Globe } from 'lucide-react';
 
 export default function Navbar() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -8,6 +11,8 @@ export default function Navbar() {
   const location = useLocation();
   const isHome = location.pathname === '/';
   const { getContent } = useContent();
+  const { language, toggleLanguage } = useLanguage();
+  const t = translations[language];
 
   const navContent = getContent('navigation_links');
   
@@ -21,9 +26,9 @@ export default function Navbar() {
       } catch (e) {}
     }
     return [
-      { name: 'خدماتنا', href: '/services' },
-      { name: 'أعمالنا', href: '/portfolio' },
-      { name: 'الأسئلة الشائعة', href: '/faq' },
+      { name: t.nav.services, href: '/services' },
+      { name: t.nav.portfolio, href: '/portfolio' },
+      { name: t.nav.faq, href: '/faq' },
     ];
   }, [navContent]);
 
@@ -78,7 +83,7 @@ export default function Navbar() {
               </svg>
             </div>
             <div className="flex flex-col justify-center">
-              <span className="text-xl font-bold leading-tight text-gray-900" style={{ fontFamily: 'var(--font-heading)' }}>زجاج الرياض</span>
+              <span className="text-xl font-bold leading-tight text-gray-900" style={{ fontFamily: 'var(--font-heading)' }}>{t.common.riyadhGlass}</span>
               <span className="text-[0.65rem] font-bold tracking-[0.2em] text-gray-500 uppercase leading-none mt-1">Zujaj Alriyad</span>
             </div>
           </Link>
@@ -95,7 +100,7 @@ export default function Navbar() {
             ))}
             <li><Link to="/contact" className="btn nav-cta">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-              تواصل معنا
+              {t.nav.contact}
             </Link></li>
           </ul>
 
@@ -112,7 +117,11 @@ export default function Navbar() {
                <Link key={idx} to={link.href} onClick={() => setIsMobileNavOpen(false)}>{link.name}</Link>
              )
           ))}
-          <Link to="/contact" className="nav-cta-mobile" onClick={() => setIsMobileNavOpen(false)}>اطلب تسعيرة مجانية</Link>
+          <button onClick={() => { toggleLanguage(); setIsMobileNavOpen(false); }} className="nav-cta-mobile flex justify-center items-center gap-2 mb-4 bg-slate-100 text-slate-800">
+            <Globe className="w-5 h-5" />
+            {language === 'ar' ? 'English' : 'عربي'}
+          </button>
+          <Link to="/contact" className="nav-cta-mobile" onClick={() => setIsMobileNavOpen(false)}>{t.nav.requestQuote}</Link>
         </div>
       </nav>
     </>

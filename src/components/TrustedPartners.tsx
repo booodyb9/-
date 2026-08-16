@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { useContent } from '../contexts/ContentContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const defaultPartners = [
   { name: 'شركة أرامكو', logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=200&h=100&fit=crop' },
@@ -12,6 +13,8 @@ const defaultPartners = [
 ];
 
 export default function TrustedPartners() {
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
   const { getContent } = useContent();
   const partnersContent = getContent('trusted_partners');
 
@@ -30,9 +33,9 @@ export default function TrustedPartners() {
   }, [partnersContent]);
 
   return (
-    <section className="py-20 bg-gray-50 border-y border-gray-100 overflow-hidden">
+    <section id="partners" className="py-20 bg-gray-50 border-y border-gray-100 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center">
-        <h2 className="text-[#0ea5e9] text-sm font-bold tracking-widest uppercase mb-4">شركاء النجاح</h2>
+        <h2 className="text-[#0ea5e9] text-sm font-bold tracking-widest uppercase mb-4">{isAr ? 'شركاء' : 'Trusted'} {isAr ? 'النجاح' : 'Partners'}</h2>
         <h3 className="text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight">نفتخر بالتعاون مع كبرى الشركات</h3>
       </div>
       
